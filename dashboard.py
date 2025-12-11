@@ -13,18 +13,23 @@ st.set_page_config(
     page_title="Crazytown Capital | Performance Dashboard",
     page_icon="📈",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded" # Menü varsayılan olarak açık başlar
 )
 
-# --- CORPORATE CSS (KURUMSAL TASARIM) ---
+# --- CSS (DÜZELTİLMİŞ) ---
 st.markdown("""
     <style>
-        /* Genel Arka Plan ve Fontlar */
+        /* Genel Arka Plan */
         .stApp {
             background-color: #0E1117;
             color: #E0E0E0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
+        /* Gizlilik Ayarları (MENÜ BUTONU GERİ GELDİ) */
+        #MainMenu {visibility: hidden;} /* Sağ üstteki 3 noktayı gizle */
+        footer {visibility: hidden;}    /* "Made with Streamlit" yazısını gizle */
+        .stDeployButton {display:none;} /* Deploy butonunu gizle */
         
         /* Başlıklar */
         h1, h2, h3 {
@@ -33,7 +38,7 @@ st.markdown("""
             letter-spacing: 0.5px;
         }
         
-        /* KPI Kutuları (Minimalist) */
+        /* KPI Kutuları */
         .metric-card {
             background: #161920;
             border-left: 4px solid #00F2C3;
@@ -55,7 +60,7 @@ st.markdown("""
             margin-top: 5px;
         }
 
-        /* Fiyatlandırma Kartları (Premium) */
+        /* Fiyatlandırma Kartları */
         .pricing-card {
             background: #161920;
             border: 1px solid #333;
@@ -93,7 +98,7 @@ st.markdown("""
             line-height: 1.8;
         }
         
-        /* Buton Stili (Kurumsal) */
+        /* Buton Stili */
         .cta-button {
             display: block;
             width: 100%;
@@ -124,17 +129,11 @@ st.markdown("""
         .stDataFrame {
             border: 1px solid #333;
         }
-        
-        /* Gizlilik */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
-        .stDeployButton {display:none;}
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. VERİ BAĞLANTISI (GOOGLE SHEETS)
+# 2. VERİ BAĞLANTISI
 # ==========================================
 @st.cache_data(ttl=60)
 def load_data():
@@ -193,9 +192,9 @@ if page == "Performance Dashboard":
     if df.empty:
         st.warning("No data available. Establishing connection...")
     else:
-        # KPI HESAPLAMA
         total_trades = len(df)
         win_trades = len(df[df['Sonuç'] == 'WIN'])
+        loss_trades = len(df[df['Sonuç'] == 'LOSS'])
         win_rate = (win_trades / total_trades * 100) if total_trades > 0 else 0
         net_r = df['R_Kazanc'].sum()
         
@@ -203,7 +202,6 @@ if page == "Performance Dashboard":
         gross_loss = abs(df[df['R_Kazanc'] < 0]['R_Kazanc'].sum())
         profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else 99.9
 
-        # KPI KARTLARI
         c1, c2, c3, c4 = st.columns(4)
         c1.markdown(f'<div class="metric-card"><div class="metric-value">{total_trades}</div><div class="metric-label">TOTAL TRADES</div></div>', unsafe_allow_html=True)
         c2.markdown(f'<div class="metric-card"><div class="metric-value">{win_rate:.1f}%</div><div class="metric-label">WIN RATE</div></div>', unsafe_allow_html=True)
@@ -213,7 +211,6 @@ if page == "Performance Dashboard":
         st.write("")
         st.write("")
 
-        # GRAFİKLER
         g1, g2 = st.columns([2, 1])
 
         with g1:
@@ -255,7 +252,6 @@ if page == "Performance Dashboard":
             )
             st.plotly_chart(fig_pie, use_container_width=True)
 
-        # TABLO
         st.markdown("### Trade History")
         
         def style_dataframe(row):
@@ -364,4 +360,5 @@ elif page == "Contact Support":
 # Alt Bilgi
 st.sidebar.markdown("---")
 st.sidebar.caption("© 2025 Crazytown Capital. Proprietary Trading Systems.")
+
 
