@@ -16,10 +16,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- CORPORATE STEALTH CSS (GİZLİLİK & TASARIM) ---
+# --- CORPORATE STEALTH CSS ---
 st.markdown("""
     <style>
-        /* 1. GİZLİLİK KATMANI (Tüm Streamlit İmzalarını Sil) */
+        /* GİZLİLİK */
         #MainMenu {visibility: hidden; display: none;}
         footer {visibility: hidden; display: none;}
         header {visibility: hidden; display: none;}
@@ -27,155 +27,54 @@ st.markdown("""
         [data-testid="stToolbar"] {display: none; visibility: hidden;}
         [data-testid="stHeader"] {display: none; visibility: hidden;}
         
-        /* Sayfa üst boşluğunu sıfırla */
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
+        .block-container { padding-top: 2rem; padding-bottom: 2rem; }
 
-        /* 2. GENEL TASARIM (Minimalist Dark) */
-        .stApp {
-            background-color: #0b0c10;
-            color: #c5c6c7;
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-        }
-        
-        h1, h2, h3, h4, h5 {
-            color: #66fcf1;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
+        /* GENEL TASARIM */
+        .stApp { background-color: #0b0c10; color: #c5c6c7; font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5 { color: #66fcf1; font-weight: 600; letter-spacing: 1px; }
 
-        /* 3. SEKME (TAB) TASARIMI */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 20px;
-            background-color: transparent;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #1f2833;
-        }
-        .stTabs [data-baseweb="tab"] {
-            height: 50px;
-            background-color: transparent;
-            border: none;
-            color: #888;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-        .stTabs [data-baseweb="tab"]:hover {
-            color: #66fcf1;
-        }
-        .stTabs [aria-selected="true"] {
-            color: #66fcf1 !important;
-            background-color: transparent !important;
-            border-bottom: 2px solid #66fcf1 !important;
-        }
+        /* TABS */
+        .stTabs [data-baseweb="tab-list"] { gap: 20px; background-color: transparent; border-bottom: 1px solid #1f2833; }
+        .stTabs [data-baseweb="tab"] { height: 50px; border: none; color: #888; font-weight: 500; }
+        .stTabs [data-baseweb="tab"]:hover { color: #66fcf1; }
+        .stTabs [aria-selected="true"] { color: #66fcf1 !important; border-bottom: 2px solid #66fcf1 !important; }
 
-        /* 4. METRİK KARTLARI (KPI) */
+        /* KPI KARTLARI */
         .metric-container {
-            background-color: #1f2833;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            border: 1px solid #2d3845;
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            background-color: #1f2833; border-radius: 8px; padding: 20px; text-align: center;
+            border: 1px solid #2d3845; transition: transform 0.2s ease;
         }
-        .metric-container:hover {
-            transform: translateY(-2px);
-            border-color: #66fcf1;
-        }
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 5px;
-        }
-        .metric-label {
-            font-size: 0.8rem;
-            color: #8892b0;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }
+        .metric-container:hover { transform: translateY(-2px); border-color: #66fcf1; }
+        .metric-value { font-size: 2rem; font-weight: 700; color: #fff; margin-bottom: 5px; }
+        .metric-label { font-size: 0.8rem; color: #8892b0; text-transform: uppercase; letter-spacing: 1.5px; }
 
-        /* 5. FİYATLANDIRMA KARTLARI */
+        /* FİYATLANDIRMA */
         .pricing-card {
-            background-color: #1f2833;
-            border-radius: 12px;
-            padding: 40px 20px;
-            text-align: center;
-            border: 1px solid #2d3845;
-            height: 100%;
-            transition: all 0.3s ease;
+            background-color: #1f2833; border-radius: 12px; padding: 40px 20px; text-align: center;
+            border: 1px solid #2d3845; height: 100%; transition: all 0.3s ease;
         }
-        .pricing-card:hover {
-            border-color: #66fcf1;
-            box-shadow: 0 10px 30px rgba(102, 252, 241, 0.05);
-            transform: translateY(-5px);
-        }
-        .plan-name {
-            color: #66fcf1;
-            font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-        }
-        .plan-price {
-            color: #fff;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 30px;
-        }
-        .plan-features {
-            text-align: left;
-            margin-left: 20%;
-            color: #c5c6c7;
-            font-size: 0.9rem;
-            line-height: 2.2;
-            margin-bottom: 30px;
-        }
+        .pricing-card:hover { border-color: #66fcf1; transform: translateY(-5px); }
+        .plan-name { color: #66fcf1; font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 15px; }
+        .price-tag { font-size: 2.5rem; font-weight: 700; color: #fff; margin: 20px 0; }
+        .price-period { font-size: 1rem; color: #888; }
+        .feature-list { text-align: left; margin-left: 15%; color: #c5c6c7; font-size: 0.9rem; line-height: 2.2; margin-bottom: 30px; }
         
-        /* 6. BUTONLAR */
+        /* BUTONLAR */
         .custom-btn {
-            display: inline-block;
-            padding: 12px 30px;
-            color: #0b0c10;
-            background-color: #66fcf1;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            width: 100%;
-            text-align: center;
+            display: inline-block; padding: 12px 30px; color: #0b0c10; background-color: #66fcf1;
+            border-radius: 4px; text-decoration: none; font-weight: 600; width: 100%; text-align: center;
         }
-        .custom-btn:hover {
-            background-color: #45a29e;
-            color: #fff;
-            box-shadow: 0 0 15px rgba(102, 252, 241, 0.3);
-        }
-        .custom-btn-outline {
-            background-color: transparent;
-            border: 1px solid #66fcf1;
-            color: #66fcf1;
-        }
-        .custom-btn-outline:hover {
-            background-color: #66fcf1;
-            color: #0b0c10;
-        }
+        .custom-btn:hover { background-color: #45a29e; color: #fff; }
+        .custom-btn-outline { background-color: transparent; border: 1px solid #66fcf1; color: #66fcf1; }
+        .custom-btn-outline:hover { background-color: #66fcf1; color: #0b0c10; }
 
-        /* 7. TABLO DÜZENİ */
-        .stDataFrame {
-            border: 1px solid #2d3845;
-        }
-        
-        /* Sidebar Gizle */
+        .stDataFrame { border: 1px solid #2d3845; }
         [data-testid="stSidebar"] {display: none;}
-        
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. VERİ BAĞLANTISI
+# 2. VERİ BAĞLANTISI (HATA KORUMALI)
 # ==========================================
 @st.cache_data(ttl=60)
 def load_data():
@@ -199,16 +98,12 @@ def load_data():
 df = load_data()
 
 # ==========================================
-# 3. İÇERİK YAPISI
+# 3. İÇERİK
 # ==========================================
-
-# Üst Başlık
 st.markdown("<h1 style='text-align: center; font-size: 2.5rem; color: #FFFFFF;'>CRAZYTOWN CAPITAL</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #8892b0; margin-top: -10px; font-style: italic;'>Proprietary Trading & Analytics</p>", unsafe_allow_html=True)
-st.write("")
-st.write("")
+st.write(""); st.write("")
 
-# MENÜ (TABS)
 tab1, tab2, tab3 = st.tabs(["PERFORMANCE", "MEMBERSHIP", "CONTACT"])
 
 # --- TAB 1: PERFORMANCE ---
@@ -216,17 +111,33 @@ with tab1:
     if df.empty:
         st.info("System initializing. Waiting for data feed...")
     else:
-        # Filtreler (Expander)
+        # --- GÜVENLİ FİLTRELEME (CRASH FIX) ---
         with st.expander("FILTER DATA"):
             c1, c2 = st.columns(2)
-            sel_coin = c1.selectbox("Asset", ["All Assets"] + list(df['Coin'].unique()))
-            sel_setup = c2.selectbox("Strategy", ["All Strategies"] + list(df['Setup'].unique()) if 'Setup' in df.columns else ["All"])
-            if sel_coin != "All Assets": df = df[df['Coin'] == sel_coin]
-            if sel_setup != "All Strategies": df = df[df['Setup'] == sel_setup]
+            
+            # Coin Filtresi (Güvenli)
+            coin_options = ["All Assets"]
+            if 'Coin' in df.columns:
+                coin_options += list(df['Coin'].unique())
+            sel_coin = c1.selectbox("Asset", coin_options)
+
+            # Setup Filtresi (Güvenli)
+            setup_options = ["All Strategies"]
+            if 'Setup' in df.columns:
+                setup_options += list(df['Setup'].unique())
+            sel_setup = c2.selectbox("Strategy", setup_options)
+            
+            # Filtreleri Uygula
+            if sel_coin != "All Assets" and 'Coin' in df.columns:
+                df = df[df['Coin'] == sel_coin]
+            
+            # BURADA HATA VARDI - DÜZELTİLDİ
+            if sel_setup != "All Strategies" and 'Setup' in df.columns:
+                df = df[df['Setup'] == sel_setup]
 
         st.write("")
 
-        # KPI Metrics (HTML CSS Cards)
+        # KPI
         total = len(df)
         win = len(df[df['Sonuç'] == 'WIN'])
         rate = (win / total * 100) if total > 0 else 0
@@ -282,36 +193,36 @@ with tab2:
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown(f"""
+        st.markdown("""
         <div class="pricing-card">
             <div class="plan-name">STARTER</div>
             <div class="plan-price">$30<span style="font-size:1rem;color:#888">/mo</span></div>
-            <div class="plan-features">
-                Telegram Channel Access<br>15m Elite Setups<br>FVG & Fib Targets<br>Support 24/7
+            <div class="feature-list">
+                ✓ Telegram Channel Access<br>✓ 15m Elite Setups<br>✓ FVG & Fib Targets<br>✓ Support 24/7
             </div>
             <a href="https://t.me/Orhan1909" target="_blank" class="custom-btn custom-btn-outline">SELECT PLAN</a>
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
-        st.markdown(f"""
+        st.markdown("""
         <div class="pricing-card" style="border-color: #66fcf1;">
             <div class="plan-name">PROFESSIONAL</div>
             <div class="plan-price">$75<span style="font-size:1rem;color:#888">/qtr</span></div>
-            <div class="plan-features">
-                <b>All Starter Features</b><br>Real-time Signals<br>Market Direction (USDT.D)<br>Priority Support
+            <div class="feature-list">
+                ✓ <b>All Starter Features</b><br>✓ Real-time Signals<br>✓ Market Direction (USDT.D)<br>✓ Priority Support
             </div>
             <a href="https://t.me/Orhan1909" target="_blank" class="custom-btn">MOST POPULAR</a>
         </div>
         """, unsafe_allow_html=True)
 
     with col3:
-        st.markdown(f"""
+        st.markdown("""
         <div class="pricing-card">
             <div class="plan-name">LIFETIME</div>
             <div class="plan-price">$250<span style="font-size:1rem;color:#888">/once</span></div>
-            <div class="plan-features">
-                <b>Lifetime Access</b><br>Future Updates Included<br>Bot Setup Assistance<br>Private Group
+            <div class="feature-list">
+                ✓ <b>Lifetime Access</b><br>✓ Future Updates Included<br>✓ Bot Setup Assistance<br>✓ Private Group
             </div>
             <a href="https://t.me/Orhan1909" target="_blank" class="custom-btn custom-btn-outline">CONTACT SALES</a>
         </div>
