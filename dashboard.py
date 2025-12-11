@@ -1,5 +1,3 @@
-
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -21,20 +19,15 @@ st.set_page_config(
 # --- ULTRA PRO CSS (GÖRSEL MAKYAJ) ---
 st.markdown("""
     <style>
-        /* Genel Arka Plan ve Fontlar */
         .stApp {
             background-color: #0E1117;
             color: #FAFAFA;
         }
-        
-        /* Başlıklar */
         h1, h2, h3 {
             font-family: 'Helvetica Neue', sans-serif;
             font-weight: 800;
             color: #FFFFFF;
         }
-        
-        /* KPI Kutuları (Cards) */
         .metric-card {
             background: #191c24;
             border: 1px solid #333;
@@ -59,8 +52,6 @@ st.markdown("""
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-
-        /* Fiyatlandırma Kartları */
         .pricing-card {
             background: linear-gradient(145deg, #1e232e, #161920);
             border-radius: 16px;
@@ -85,12 +76,15 @@ st.markdown("""
             font-size: 1rem;
             color: #888;
         }
-        
-        /* Tablo Stili */
         .stDataFrame {
             border: 1px solid #333;
             border-radius: 10px;
         }
+        /* Gizlilik */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        .stDeployButton {display:none;}
     </style>
 """, unsafe_allow_html=True)
 
@@ -114,14 +108,10 @@ def load_data():
         if not data: return pd.DataFrame()
         df = pd.DataFrame(data)
         
-        # Veri Temizliği
         if 'R_Kazanc' in df.columns:
             df['R_Kazanc'] = df['R_Kazanc'].astype(str).str.replace(',', '.')
             df['R_Kazanc'] = pd.to_numeric(df['R_Kazanc'], errors='coerce').fillna(0)
             
-        # Tarih formatı (Gerekirse)
-        # df['Tarih'] = pd.to_datetime(df['Tarih'], format='%d.%m.%Y', errors='coerce')
-        
         return df
     except Exception as e:
         return pd.DataFrame()
@@ -136,19 +126,14 @@ page = st.sidebar.radio("Navigasyon", ["📊 Dashboard (Canlı)", "💎 VIP Club
 
 st.sidebar.markdown("---")
 
-# FİLTRELER (Sadece Dashboard sayfasında aktif olsun)
 if page == "📊 Dashboard (Canlı)" and not df.empty:
     st.sidebar.markdown("### 🔍 Filtreler")
-    
-    # Coin Filtresi
     coin_list = ["Tümü"] + list(df['Coin'].unique())
     selected_coin = st.sidebar.selectbox("Coin Seç:", coin_list)
     
-    # Setup Filtresi
     setup_list = ["Tümü"] + list(df['Setup'].unique()) if 'Setup' in df.columns else ["Tümü"]
     selected_setup = st.sidebar.selectbox("Setup Tipi:", setup_list)
     
-    # Filtreleme Mantığı
     if selected_coin != "Tümü":
         df = df[df['Coin'] == selected_coin]
     if selected_setup != "Tümü":
@@ -159,7 +144,6 @@ if page == "📊 Dashboard (Canlı)" and not df.empty:
 # ==========================================
 if page == "📊 Dashboard (Canlı)":
     
-    # Başlık Alanı
     col_logo, col_text = st.columns([1, 5])
     with col_text:
         st.markdown("# 🎯 CRAZYTOWN TRADER")
@@ -170,19 +154,17 @@ if page == "📊 Dashboard (Canlı)":
     if df.empty:
         st.warning("⚠️ Veri bekleniyor. Lütfen veritabanı bağlantısını kontrol edin.")
     else:
-        # --- PRO METRİKLER (KPI) ---
+        # KPI
         total_trades = len(df)
         win_trades = len(df[df['Sonuç'] == 'WIN'])
         loss_trades = len(df[df['Sonuç'] == 'LOSS'])
         win_rate = (win_trades / total_trades * 100) if total_trades > 0 else 0
         net_r = df['R_Kazanc'].sum()
         
-        # Profit Factor Hesabı (Toplam Kazanç R / Toplam Kayıp R)
         gross_profit = df[df['R_Kazanc'] > 0]['R_Kazanc'].sum()
         gross_loss = abs(df[df['R_Kazanc'] < 0]['R_Kazanc'].sum())
         profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else 99.9
 
-        # Özel HTML Kartlar
         c1, c2, c3, c4 = st.columns(4)
         c1.markdown(f'<div class="metric-card"><div class="metric-value">{total_trades}</div><div class="metric-label">TOPLAM İŞLEM</div></div>', unsafe_allow_html=True)
         c2.markdown(f'<div class="metric-card"><div class="metric-value">%{win_rate:.1f}</div><div class="metric-label">BAŞARI ORANI</div></div>', unsafe_allow_html=True)
@@ -192,7 +174,6 @@ if page == "📊 Dashboard (Canlı)":
         st.write("")
         st.write("")
 
-        # --- GRAFİKLER ---
         g1, g2 = st.columns([2, 1])
 
         with g1:
@@ -218,22 +199,22 @@ if page == "📊 Dashboard (Canlı)":
 
         with g2:
             st.subheader("🎯 Performans Dağılımı")
-            fig_pie = px.donut(df, names='Sonuç', values=[1]*len(df), hole=0.6,
+            # DÜZELTME BURADA YAPILDI: px.donut yerine px.pie
+            fig_pie = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.6,
                                color='Sonuç', color_discrete_map={'WIN':'#00F2C3', 'LOSS':'#FF4B4B'})
+            
             fig_pie.update_layout(
                 template="plotly_dark",
                 paper_bgcolor='rgba(0,0,0,0)',
                 showlegend=False,
-                annotations=[dict(text=f"%{win_rate:.0f}", x=0.5, y=0.5, font_size=24, showarrow=False)],
+                annotations=[dict(text=f"%{win_rate:.0f}", x=0.5, y=0.5, font_size=24, showarrow=False, font_color="white")],
                 margin=dict(l=20, r=20, t=20, b=20),
                 height=350
             )
             st.plotly_chart(fig_pie, use_container_width=True)
 
-        # --- DETAYLI TABLO ---
         st.subheader("📋 Son İşlem Detayları")
         
-        # Tablo Görselleştirme
         def style_dataframe(row):
             color = '#00F2C3' if row['Sonuç'] == 'WIN' else '#FF4B4B'
             return [f'color: {color}; font-weight: bold' if col == 'Sonuç' else '' for col in row.index]
@@ -262,7 +243,6 @@ elif page == "💎 VIP Club":
     st.write("")
     st.write("")
 
-    # Fiyatlandırma Tablosu
     col1, col2, col3 = st.columns(3)
 
     with col1:
@@ -284,7 +264,6 @@ elif page == "💎 VIP Club":
         """, unsafe_allow_html=True)
 
     with col2:
-        # Öne Çıkan Kart
         st.markdown("""
         <div class="pricing-card featured">
             <div style="position:absolute; top:0; right:0; background:#00F2C3; color:black; padding:5px 15px; font-weight:bold; font-size:0.8rem; border-bottom-left-radius:10px;">POPÜLER</div>
@@ -326,7 +305,6 @@ elif page == "💎 VIP Club":
 # ==========================================
 elif page == "📞 İletişim":
     st.header("📞 Bizimle İletişime Geçin")
-    
     st.info("Aklına takılan bir soru mu var? Ödeme yöntemleri hakkında bilgi mi almak istiyorsun?")
     
     c1, c2 = st.columns(2)
@@ -334,15 +312,12 @@ elif page == "📞 İletişim":
         st.markdown("""
         ### 📨 Telegram Destek
         En hızlı dönüş için Telegram'dan yazabilirsin.
-        
         **👉 [@Orhan1909](https://t.me/Orhan1909)**
         """)
-    
     with c2:
         st.markdown("""
         ### 📧 E-Posta
         Kurumsal veya detaylı soruların için:
-        
         **👉 orhanaliyev02@gmail.com**
         """)
 
