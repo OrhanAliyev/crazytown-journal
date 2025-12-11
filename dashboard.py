@@ -12,6 +12,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- 🔒 GİZLİLİK MODU (GitHub Linki ve Menüyü Kaldır) ---
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            .stDeployButton {display:none;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 # --- CSS STİL ---
 st.markdown("""
     <style>
@@ -36,18 +47,17 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- GOOGLE SHEETS BAĞLANTISI (SECRETS) ---
+# --- GOOGLE SHEETS BAĞLANTISI ---
 @st.cache_data(ttl=60)
 def load_data():
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
         
-        # Streamlit Cloud üzerindeki Secrets'tan anahtarı al
         if "gcp_service_account" in st.secrets:
             creds_dict = st.secrets["gcp_service_account"]
             creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
         else:
-            return pd.DataFrame() # Lokal dosya yoksa boş dön
+            return pd.DataFrame() 
             
         client = gspread.authorize(creds)
         sheet = client.open("Crazytown_Journal").sheet1
@@ -58,9 +68,7 @@ def load_data():
             
         df = pd.DataFrame(data)
         
-        # Sayısal Dönüşümler
         if 'R_Kazanc' in df.columns:
-            # Virgül varsa noktaya çevir (Excel formatı için)
             df['R_Kazanc'] = df['R_Kazanc'].astype(str).str.replace(',', '.')
             df['R_Kazanc'] = pd.to_numeric(df['R_Kazanc'], errors='coerce').fillna(0)
             
@@ -78,7 +86,6 @@ st.markdown('<p class="slogan">"Don\'t chase the market, let the market come to 
 if df.empty:
     st.info("📭 Veri bekleniyor... (Bağlantı kuruluyor veya tablo boş)")
 else:
-    # --- KPI ---
     total_trades = len(df)
     win_count = len(df[df['Sonuç'] == 'WIN'])
     win_rate = (win_count / total_trades) * 100 if total_trades > 0 else 0
@@ -95,7 +102,6 @@ else:
 
     st.markdown("---")
 
-    # --- GRAFİKLER ---
     col_left, col_right = st.columns([2, 1])
 
     with col_left:
@@ -112,7 +118,6 @@ else:
                          template="plotly_dark")
         st.plotly_chart(fig_pie, use_container_width=True)
 
-    # --- TABLO ---
     st.subheader("📝 Son İşlemler Listesi")
     
     def highlight_win_loss(val):
@@ -125,6 +130,5 @@ else:
         hide_index=True 
     )
 
-# --- ALT BİLGİ ---
 st.markdown("---")
 st.caption("⚠️ **Yasal Uyarı:** *Burada paylaşılan veriler kişisel işlem günlüğüdür ve eğitim amaçlıdır. Kesinlikle yatırım tavsiyesi değildir (YTD).*")
