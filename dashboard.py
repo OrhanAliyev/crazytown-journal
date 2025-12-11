@@ -13,32 +13,42 @@ st.set_page_config(
     page_title="Crazytown Capital | Performance Dashboard",
     page_icon="📈",
     layout="wide",
-    initial_sidebar_state="expanded" # Menü varsayılan olarak açık başlar
+    initial_sidebar_state="expanded"
 )
 
-# --- CSS (DÜZELTİLMİŞ) ---
+# --- 🔒 GİZLİLİK VE MAKYAJ (GÜÇLENDİRİLMİŞ CSS) ---
 st.markdown("""
     <style>
-        /* Genel Arka Plan */
+        /* 1. SAĞ ÜSTTEKİ GITHUB VE MENÜYÜ YOK ET */
+        #MainMenu {visibility: hidden; display: none;}
+        header {visibility: hidden; display: none;}
+        footer {visibility: hidden; display: none;}
+        
+        /* Streamlit'in kendi toolbar'ını ve deploy butonunu gizle */
+        [data-testid="stToolbar"] {visibility: hidden; display: none;}
+        [data-testid="stHeader"] {visibility: hidden; display: none;}
+        [data-testid="stStatusWidget"] {visibility: hidden; display: none;}
+        .stDeployButton {display:none; visibility: hidden;}
+        
+        /* Sayfanın üstündeki boşluğu kapat (Header gidince boşluk kalmasın) */
+        .block-container {
+            padding-top: 0rem;
+        }
+
+        /* 2. GENEL TASARIM */
         .stApp {
             background-color: #0E1117;
             color: #E0E0E0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        /* Gizlilik Ayarları (MENÜ BUTONU GERİ GELDİ) */
-        #MainMenu {visibility: hidden;} /* Sağ üstteki 3 noktayı gizle */
-        footer {visibility: hidden;}    /* "Made with Streamlit" yazısını gizle */
-        .stDeployButton {display:none;} /* Deploy butonunu gizle */
-        
-        /* Başlıklar */
         h1, h2, h3 {
             font-weight: 600;
             color: #FFFFFF;
             letter-spacing: 0.5px;
         }
         
-        /* KPI Kutuları */
+        /* KPI KUTULARI */
         .metric-card {
             background: #161920;
             border-left: 4px solid #00F2C3;
@@ -60,7 +70,7 @@ st.markdown("""
             margin-top: 5px;
         }
 
-        /* Fiyatlandırma Kartları */
+        /* FİYATLANDIRMA KARTLARI */
         .pricing-card {
             background: #161920;
             border: 1px solid #333;
@@ -98,7 +108,7 @@ st.markdown("""
             line-height: 1.8;
         }
         
-        /* Buton Stili */
+        /* BUTONLAR */
         .cta-button {
             display: block;
             width: 100%;
@@ -125,7 +135,7 @@ st.markdown("""
             background: #00D2A8;
         }
 
-        /* Tablo Stili */
+        /* TABLO */
         .stDataFrame {
             border: 1px solid #333;
         }
@@ -163,7 +173,7 @@ def load_data():
 df = load_data()
 
 # ==========================================
-# 3. YAN MENÜ (SIDEBAR)
+# 3. YAN MENÜ
 # ==========================================
 st.sidebar.markdown("### CRAZYTOWN CAPITAL")
 st.sidebar.markdown("---")
@@ -183,21 +193,19 @@ if page == "Performance Dashboard" and not df.empty:
 # SAYFA 1: DASHBOARD
 # ==========================================
 if page == "Performance Dashboard":
-    
     st.markdown("# LIVE PERFORMANCE MONITOR")
     st.markdown('<p style="color:#888; margin-top:-15px;">Real-time trading data powered by Crazytown Algorithm.</p>', unsafe_allow_html=True)
-    
     st.markdown("---")
 
     if df.empty:
         st.warning("No data available. Establishing connection...")
     else:
+        # KPI
         total_trades = len(df)
         win_trades = len(df[df['Sonuç'] == 'WIN'])
         loss_trades = len(df[df['Sonuç'] == 'LOSS'])
         win_rate = (win_trades / total_trades * 100) if total_trades > 0 else 0
         net_r = df['R_Kazanc'].sum()
-        
         gross_profit = df[df['R_Kazanc'] > 0]['R_Kazanc'].sum()
         gross_loss = abs(df[df['R_Kazanc'] < 0]['R_Kazanc'].sum())
         profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else 99.9
@@ -211,66 +219,34 @@ if page == "Performance Dashboard":
         st.write("")
         st.write("")
 
+        # GRAFİKLER
         g1, g2 = st.columns([2, 1])
 
         with g1:
             st.markdown("### Equity Curve (R-Multiple)")
             df['Kümülatif'] = df['R_Kazanc'].cumsum()
-            
             fig = go.Figure()
             fig.add_trace(go.Scatter(
                 x=df['Tarih'], y=df['Kümülatif'],
-                mode='lines',
-                fill='tozeroy',
+                mode='lines', fill='tozeroy',
                 line=dict(color='#00F2C3', width=2),
                 fillcolor='rgba(0, 242, 195, 0.1)'
             ))
-            fig.update_layout(
-                template="plotly_dark",
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                margin=dict(l=0, r=0, t=10, b=0),
-                height=350,
-                xaxis=dict(showgrid=False),
-                yaxis=dict(showgrid=True, gridcolor='#333')
-            )
+            fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=10, b=0), height=350, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor='#333'))
             st.plotly_chart(fig, use_container_width=True)
 
         with g2:
             st.markdown("### Performance Distribution")
-            fig_pie = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.7,
-                               color='Sonuç', color_discrete_map={'WIN':'#00F2C3', 'LOSS':'#FF4B4B'})
-            
-            fig_pie.update_layout(
-                template="plotly_dark",
-                paper_bgcolor='rgba(0,0,0,0)',
-                showlegend=True,
-                legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
-                margin=dict(l=20, r=20, t=20, b=20),
-                height=350,
-                annotations=[dict(text=f"{win_rate:.0f}%", x=0.5, y=0.5, font_size=28, showarrow=False, font_color="white", font_family="Arial Black")]
-            )
+            fig_pie = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.7, color='Sonuç', color_discrete_map={'WIN':'#00F2C3', 'LOSS':'#FF4B4B'})
+            fig_pie.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5), margin=dict(l=20, r=20, t=20, b=20), height=350, annotations=[dict(text=f"{win_rate:.0f}%", x=0.5, y=0.5, font_size=28, showarrow=False, font_color="white", font_family="Arial Black")])
             st.plotly_chart(fig_pie, use_container_width=True)
 
         st.markdown("### Trade History")
-        
         def style_dataframe(row):
             color = '#00F2C3' if row['Sonuç'] == 'WIN' else '#FF4B4B'
             return [f'color: {color}; font-weight: 600' if col == 'Sonuç' else 'color: #DDD' for col in row.index]
 
-        st.dataframe(
-            df.style.apply(style_dataframe, axis=1),
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "Tarih": "Date",
-                "Coin": "Asset",
-                "Yön": "Direction",
-                "Giriş": st.column_config.NumberColumn("Entry", format="$%.4f"),
-                "R_Kazanc": st.column_config.NumberColumn("Return (R)", format="%.2f R"),
-                "Sonuç": "Result"
-            }
-        )
+        st.dataframe(df.style.apply(style_dataframe, axis=1), use_container_width=True, hide_index=True, column_config={"Tarih": "Date", "Coin": "Asset", "Yön": "Direction", "Giriş": st.column_config.NumberColumn("Entry", format="$%.4f"), "R_Kazanc": st.column_config.NumberColumn("Return (R)", format="%.2f R"), "Sonuç": "Result"})
 
 # ==========================================
 # SAYFA 2: VIP ÜYELİK
@@ -278,86 +254,25 @@ if page == "Performance Dashboard":
 elif page == "Membership Access":
     st.markdown("<h1 style='text-align: center;'>MEMBERSHIP PLANS</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #888;'>Select a plan to access real-time institutional signals.</p>", unsafe_allow_html=True)
-    
-    st.write("")
-    st.write("")
+    st.write(""); st.write("")
 
     col1, col2, col3 = st.columns(3)
-
     with col1:
-        st.markdown("""
-        <div class="pricing-card">
-            <div class="pricing-header">STARTER</div>
-            <div class="price-tag">$30</div>
-            <div class="price-period">Monthly Billed</div>
-            <div class="feature-list">
-                ✓ Telegram Signal Access<br>
-                ✓ 15m Elite Setups<br>
-                ✓ FVG & Fib Targets<br>
-                <span style="color:#555">✕ USDT.D Analysis</span>
-            </div>
-            <a href="https://t.me/Orhan1909" target="_blank" class="cta-button">GET STARTED</a>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown("""<div class="pricing-card"><div class="pricing-header">STARTER</div><div class="price-tag">$30</div><div class="price-period">Monthly Billed</div><div class="feature-list">✓ Telegram Signal Access<br>✓ 15m Elite Setups<br>✓ FVG & Fib Targets<br><span style="color:#555">✕ USDT.D Analysis</span></div><a href="https://t.me/Orhan1909" target="_blank" class="cta-button">GET STARTED</a></div>""", unsafe_allow_html=True)
     with col2:
-        st.markdown("""
-        <div class="pricing-card featured">
-            <div class="pricing-header">PROFESSIONAL</div>
-            <div class="price-tag">$75</div>
-            <div class="price-period">Quarterly Billed</div>
-            <div class="feature-list">
-                ✓ <b>All Starter Features</b><br>
-                ✓ Real-time L/S Signals<br>
-                ✓ Market Direction (USDT.D)<br>
-                ✓ Priority Support
-            </div>
-            <a href="https://t.me/Orhan1909" target="_blank" class="cta-button cta-button-primary">BECOME A PRO</a>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown("""<div class="pricing-card featured"><div class="pricing-header">PROFESSIONAL</div><div class="price-tag">$75</div><div class="price-period">Quarterly Billed</div><div class="feature-list">✓ <b>All Starter Features</b><br>✓ Real-time L/S Signals<br>✓ Market Direction (USDT.D)<br>✓ Priority Support</div><a href="https://t.me/Orhan1909" target="_blank" class="cta-button cta-button-primary">BECOME A PRO</a></div>""", unsafe_allow_html=True)
     with col3:
-        st.markdown("""
-        <div class="pricing-card">
-            <div class="pricing-header">LIFETIME</div>
-            <div class="price-tag">$250</div>
-            <div class="price-period">One-time Payment</div>
-            <div class="feature-list">
-                ✓ <b>Lifetime Access</b><br>
-                ✓ All Future Updates<br>
-                ✓ Bot Setup Assistance<br>
-                ✓ Private Group Access
-            </div>
-            <a href="https://t.me/Orhan1909" target="_blank" class="cta-button">CONTACT SALES</a>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="pricing-card"><div class="pricing-header">LIFETIME</div><div class="price-tag">$250</div><div class="price-period">One-time Payment</div><div class="feature-list">✓ <b>Lifetime Access</b><br>✓ All Future Updates<br>✓ Bot Setup Assistance<br>✓ Private Group Access</div><a href="https://t.me/Orhan1909" target="_blank" class="cta-button">CONTACT SALES</a></div>""", unsafe_allow_html=True)
 
 # ==========================================
 # SAYFA 3: İLETİŞİM
 # ==========================================
 elif page == "Contact Support":
-    st.markdown("## CONTACT US")
-    st.markdown("---")
-    
+    st.markdown("## CONTACT US"); st.markdown("---")
     c1, c2 = st.columns(2)
-    
-    with c1:
-        st.markdown("""
-        ### Telegram Support
-        For instant assistance and membership inquiries.
-        
-        <a href="https://t.me/Orhan1909" class="cta-button">OPEN TELEGRAM</a>
-        """, unsafe_allow_html=True)
-    
-    with c2:
-        st.markdown("""
-        ### Email Inquiries
-        For business partnerships and detailed questions.
-        
-        **orhanaliyev02@gmail.com**
-        """)
+    with c1: st.markdown("""### Telegram Support\nFor instant assistance and membership inquiries.\n<a href="https://t.me/Orhan1909" class="cta-button">OPEN TELEGRAM</a>""", unsafe_allow_html=True)
+    with c2: st.markdown("""### Email Inquiries\nFor business partnerships and detailed questions.\n**orhanaliyev02@gmail.com**""")
 
-# Alt Bilgi
 st.sidebar.markdown("---")
 st.sidebar.caption("© 2025 Crazytown Capital. Proprietary Trading Systems.")
 
