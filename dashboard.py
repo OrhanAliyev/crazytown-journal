@@ -5,39 +5,62 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 # --- SAYFA YAPILANDIRMASI ---
-st.set_page_config(page_title="Crazytown Public Journal", page_icon="🎯", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Crazytown Public Journal",
+    page_icon="🎯",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
 # --- CSS STİL ---
 st.markdown("""
     <style>
-    .main-title {font-size: 3rem; font-weight: 800; color: #00F2C3; text-align: center; margin-bottom: 0px;}
-    .slogan {font-size: 1.2rem; color: #cfd8dc; text-align: center; font-style: italic; margin-bottom: 30px;}
-    div[data-testid="stMetricValue"] {font-size: 2rem; color: #00F2C3;}
+    .main-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #00F2C3;
+        text-align: center;
+        margin-bottom: 0px;
+    }
+    .slogan {
+        font-size: 1.2rem;
+        color: #cfd8dc;
+        text-align: center;
+        font-style: italic;
+        margin-bottom: 30px;
+    }
+    div[data-testid="stMetricValue"] {
+        font-size: 2rem;
+        color: #00F2C3;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- GOOGLE SHEETS BAĞLANTISI (AKILLI MOD) ---
+# --- GOOGLE SHEETS BAĞLANTISI (SECRETS) ---
 @st.cache_data(ttl=60)
 def load_data():
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
         
-        # 1. YÖNTEM: Önce Bulut Kasasına (Secrets) Bak
+        # Streamlit Cloud üzerindeki Secrets'tan anahtarı al
         if "gcp_service_account" in st.secrets:
             creds_dict = st.secrets["gcp_service_account"]
             creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-        # 2. YÖNTEM: Yoksa Bilgisayardaki Dosyaya Bak (Local)
         else:
-            creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+            return pd.DataFrame() # Lokal dosya yoksa boş dön
             
         client = gspread.authorize(creds)
         sheet = client.open("Crazytown_Journal").sheet1
         data = sheet.get_all_records()
         
-        if not data: return pd.DataFrame()
+        if not data:
+            return pd.DataFrame()
+            
         df = pd.DataFrame(data)
         
+        # Sayısal Dönüşümler
         if 'R_Kazanc' in df.columns:
+            # Virgül varsa noktaya çevir (Excel formatı için)
             df['R_Kazanc'] = df['R_Kazanc'].astype(str).str.replace(',', '.')
             df['R_Kazanc'] = pd.to_numeric(df['R_Kazanc'], errors='coerce').fillna(0)
             
@@ -53,8 +76,9 @@ st.markdown('<p class="main-title">🎯 CRAZYTOWN TRADER</p>', unsafe_allow_html
 st.markdown('<p class="slogan">"Don\'t chase the market, let the market come to you. Sniper Mode: ON."</p>', unsafe_allow_html=True)
 
 if df.empty:
-    st.info("📭 Veri bekleniyor... (Bağlantı kuruluyor)")
+    st.info("📭 Veri bekleniyor... (Bağlantı kuruluyor veya tablo boş)")
 else:
+    # --- KPI ---
     total_trades = len(df)
     win_count = len(df[df['Sonuç'] == 'WIN'])
     win_rate = (win_count / total_trades) * 100 if total_trades > 0 else 0
@@ -65,10 +89,13 @@ else:
     c1.metric("Toplam İşlem", f"{total_trades}", delta="Adet")
     c2.metric("Win Rate (Başarı)", f"%{win_rate:.1f}", delta_color="normal")
     c3.metric("Net Kazanç (R)", f"{total_r:.2f}R", delta="Kasa Büyümesi")
+    
     val = avg_r if pd.notna(avg_r) else 0
     c4.metric("Ortalama Kazanç", f"{val:.2f}R")
 
     st.markdown("---")
+
+    # --- GRAFİKLER ---
     col_left, col_right = st.columns([2, 1])
 
     with col_left:
@@ -80,14 +107,24 @@ else:
 
     with col_right:
         st.subheader("🎯 Win / Loss")
-        fig_pie = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.5, color='Sonuç', color_discrete_map={'WIN':'#00cc96', 'LOSS':'#ef553b'}, template="plotly_dark")
+        fig_pie = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.5, 
+                         color='Sonuç', color_discrete_map={'WIN':'#00cc96', 'LOSS':'#ef553b'}, 
+                         template="plotly_dark")
         st.plotly_chart(fig_pie, use_container_width=True)
 
+    # --- TABLO ---
     st.subheader("📝 Son İşlemler Listesi")
+    
     def highlight_win_loss(val):
         color = '#00F2C3' if val == 'WIN' else '#FF4B4B'
         return f'color: {color}; font-weight: bold'
-    st.dataframe(df.style.applymap(highlight_win_loss, subset=['Sonuç']), use_container_width=True, hide_index=True)
 
+    st.dataframe(
+        df.style.applymap(highlight_win_loss, subset=['Sonuç']),
+        use_container_width=True,
+        hide_index=True 
+    )
+
+# --- ALT BİLGİ ---
 st.markdown("---")
-st.caption("⚠️ **Yasal Uyarı:** *Burada paylaşılan veriler kişisel işlem günlüğüdür ve eğitim amaçlıdır. Kesinlikle yatırım tavsiyesi değildir (YTD).*")yatırım tavsiyesi değildir (YTD).*")
+st.caption("⚠️ **Yasal Uyarı:** *Burada paylaşılan veriler kişisel işlem günlüğüdür ve eğitim amaçlıdır. Kesinlikle yatırım tavsiyesi değildir (YTD).*")
