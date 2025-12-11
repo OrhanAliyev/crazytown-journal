@@ -10,76 +10,121 @@ from datetime import datetime
 # 1. SAYFA VE STİL YAPILANDIRMASI
 # ==========================================
 st.set_page_config(
-    page_title="Crazytown Public Journal",
-    page_icon="🎯",
+    page_title="Crazytown Capital | Performance Dashboard",
+    page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- ULTRA PRO CSS (GÖRSEL MAKYAJ) ---
+# --- CORPORATE CSS (KURUMSAL TASARIM) ---
 st.markdown("""
     <style>
+        /* Genel Arka Plan ve Fontlar */
         .stApp {
             background-color: #0E1117;
-            color: #FAFAFA;
+            color: #E0E0E0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
+        /* Başlıklar */
         h1, h2, h3 {
-            font-family: 'Helvetica Neue', sans-serif;
-            font-weight: 800;
+            font-weight: 600;
             color: #FFFFFF;
+            letter-spacing: 0.5px;
         }
+        
+        /* KPI Kutuları (Minimalist) */
         .metric-card {
-            background: #191c24;
-            border: 1px solid #333;
-            border-radius: 12px;
+            background: #161920;
+            border-left: 4px solid #00F2C3;
+            border-radius: 4px;
             padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
-        }
-        .metric-card:hover {
-            transform: translateY(-5px);
-            border-color: #00F2C3;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         .metric-value {
-            font-size: 2.2rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            color: #00F2C3;
+            color: #FFFFFF;
         }
         .metric-label {
-            font-size: 0.9rem;
-            color: #cfd8dc;
+            font-size: 0.85rem;
+            color: #A0A0A0;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            font-weight: 600;
+            margin-top: 5px;
         }
+
+        /* Fiyatlandırma Kartları (Premium) */
         .pricing-card {
-            background: linear-gradient(145deg, #1e232e, #161920);
-            border-radius: 16px;
-            padding: 30px;
-            margin: 10px;
+            background: #161920;
             border: 1px solid #333;
+            border-radius: 8px;
+            padding: 40px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
+            transition: all 0.3s ease;
         }
-        .pricing-card.featured {
-            border: 2px solid #00F2C3;
-            box-shadow: 0 0 20px rgba(0, 242, 195, 0.2);
+        .pricing-card:hover {
+            border-color: #00F2C3;
+            transform: translateY(-5px);
+        }
+        .pricing-header {
+            font-size: 1.2rem;
+            color: #00F2C3;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
         }
         .price-tag {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #fff;
-            margin: 15px 0;
+            font-size: 3rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin: 20px 0;
         }
         .price-period {
             font-size: 1rem;
             color: #888;
         }
+        .feature-list {
+            text-align: left;
+            margin: 30px 0;
+            color: #CCC;
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+        
+        /* Buton Stili (Kurumsal) */
+        .cta-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: #00F2C3;
+            border: 1px solid #00F2C3;
+            border-radius: 4px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .cta-button:hover {
+            background: #00F2C3;
+            color: #0E1117;
+        }
+        .cta-button-primary {
+            background: #00F2C3;
+            color: #0E1117;
+            border: none;
+        }
+        .cta-button-primary:hover {
+            background: #00D2A8;
+        }
+
+        /* Tablo Stili */
         .stDataFrame {
             border: 1px solid #333;
-            border-radius: 10px;
         }
+        
         /* Gizlilik */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
@@ -119,45 +164,38 @@ def load_data():
 df = load_data()
 
 # ==========================================
-# 3. YAN MENÜ VE FİLTRELER
+# 3. YAN MENÜ (SIDEBAR)
 # ==========================================
-st.sidebar.markdown("## ⚡ KONTROL PANELİ")
-page = st.sidebar.radio("Navigasyon", ["📊 Dashboard (Canlı)", "💎 VIP Club", "📞 İletişim"], index=0)
+st.sidebar.markdown("### CRAZYTOWN CAPITAL")
+st.sidebar.markdown("---")
+page = st.sidebar.radio("MENU", ["Performance Dashboard", "Membership Access", "Contact Support"], index=0)
 
 st.sidebar.markdown("---")
 
-if page == "📊 Dashboard (Canlı)" and not df.empty:
-    st.sidebar.markdown("### 🔍 Filtreler")
-    coin_list = ["Tümü"] + list(df['Coin'].unique())
-    selected_coin = st.sidebar.selectbox("Coin Seç:", coin_list)
+if page == "Performance Dashboard" and not df.empty:
+    st.sidebar.markdown("#### FILTERS")
+    coin_list = ["All Assets"] + list(df['Coin'].unique())
+    selected_coin = st.sidebar.selectbox("Asset:", coin_list)
     
-    setup_list = ["Tümü"] + list(df['Setup'].unique()) if 'Setup' in df.columns else ["Tümü"]
-    selected_setup = st.sidebar.selectbox("Setup Tipi:", setup_list)
-    
-    if selected_coin != "Tümü":
+    if selected_coin != "All Assets":
         df = df[df['Coin'] == selected_coin]
-    if selected_setup != "Tümü":
-        df = df[df['Setup'] == selected_setup]
 
 # ==========================================
 # SAYFA 1: DASHBOARD
 # ==========================================
-if page == "📊 Dashboard (Canlı)":
+if page == "Performance Dashboard":
     
-    col_logo, col_text = st.columns([1, 5])
-    with col_text:
-        st.markdown("# 🎯 CRAZYTOWN TRADER")
-        st.markdown('#### *"Don\'t chase the market, let the market come to you. Sniper Mode: ON."*')
+    st.markdown("# LIVE PERFORMANCE MONITOR")
+    st.markdown('<p style="color:#888; margin-top:-15px;">Real-time trading data powered by Crazytown Algorithm.</p>', unsafe_allow_html=True)
     
     st.markdown("---")
 
     if df.empty:
-        st.warning("⚠️ Veri bekleniyor. Lütfen veritabanı bağlantısını kontrol edin.")
+        st.warning("No data available. Establishing connection...")
     else:
-        # KPI
+        # KPI HESAPLAMA
         total_trades = len(df)
         win_trades = len(df[df['Sonuç'] == 'WIN'])
-        loss_trades = len(df[df['Sonuç'] == 'LOSS'])
         win_rate = (win_trades / total_trades * 100) if total_trades > 0 else 0
         net_r = df['R_Kazanc'].sum()
         
@@ -165,80 +203,85 @@ if page == "📊 Dashboard (Canlı)":
         gross_loss = abs(df[df['R_Kazanc'] < 0]['R_Kazanc'].sum())
         profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else 99.9
 
+        # KPI KARTLARI
         c1, c2, c3, c4 = st.columns(4)
-        c1.markdown(f'<div class="metric-card"><div class="metric-value">{total_trades}</div><div class="metric-label">TOPLAM İŞLEM</div></div>', unsafe_allow_html=True)
-        c2.markdown(f'<div class="metric-card"><div class="metric-value">%{win_rate:.1f}</div><div class="metric-label">BAŞARI ORANI</div></div>', unsafe_allow_html=True)
-        c3.markdown(f'<div class="metric-card"><div class="metric-value" style="color: {"#00F2C3" if net_r > 0 else "#FF4B4B"}">{net_r:.2f}R</div><div class="metric-label">NET KAZANÇ</div></div>', unsafe_allow_html=True)
+        c1.markdown(f'<div class="metric-card"><div class="metric-value">{total_trades}</div><div class="metric-label">TOTAL TRADES</div></div>', unsafe_allow_html=True)
+        c2.markdown(f'<div class="metric-card"><div class="metric-value">{win_rate:.1f}%</div><div class="metric-label">WIN RATE</div></div>', unsafe_allow_html=True)
+        c3.markdown(f'<div class="metric-card"><div class="metric-value" style="color: {"#00F2C3" if net_r > 0 else "#FF4B4B"}">{net_r:.2f}R</div><div class="metric-label">NET RETURN</div></div>', unsafe_allow_html=True)
         c4.markdown(f'<div class="metric-card"><div class="metric-value">{profit_factor:.2f}</div><div class="metric-label">PROFIT FACTOR</div></div>', unsafe_allow_html=True)
 
         st.write("")
         st.write("")
 
+        # GRAFİKLER
         g1, g2 = st.columns([2, 1])
 
         with g1:
-            st.subheader("📈 Kasa Büyümesi (R Eğrisi)")
+            st.markdown("### Equity Curve (R-Multiple)")
             df['Kümülatif'] = df['R_Kazanc'].cumsum()
             
             fig = go.Figure()
             fig.add_trace(go.Scatter(
                 x=df['Tarih'], y=df['Kümülatif'],
-                mode='lines+markers',
+                mode='lines',
                 fill='tozeroy',
-                line=dict(color='#00F2C3', width=3),
-                marker=dict(size=8, color='#131722', line=dict(color='#00F2C3', width=2))
+                line=dict(color='#00F2C3', width=2),
+                fillcolor='rgba(0, 242, 195, 0.1)'
             ))
             fig.update_layout(
                 template="plotly_dark",
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
-                margin=dict(l=20, r=20, t=20, b=20),
-                height=350
+                margin=dict(l=0, r=0, t=10, b=0),
+                height=350,
+                xaxis=dict(showgrid=False),
+                yaxis=dict(showgrid=True, gridcolor='#333')
             )
             st.plotly_chart(fig, use_container_width=True)
 
         with g2:
-            st.subheader("🎯 Performans Dağılımı")
-            # DÜZELTME BURADA YAPILDI: px.donut yerine px.pie
-            fig_pie = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.6,
+            st.markdown("### Performance Distribution")
+            fig_pie = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.7,
                                color='Sonuç', color_discrete_map={'WIN':'#00F2C3', 'LOSS':'#FF4B4B'})
             
             fig_pie.update_layout(
                 template="plotly_dark",
                 paper_bgcolor='rgba(0,0,0,0)',
-                showlegend=False,
-                annotations=[dict(text=f"%{win_rate:.0f}", x=0.5, y=0.5, font_size=24, showarrow=False, font_color="white")],
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
                 margin=dict(l=20, r=20, t=20, b=20),
-                height=350
+                height=350,
+                annotations=[dict(text=f"{win_rate:.0f}%", x=0.5, y=0.5, font_size=28, showarrow=False, font_color="white", font_family="Arial Black")]
             )
             st.plotly_chart(fig_pie, use_container_width=True)
 
-        st.subheader("📋 Son İşlem Detayları")
+        # TABLO
+        st.markdown("### Trade History")
         
         def style_dataframe(row):
             color = '#00F2C3' if row['Sonuç'] == 'WIN' else '#FF4B4B'
-            return [f'color: {color}; font-weight: bold' if col == 'Sonuç' else '' for col in row.index]
+            return [f'color: {color}; font-weight: 600' if col == 'Sonuç' else 'color: #DDD' for col in row.index]
 
         st.dataframe(
             df.style.apply(style_dataframe, axis=1),
             use_container_width=True,
             hide_index=True,
             column_config={
-                "Tarih": "📅 Tarih",
-                "Coin": "🪙 Sembol",
-                "Yön": "↕️ Yön",
-                "Giriş": st.column_config.NumberColumn("Giriş", format="$%.4f"),
-                "R_Kazanc": st.column_config.NumberColumn("Kazanılan R", format="%.2f R"),
-                "Sonuç": "Sonuç"
+                "Tarih": "Date",
+                "Coin": "Asset",
+                "Yön": "Direction",
+                "Giriş": st.column_config.NumberColumn("Entry", format="$%.4f"),
+                "R_Kazanc": st.column_config.NumberColumn("Return (R)", format="%.2f R"),
+                "Sonuç": "Result"
             }
         )
 
 # ==========================================
 # SAYFA 2: VIP ÜYELİK
 # ==========================================
-elif page == "💎 VIP Club":
-    st.markdown("<h1 style='text-align: center; color: #00F2C3;'>💎 CRAZYTOWN VIP CLUB</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 1.2rem;'>Analizle vakit kaybetme. Profesyonel sinyalleri cebine al.</p>", unsafe_allow_html=True)
+elif page == "Membership Access":
+    st.markdown("<h1 style='text-align: center;'>MEMBERSHIP PLANS</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #888;'>Select a plan to access real-time institutional signals.</p>", unsafe_allow_html=True)
     
     st.write("")
     st.write("")
@@ -248,79 +291,77 @@ elif page == "💎 VIP Club":
     with col1:
         st.markdown("""
         <div class="pricing-card">
-            <h3 style="color:#cfd8dc">BAŞLANGIÇ</h3>
+            <div class="pricing-header">STARTER</div>
             <div class="price-tag">$30</div>
-            <div class="price-period">Aylık</div>
-            <hr style="border-color: #333;">
-            <p>✅ Telegram Sinyal Kanalı</p>
-            <p>✅ 15dk Elite Setup'lar</p>
-            <p>✅ FVG & Fib Hedefleri</p>
-            <p style="color:#666">❌ USDT.D Analizi</p>
-            <br>
-            <a href="https://t.me/Orhan1909" target="_blank" style="text-decoration: none;">
-                <div style="background:#333; color:white; padding:10px; border-radius:5px; font-weight:bold;">SEÇ & İLETİŞİME GEÇ</div>
-            </a>
+            <div class="price-period">Monthly Billed</div>
+            <div class="feature-list">
+                ✓ Telegram Signal Access<br>
+                ✓ 15m Elite Setups<br>
+                ✓ FVG & Fib Targets<br>
+                <span style="color:#555">✕ USDT.D Analysis</span>
+            </div>
+            <a href="https://t.me/Orhan1909" target="_blank" class="cta-button">GET STARTED</a>
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
         st.markdown("""
         <div class="pricing-card featured">
-            <div style="position:absolute; top:0; right:0; background:#00F2C3; color:black; padding:5px 15px; font-weight:bold; font-size:0.8rem; border-bottom-left-radius:10px;">POPÜLER</div>
-            <h3 style="color:#00F2C3">PRO TRADER</h3>
+            <div class="pricing-header">PROFESSIONAL</div>
             <div class="price-tag">$75</div>
-            <div class="price-period">3 Aylık</div>
-            <hr style="border-color: #333;">
-            <p>✅ <b>HER ŞEY DAHİL</b></p>
-            <p>✅ Anlık Sinyaller (L/S)</p>
-            <p>✅ USDT.D Piyasa Yönü</p>
-            <p>✅ Özel Destek Hattı</p>
-            <br>
-            <a href="https://t.me/Orhan1909" target="_blank" style="text-decoration: none;">
-                <div style="background:#00F2C3; color:black; padding:10px; border-radius:5px; font-weight:bold;">🔥 HEMEN KATIL</div>
-            </a>
+            <div class="price-period">Quarterly Billed</div>
+            <div class="feature-list">
+                ✓ <b>All Starter Features</b><br>
+                ✓ Real-time L/S Signals<br>
+                ✓ Market Direction (USDT.D)<br>
+                ✓ Priority Support
+            </div>
+            <a href="https://t.me/Orhan1909" target="_blank" class="cta-button cta-button-primary">BECOME A PRO</a>
         </div>
         """, unsafe_allow_html=True)
 
     with col3:
         st.markdown("""
         <div class="pricing-card">
-            <h3 style="color:#cfd8dc">LIFETIME</h3>
+            <div class="pricing-header">LIFETIME</div>
             <div class="price-tag">$250</div>
-            <div class="price-period">Tek Seferlik</div>
-            <hr style="border-color: #333;">
-            <p>✅ <b>ÖMÜR BOYU ERİŞİM</b></p>
-            <p>✅ Gelecek Tüm Güncellemeler</p>
-            <p>✅ Bot Kurulum Desteği</p>
-            <p>✅ VIP Gruba Doğrudan Giriş</p>
-            <br>
-            <a href="https://t.me/Orhan1909" target="_blank" style="text-decoration: none;">
-                <div style="background:#333; color:white; padding:10px; border-radius:5px; font-weight:bold;">İLETİŞİME GEÇ</div>
-            </a>
+            <div class="price-period">One-time Payment</div>
+            <div class="feature-list">
+                ✓ <b>Lifetime Access</b><br>
+                ✓ All Future Updates<br>
+                ✓ Bot Setup Assistance<br>
+                ✓ Private Group Access
+            </div>
+            <a href="https://t.me/Orhan1909" target="_blank" class="cta-button">CONTACT SALES</a>
         </div>
         """, unsafe_allow_html=True)
 
 # ==========================================
 # SAYFA 3: İLETİŞİM
 # ==========================================
-elif page == "📞 İletişim":
-    st.header("📞 Bizimle İletişime Geçin")
-    st.info("Aklına takılan bir soru mu var? Ödeme yöntemleri hakkında bilgi mi almak istiyorsun?")
+elif page == "Contact Support":
+    st.markdown("## CONTACT US")
+    st.markdown("---")
     
     c1, c2 = st.columns(2)
+    
     with c1:
         st.markdown("""
-        ### 📨 Telegram Destek
-        En hızlı dönüş için Telegram'dan yazabilirsin.
-        **👉 [@Orhan1909](https://t.me/Orhan1909)**
-        """)
+        ### Telegram Support
+        For instant assistance and membership inquiries.
+        
+        <a href="https://t.me/Orhan1909" class="cta-button">OPEN TELEGRAM</a>
+        """, unsafe_allow_html=True)
+    
     with c2:
         st.markdown("""
-        ### 📧 E-Posta
-        Kurumsal veya detaylı soruların için:
-        **👉 orhanaliyev02@gmail.com**
+        ### Email Inquiries
+        For business partnerships and detailed questions.
+        
+        **orhanaliyev02@gmail.com**
         """)
 
 # Alt Bilgi
 st.sidebar.markdown("---")
-st.sidebar.caption("© 2025 Crazytown Trader. All rights reserved.")
+st.sidebar.caption("© 2025 Crazytown Capital. Proprietary Trading Systems.")
+
