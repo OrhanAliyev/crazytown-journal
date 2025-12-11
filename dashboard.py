@@ -16,79 +16,58 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- NÜKLEER GİZLİLİK CSS (EN GÜÇLÜ SÜRÜM) ---
+# --- NÜKLEER GİZLİLİK CSS (V108 - SAĞ ALT İKON GİDERİCİ) ---
 st.markdown("""
     <style>
-        /* 1. Ana Menü ve Header Gizleme */
+        /* 1. SAĞ ALTTAKİ PROFİL İKONUNU KESİN OLARAK YOK ET */
+        div[class^="viewerBadge_container"], 
+        .viewerBadge_container__1QSob {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            width: 0 !important;
+            pointer-events: none !important;
+        }
+
+        /* 2. Diğer Gizlilik Ayarları (Header, Footer, Toolbar) */
         #MainMenu {visibility: hidden; display: none !important;}
         header {visibility: hidden; display: none !important;}
         [data-testid="stHeader"] {display: none !important;}
-        
-        /* 2. Alt Bilgi (Footer) ve 'Created by' Gizleme */
         footer {visibility: hidden; display: none !important;}
         .stFooter {display: none !important;}
-        
-        /* 3. 'Manage App' Butonunu Gizleme */
-        .viewerBadge_container__1QSob {display: none !important;}
         .stApp > header {display: none !important;}
-        
-        /* 4. Toolbar ve Deploy Butonları */
         [data-testid="stToolbar"] {display: none !important;}
         .stDeployButton {display:none !important;}
         
-        /* 5. Sayfa Üst Boşluğunu Kapat */
+        /* 3. Sayfa Üst Boşluğunu Kapat */
         .block-container {
             padding-top: 0rem !important;
             padding-bottom: 0rem !important;
         }
 
-        /* 6. GENEL TASARIM */
+        /* 4. GENEL TASARIM */
         .stApp {
             background-color: #0E1117;
             color: #E0E0E0;
             font-family: 'Segoe UI', sans-serif;
         }
         
-        /* Geriye kalan tasarım kodları... */
-        .metric-card {
-            background: #161920;
-            border-left: 4px solid #00F2C3;
-            border-radius: 4px;
-            padding: 20px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            text-align: center;
-        }
+        /* KPI, Kartlar ve Tablo Tasarımı (Aynı kalıyor) */
+        .metric-card { background: #161920; border-left: 4px solid #00F2C3; border-radius: 4px; padding: 20px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); text-align: center; }
         .metric-value { font-size: 1.8rem; font-weight: 700; color: #FFFFFF; }
         .metric-label { font-size: 0.85rem; color: #A0A0A0; font-weight: 600; margin-top: 5px; }
-
-        .pricing-card {
-            background: #161920;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            transition: transform 0.3s;
-        }
+        .pricing-card { background: #161920; border: 1px solid #333; border-radius: 8px; padding: 30px; text-align: center; transition: transform 0.3s; }
         .pricing-card:hover { transform: scale(1.02); border-color: #00F2C3; }
         .price-tag { font-size: 2.5rem; font-weight: 800; color: #fff; margin: 15px 0; }
         .pricing-header { font-size: 1.2rem; color: #00F2C3; font-weight: 700; margin-bottom: 10px; }
         .price-period { font-size: 1rem; color: #888; }
         .feature-list { text-align: left; margin: 20px 0; color: #CCC; font-size: 0.95rem; line-height: 1.8; }
-        
-        .cta-button {
-            display: block; width: 100%; padding: 12px;
-            background: transparent; color: #00F2C3;
-            border: 1px solid #00F2C3; border-radius: 4px;
-            text-align: center; text-decoration: none; font-weight: bold;
-        }
+        .cta-button { display: block; width: 100%; padding: 12px; background: transparent; color: #00F2C3; border: 1px solid #00F2C3; border-radius: 4px; text-align: center; text-decoration: none; font-weight: bold; }
         .cta-button:hover { background: #00F2C3; color: #0E1117; }
         .cta-button-primary { background: #00F2C3; color: #0E1117; border: none; }
         .cta-button-primary:hover { background: #00D2A8; }
-        
         .stDataFrame { border: 1px solid #333; }
-        
-        /* Yan menü gizli kalsın */
         [data-testid="stSidebar"] {display: none;}
     </style>
 """, unsafe_allow_html=True)
