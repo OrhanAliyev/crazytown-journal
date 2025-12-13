@@ -20,9 +20,10 @@ st.set_page_config(
 # --- NÜKLEER GİZLİLİK CSS (FULL STEALTH) ---
 st.markdown("""
     <style>
-        /* GİZLİLİK */
+        /* GİZLİLİK PROTOKOLÜ */
         div[class^="viewerBadge_container"], .viewerBadge_container__1QSob {display: none !important;}
         #MainMenu, header, footer, .stDeployButton, [data-testid="stToolbar"] {display: none !important;}
+        .stApp > header {display: none !important;}
         .block-container {padding-top: 0rem !important; padding-bottom: 2rem !important;}
 
         /* GENEL TASARIM */
@@ -45,7 +46,10 @@ st.markdown("""
         .plan-name {color: #66fcf1; font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 15px;}
         .plan-price {color: #fff; font-size: 2.5rem; font-weight: 700; margin-bottom: 30px;}
         
-        /* ÖZEL BANNER */
+        .testimonial-card {background-color: #15161a; border-left: 3px solid #66fcf1; padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 20px;}
+        .testimonial-text {font-style: italic; color: #e0e0e0; font-size: 0.95rem;}
+        .testimonial-author {margin-top: 10px; color: #66fcf1; font-weight: bold; font-size: 0.85rem;}
+
         .promo-banner {
             background: linear-gradient(90deg, #1f2833 0%, #0b0c10 100%);
             border: 1px solid #66fcf1; color: #fff; padding: 15px; border-radius: 8px;
@@ -115,7 +119,7 @@ with tab1:
     if df.empty:
         st.warning("System initializing...")
     else:
-        # KPI & GRAFİKLER (Mevcut Kodlar)
+        # KPI & GRAFİKLER
         total = len(df)
         win = len(df[df['Sonuç'] == 'WIN'])
         rate = (win / total * 100) if total > 0 else 0
@@ -142,41 +146,43 @@ with tab1:
             fig_pie.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', showlegend=False, margin=dict(l=20, r=20, t=10, b=20), height=300, annotations=[dict(text=f"{rate:.0f}%", x=0.5, y=0.5, font_size=24, showarrow=False, font_color="white")])
             st.plotly_chart(fig_pie, use_container_width=True)
 
-        # --- YENİ BÖLÜM: MARKET INTELLIGENCE ---
+        # --- MARKET INTELLIGENCE ---
         st.markdown("---")
         st.subheader("📡 MARKET INTELLIGENCE")
-        
         mi1, mi2 = st.columns(2)
-        
         with mi1:
             st.markdown("##### TECHNICAL GAUGE (BTC/USDT)")
-            # TradingView Technical Analysis Widget
             components.html("""
-            <div class="tradingview-widget-container">
-              <div class="tradingview-widget-container__widget"></div>
-              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
-              {
-              "interval": "4h", "width": "100%", "isTransparent": true, "height": "400",
-              "symbol": "BINANCE:BTCUSDT", "showIntervalTabs": true, "displayMode": "single", "locale": "en", "colorTheme": "dark"
-            }
-              </script>
-            </div>
+            <div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>{"interval": "4h", "width": "100%", "isTransparent": true, "height": "400", "symbol": "BINANCE:BTCUSDT", "showIntervalTabs": true, "displayMode": "single", "locale": "en", "colorTheme": "dark"}</script></div>
             """, height=400)
-            
         with mi2:
             st.markdown("##### ECONOMIC CALENDAR")
-            # TradingView Economic Calendar Widget
             components.html("""
-            <div class="tradingview-widget-container">
-              <div class="tradingview-widget-container__widget"></div>
-              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
-              {
-              "colorTheme": "dark", "isTransparent": true, "width": "100%", "height": "400", "locale": "en", "importanceFilter": "-1,0,1", "currencyFilter": "USD"
-            }
-              </script>
-            </div>
+            <div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>{"colorTheme": "dark", "isTransparent": true, "width": "100%", "height": "400", "locale": "en", "importanceFilter": "-1,0,1", "currencyFilter": "USD"}</script></div>
             """, height=400)
-            
+
+        # --- ROI CALCULATOR (GERİ GELDİ) ---
+        st.markdown("---")
+        st.subheader("🧮 ROI SIMULATOR")
+        st.markdown("Calculate potential earnings based on historical performance.")
+        roi_c1, roi_c2, roi_c3 = st.columns([1,1,2])
+        with roi_c1:
+            user_capital = st.number_input("Initial Capital ($)", min_value=100, value=1000, step=100)
+        with roi_c2:
+            user_risk = st.slider("Risk Per Trade (%)", 0.5, 5.0, 2.0, 0.1)
+        
+        potential_profit = user_capital * (user_risk / 100) * net_r_total
+        final_balance = user_capital + potential_profit
+        roi_percentage = (potential_profit / user_capital) * 100
+        
+        with roi_c3:
+            st.markdown(f"""
+            <div style="background:#1f2833; padding:15px; border-radius:8px; border:1px solid #66fcf1; text-align:center;">
+                <span style="color:#888; font-size:0.9rem;">PROJECTED BALANCE</span><br>
+                <span style="color:#fff; font-size:2.2rem; font-weight:bold;">${final_balance:,.2f}</span><br>
+                <span style="color:#66fcf1; font-weight:bold;">(+${potential_profit:,.2f} / +%{roi_percentage:.1f})</span>
+            </div>
+            """, unsafe_allow_html=True)
         st.markdown("---")
         
         # TABLO
@@ -191,69 +197,35 @@ with tab1:
 # ==========================================
 with tab2:
     st.write("")
+    st.markdown("""<div class="promo-banner">🔥 LIMITED TIME OFFER: Get the LIFETIME access before prices increase on Monday!</div>""", unsafe_allow_html=True)
     
-    # PROMO BANNER (ACİLİYET HİSSİ)
-    st.markdown("""
-    <div class="promo-banner">
-        🔥 LIMITED TIME OFFER: Get the LIFETIME access before prices increase on Monday!
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.write(""); st.write("")
+    # SOCIAL PROOF (GERİ GELDİ)
+    st.subheader("💬 TRADER FEEDBACK")
+    sp1, sp2, sp3 = st.columns(3)
+    with sp1: st.markdown("""<div class="testimonial-card"><div class="testimonial-text">"I've tried many signal groups, but the risk management here is top tier."</div><div class="testimonial-author">@Crypto*** (VIP Member)</div></div>""", unsafe_allow_html=True)
+    with sp2: st.markdown("""<div class="testimonial-card"><div class="testimonial-text">"The dashboard transparency sold me. ROI calculator was spot on."</div><div class="testimonial-author">@Alex*** (Pro Trader)</div></div>""", unsafe_allow_html=True)
+    with sp3: st.markdown("""<div class="testimonial-card"><div class="testimonial-text">"Started with Starter plan, upgraded to Lifetime. FVG setups are insane."</div><div class="testimonial-author">@Mehmet*** (VIP Member)</div></div>""", unsafe_allow_html=True)
+    st.write("")
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("""
-        <div class="pricing-card">
-            <div class="plan-name">STARTER</div>
-            <div class="plan-price">$30<span style="font-size:1rem;color:#888">/mo</span></div>
-            <br>
-            <div style="text-align:left; color:#ccc; line-height:2;">
-            ✓ Telegram Access<br>✓ 15m Elite Setups<br>✓ FVG & Fib Targets<br>✓ Support 24/7
-            </div>
-            <br><br>
-            <a href="https://t.me/Orhan1909" target="_blank" class="custom-btn custom-btn-outline">SELECT PLAN</a>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown("""<div class="pricing-card"><div class="plan-name">STARTER</div><div class="plan-price">$30<span style="font-size:1rem;color:#888">/mo</span></div><div class="feature-list">✓ Telegram Access<br>✓ 15m Elite Setups<br>✓ FVG & Fib Targets<br>✓ Support 24/7</div><a href="https://t.me/Orhan1909" target="_blank" class="custom-btn custom-btn-outline">SELECT PLAN</a></div>""", unsafe_allow_html=True)
     with col2:
-        st.markdown("""
-        <div class="pricing-card" style="border-color: #66fcf1;">
-            <div class="plan-name">PROFESSIONAL</div>
-            <div class="plan-price">$75<span style="font-size:1rem;color:#888">/qtr</span></div>
-            <br>
-            <div style="text-align:left; color:#ccc; line-height:2;">
-            ✓ <b>All Starter Features</b><br>✓ Real-time Signals<br>✓ Market Direction (USDT.D)<br>✓ Priority Support
-            </div>
-            <br><br>
-            <a href="https://t.me/Orhan1909" target="_blank" class="custom-btn">MOST POPULAR</a>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown("""<div class="pricing-card" style="border-color: #66fcf1;"><div class="plan-name">PROFESSIONAL</div><div class="plan-price">$75<span style="font-size:1rem;color:#888">/qtr</span></div><div class="feature-list">✓ <b>All Starter Features</b><br>✓ Real-time Signals<br>✓ Market Direction (USDT.D)<br>✓ Priority Support</div><a href="https://t.me/Orhan1909" target="_blank" class="custom-btn">MOST POPULAR</a></div>""", unsafe_allow_html=True)
     with col3:
-        st.markdown("""
-        <div class="pricing-card">
-            <div class="plan-name">LIFETIME</div>
-            <div class="plan-price">$250<span style="font-size:1rem;color:#888">/once</span></div>
-            <br>
-            <div style="text-align:left; color:#ccc; line-height:2;">
-            ✓ <b>Lifetime Access</b><br>✓ Future Updates Included<br>✓ Bot Setup Assistance<br>✓ Private Group
-            </div>
-            <br><br>
-            <a href="https://t.me/Orhan1909" target="_blank" class="custom-btn custom-btn-outline">CONTACT SALES</a>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="pricing-card"><div class="plan-name">LIFETIME</div><div class="plan-price">$250<span style="font-size:1rem;color:#888">/once</span></div><div class="feature-list">✓ <b>Lifetime Access</b><br>✓ Future Updates Included<br>✓ Bot Setup Assistance<br>✓ Private Group</div><a href="https://t.me/Orhan1909" target="_blank" class="custom-btn custom-btn-outline">CONTACT SALES</a></div>""", unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: CONTACT
+# TAB 3: CONTACT & FAQ
 # ==========================================
 with tab3:
     st.write(""); st.write("")
     c1, c2 = st.columns(2)
     with c1: st.markdown("""### 📨 Telegram Support\nFor instant assistance:\n<a href="https://t.me/Orhan1909" class="custom-btn">OPEN TELEGRAM</a>""", unsafe_allow_html=True)
     with c2: st.markdown("""### 📧 Email\nFor business partnerships:\n**orhanaliyev02@gmail.com**""")
-    st.write(""); st.divider()
     
+    # FAQ (GERİ GELDİ)
+    st.write(""); st.divider()
     st.subheader("❓ FAQ")
     with st.expander("How do I get access?"): st.write("Contact us on Telegram after USDT (TRC20) payment.")
     with st.expander("Is my capital safe?"): st.write("We use strict risk management (max 2% risk per trade).")
