@@ -17,31 +17,24 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- NÜKLEER GİZLİLİK CSS (V109 - FULL STEALTH) ---
+# --- NÜKLEER GİZLİLİK CSS (FULL STEALTH) ---
 st.markdown("""
     <style>
-        /* GİZLİLİK PROTOKOLÜ */
+        /* GİZLİLİK */
         div[class^="viewerBadge_container"], .viewerBadge_container__1QSob {display: none !important;}
-        #MainMenu {visibility: hidden; display: none !important;}
-        header {visibility: hidden; display: none !important;}
-        [data-testid="stHeader"] {display: none !important;}
-        footer {visibility: hidden; display: none !important;}
-        .stFooter {display: none !important;}
-        .stApp > header {display: none !important;}
-        [data-testid="stToolbar"] {display: none !important;}
-        .stDeployButton {display:none !important;}
+        #MainMenu, header, footer, .stDeployButton, [data-testid="stToolbar"] {display: none !important;}
         .block-container {padding-top: 0rem !important; padding-bottom: 2rem !important;}
 
         /* GENEL TASARIM */
-        .stApp {background-color: #0b0c10; color: #c5c6c7; font-family: 'Inter', 'Segoe UI', sans-serif;}
+        .stApp {background-color: #0b0c10; color: #c5c6c7; font-family: 'Inter', sans-serif;}
         
         /* TABS */
-        .stTabs [data-baseweb="tab-list"] {gap: 20px; background-color: transparent; border-bottom: 1px solid #1f2833; padding-top: 10px;}
-        .stTabs [data-baseweb="tab"] {height: 50px; border: none; color: #888; font-weight: 500;}
+        .stTabs [data-baseweb="tab-list"] {gap: 20px; border-bottom: 1px solid #1f2833; padding-top: 10px;}
+        .stTabs [data-baseweb="tab"] {height: 50px; color: #888; font-weight: 500; border: none;}
         .stTabs [data-baseweb="tab"]:hover {color: #66fcf1;}
         .stTabs [aria-selected="true"] {color: #66fcf1 !important; border-bottom: 2px solid #66fcf1 !important;}
 
-        /* KARTLAR VE KUTULAR */
+        /* KARTLAR */
         .metric-container {background-color: #1f2833; border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #2d3845; transition: transform 0.2s ease;}
         .metric-container:hover {transform: translateY(-2px); border-color: #66fcf1;}
         .metric-value {font-size: 2rem; font-weight: 700; color: #fff; margin-bottom: 5px;}
@@ -51,11 +44,13 @@ st.markdown("""
         .pricing-card:hover {border-color: #66fcf1; transform: translateY(-5px);}
         .plan-name {color: #66fcf1; font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 15px;}
         .plan-price {color: #fff; font-size: 2.5rem; font-weight: 700; margin-bottom: 30px;}
-        .feature-list {text-align: left; margin-left: 15%; color: #c5c6c7; font-size: 0.9rem; line-height: 2.2; margin-bottom: 30px;}
         
-        .testimonial-card {background-color: #15161a; border-left: 3px solid #66fcf1; padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 20px;}
-        .testimonial-text {font-style: italic; color: #e0e0e0; font-size: 0.95rem;}
-        .testimonial-author {margin-top: 10px; color: #66fcf1; font-weight: bold; font-size: 0.85rem;}
+        /* ÖZEL BANNER */
+        .promo-banner {
+            background: linear-gradient(90deg, #1f2833 0%, #0b0c10 100%);
+            border: 1px solid #66fcf1; color: #fff; padding: 15px; border-radius: 8px;
+            text-align: center; margin-bottom: 20px; font-weight: bold;
+        }
 
         .custom-btn {display: inline-block; padding: 12px 30px; color: #0b0c10; background-color: #66fcf1; border-radius: 4px; text-decoration: none; font-weight: 600; width: 100%; text-align: center;}
         .custom-btn:hover {background-color: #45a29e; color: #fff;}
@@ -92,28 +87,15 @@ def load_data():
 df = load_data()
 
 # ==========================================
-# 3. HEADER & TICKER TAPE (CANLI BORSA)
+# 3. HEADER & TICKER TAPE
 # ==========================================
-
-# TradingView Ticker Tape Widget (En Üste)
 components.html("""
 <div class="tradingview-widget-container">
   <div class="tradingview-widget-container__widget"></div>
   <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
   {
-  "symbols": [
-    {"proName": "BINANCE:BTCUSDT", "title": "Bitcoin"},
-    {"proName": "BINANCE:ETHUSDT", "title": "Ethereum"},
-    {"proName": "BINANCE:SOLUSDT", "title": "Solana"},
-    {"proName": "BINANCE:AVAXUSDT", "title": "Avalanche"},
-    {"description": "USDT.D", "proName": "CRYPTOCAP:USDT.D"},
-    {"description": "S&P 500", "proName": "OANDA:SPX500USD"}
-  ],
-  "showSymbolLogo": true,
-  "colorTheme": "dark",
-  "isTransparent": false,
-  "displayMode": "adaptive",
-  "locale": "en"
+  "symbols": [{"proName": "BINANCE:BTCUSDT", "title": "Bitcoin"}, {"proName": "BINANCE:ETHUSDT", "title": "Ethereum"}, {"proName": "BINANCE:SOLUSDT", "title": "Solana"}, {"description": "USDT.D", "proName": "CRYPTOCAP:USDT.D"}],
+  "showSymbolLogo": true, "colorTheme": "dark", "isTransparent": false, "displayMode": "adaptive", "locale": "en"
 }
   </script>
 </div>
@@ -124,32 +106,16 @@ st.markdown("<h1 style='text-align: center; font-size: 3rem; color: #FFFFFF;'>CR
 st.markdown("<p style='text-align: center; color: #66fcf1; margin-top: -15px; letter-spacing: 2px; font-size: 0.9rem;'>ALGORITHMIC TRADING SYSTEMS</p>", unsafe_allow_html=True)
 st.write("")
 
-# MENÜLER
 tab1, tab2, tab3 = st.tabs(["PERFORMANCE", "MEMBERSHIP", "CONTACT"])
 
 # ==========================================
-# TAB 1: PERFORMANCE + ROI CALCULATOR
+# TAB 1: PERFORMANCE (DASHBOARD)
 # ==========================================
 with tab1:
     if df.empty:
         st.warning("System initializing...")
     else:
-        # FİLTRELER
-        with st.expander("DATA FILTERING"):
-            c1, c2 = st.columns(2)
-            coin_options = ["All Assets"]; setup_options = ["All Strategies"]
-            if 'Coin' in df.columns: coin_options += list(df['Coin'].unique())
-            if 'Setup' in df.columns: setup_options += list(df['Setup'].unique())
-            
-            sel_coin = c1.selectbox("Asset", coin_options)
-            sel_setup = c2.selectbox("Strategy", setup_options)
-            
-            if sel_coin != "All Assets" and 'Coin' in df.columns: df = df[df['Coin'] == sel_coin]
-            if sel_setup != "All Strategies" and 'Setup' in df.columns: df = df[df['Setup'] == sel_setup]
-
-        st.write("")
-
-        # KPI
+        # KPI & GRAFİKLER (Mevcut Kodlar)
         total = len(df)
         win = len(df[df['Sonuç'] == 'WIN'])
         rate = (win / total * 100) if total > 0 else 0
@@ -164,148 +130,134 @@ with tab1:
 
         st.write(""); st.write("")
 
-        # GRAFİKLER
         g1, g2 = st.columns([2, 1])
         with g1:
-            st.markdown("##### EQUITY CURVE (GROWTH)")
             df['Cum'] = df['R_Kazanc'].cumsum()
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=df['Tarih'], y=df['Cum'], mode='lines', fill='tozeroy', line=dict(color='#66fcf1', width=2), fillcolor='rgba(102, 252, 241, 0.1)'))
-            fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=20, b=0), height=320, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor='#1f2833'))
+            fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=10, b=0), height=300, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor='#1f2833'))
             st.plotly_chart(fig, use_container_width=True)
-
         with g2:
-            st.markdown("##### OUTCOME DISTRIBUTION")
             fig_pie = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.7, color='Sonuç', color_discrete_map={'WIN':'#66fcf1', 'LOSS':'#ff4b4b'})
-            fig_pie.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', showlegend=False, margin=dict(l=20, r=20, t=20, b=20), height=320, annotations=[dict(text=f"{rate:.0f}%", x=0.5, y=0.5, font_size=24, showarrow=False, font_color="white", font_family="Arial")])
+            fig_pie.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', showlegend=False, margin=dict(l=20, r=20, t=10, b=20), height=300, annotations=[dict(text=f"{rate:.0f}%", x=0.5, y=0.5, font_size=24, showarrow=False, font_color="white")])
             st.plotly_chart(fig_pie, use_container_width=True)
 
-        # -------------------------------------------
-        # ROI CALCULATOR (YENİ ÖZELLİK)
-        # -------------------------------------------
+        # --- YENİ BÖLÜM: MARKET INTELLIGENCE ---
         st.markdown("---")
-        st.subheader("🧮 ROI SIMULATOR")
-        st.markdown("Calculate your potential earnings based on our historical performance.")
+        st.subheader("📡 MARKET INTELLIGENCE")
         
-        roi_c1, roi_c2, roi_c3 = st.columns([1,1,2])
-        with roi_c1:
-            user_capital = st.number_input("Initial Capital ($)", min_value=100, value=1000, step=100)
-        with roi_c2:
-            user_risk = st.slider("Risk Per Trade (%)", 0.5, 5.0, 2.0, 0.1)
+        mi1, mi2 = st.columns(2)
         
-        # Hesaplama: Capital * (Risk/100) * Total_R
-        potential_profit = user_capital * (user_risk / 100) * net_r_total
-        final_balance = user_capital + potential_profit
-        roi_percentage = (potential_profit / user_capital) * 100
-        
-        with roi_c3:
-            st.markdown(f"""
-            <div style="background:#1f2833; padding:15px; border-radius:8px; border:1px solid #66fcf1; text-align:center;">
-                <span style="color:#888; font-size:0.9rem;">PROJECTED BALANCE</span><br>
-                <span style="color:#fff; font-size:2.2rem; font-weight:bold;">${final_balance:,.2f}</span><br>
-                <span style="color:#66fcf1; font-weight:bold;">(+${potential_profit:,.2f} / +%{roi_percentage:.1f})</span>
+        with mi1:
+            st.markdown("##### TECHNICAL GAUGE (BTC/USDT)")
+            # TradingView Technical Analysis Widget
+            components.html("""
+            <div class="tradingview-widget-container">
+              <div class="tradingview-widget-container__widget"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+              {
+              "interval": "4h", "width": "100%", "isTransparent": true, "height": "400",
+              "symbol": "BINANCE:BTCUSDT", "showIntervalTabs": true, "displayMode": "single", "locale": "en", "colorTheme": "dark"
+            }
+              </script>
             </div>
-            """, unsafe_allow_html=True)
+            """, height=400)
+            
+        with mi2:
+            st.markdown("##### ECONOMIC CALENDAR")
+            # TradingView Economic Calendar Widget
+            components.html("""
+            <div class="tradingview-widget-container">
+              <div class="tradingview-widget-container__widget"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
+              {
+              "colorTheme": "dark", "isTransparent": true, "width": "100%", "height": "400", "locale": "en", "importanceFilter": "-1,0,1", "currencyFilter": "USD"
+            }
+              </script>
+            </div>
+            """, height=400)
+            
         st.markdown("---")
-
+        
         # TABLO
         st.markdown("##### TRADE LOG")
         def style_df(row):
             color = '#66fcf1' if row['Sonuç'] == 'WIN' else '#ff4b4b'
             return [f'color: {color}; font-weight: 600' if col == 'Sonuç' else 'color: #c5c6c7' for col in row.index]
-        
-        st.dataframe(df.style.apply(style_df, axis=1), use_container_width=True, hide_index=True, column_config={"Tarih": "DATE", "Coin": "ASSET", "Yön": "SIDE", "Giriş": st.column_config.NumberColumn("ENTRY", format="$%.4f"), "R_Kazanc": st.column_config.NumberColumn("RETURN (R)", format="%.2f R"), "Sonuç": "RESULT"})
+        st.dataframe(df.style.apply(style_df, axis=1), use_container_width=True, hide_index=True)
 
 # ==========================================
-# TAB 2: MEMBERSHIP + SOCIAL PROOF
+# TAB 2: MEMBERSHIP
 # ==========================================
 with tab2:
     st.write("")
     
-    # SOCIAL PROOF (KANIT DUVARI)
-    st.subheader("💬 TRADER FEEDBACK")
-    sp1, sp2, sp3 = st.columns(3)
-    
-    with sp1:
-        st.markdown("""
-        <div class="testimonial-card">
-            <div class="testimonial-text">"I've tried many signal groups, but the risk management here is top tier. The bot catches moves I always miss."</div>
-            <div class="testimonial-author">@Crypto*** (VIP Member)</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with sp2:
-        st.markdown("""
-        <div class="testimonial-card">
-            <div class="testimonial-text">"The dashboard transparency is what sold me. No fake results, just pure data. ROI calculator was spot on."</div>
-            <div class="testimonial-author">@Alex*** (Pro Trader)</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with sp3:
-        st.markdown("""
-        <div class="testimonial-card">
-            <div class="testimonial-text">"Started with the Starter plan, upgraded to Lifetime in 2 weeks. The FVG setups are insane."</div>
-            <div class="testimonial-author">@Mehmet*** (VIP Member)</div>
-        </div>
-        """, unsafe_allow_html=True)
+    # PROMO BANNER (ACİLİYET HİSSİ)
+    st.markdown("""
+    <div class="promo-banner">
+        🔥 LIMITED TIME OFFER: Get the LIFETIME access before prices increase on Monday!
+    </div>
+    """, unsafe_allow_html=True)
     
     st.write(""); st.write("")
 
-    # FİYATLANDIRMA
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown("""
         <div class="pricing-card">
             <div class="plan-name">STARTER</div>
             <div class="plan-price">$30<span style="font-size:1rem;color:#888">/mo</span></div>
-            <div class="feature-list">✓ Telegram Channel Access<br>✓ 15m Elite Setups<br>✓ FVG & Fib Targets<br>✓ Support 24/7</div>
+            <br>
+            <div style="text-align:left; color:#ccc; line-height:2;">
+            ✓ Telegram Access<br>✓ 15m Elite Setups<br>✓ FVG & Fib Targets<br>✓ Support 24/7
+            </div>
+            <br><br>
             <a href="https://t.me/Orhan1909" target="_blank" class="custom-btn custom-btn-outline">SELECT PLAN</a>
         </div>
         """, unsafe_allow_html=True)
+
     with col2:
         st.markdown("""
         <div class="pricing-card" style="border-color: #66fcf1;">
             <div class="plan-name">PROFESSIONAL</div>
             <div class="plan-price">$75<span style="font-size:1rem;color:#888">/qtr</span></div>
-            <div class="feature-list">✓ <b>All Starter Features</b><br>✓ Real-time Signals<br>✓ Market Direction (USDT.D)<br>✓ Priority Support</div>
+            <br>
+            <div style="text-align:left; color:#ccc; line-height:2;">
+            ✓ <b>All Starter Features</b><br>✓ Real-time Signals<br>✓ Market Direction (USDT.D)<br>✓ Priority Support
+            </div>
+            <br><br>
             <a href="https://t.me/Orhan1909" target="_blank" class="custom-btn">MOST POPULAR</a>
         </div>
         """, unsafe_allow_html=True)
+
     with col3:
         st.markdown("""
         <div class="pricing-card">
             <div class="plan-name">LIFETIME</div>
             <div class="plan-price">$250<span style="font-size:1rem;color:#888">/once</span></div>
-            <div class="feature-list">✓ <b>Lifetime Access</b><br>✓ Future Updates Included<br>✓ Bot Setup Assistance<br>✓ Private Group</div>
+            <br>
+            <div style="text-align:left; color:#ccc; line-height:2;">
+            ✓ <b>Lifetime Access</b><br>✓ Future Updates Included<br>✓ Bot Setup Assistance<br>✓ Private Group
+            </div>
+            <br><br>
             <a href="https://t.me/Orhan1909" target="_blank" class="custom-btn custom-btn-outline">CONTACT SALES</a>
         </div>
         """, unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: CONTACT + FAQ
+# TAB 3: CONTACT
 # ==========================================
 with tab3:
     st.write(""); st.write("")
     c1, c2 = st.columns(2)
     with c1: st.markdown("""### 📨 Telegram Support\nFor instant assistance:\n<a href="https://t.me/Orhan1909" class="custom-btn">OPEN TELEGRAM</a>""", unsafe_allow_html=True)
     with c2: st.markdown("""### 📧 Email\nFor business partnerships:\n**orhanaliyev02@gmail.com**""")
-
-    st.write(""); st.write("")
-    st.divider()
+    st.write(""); st.divider()
     
-    # FAQ (SIKÇA SORULAN SORULAR)
-    st.subheader("❓ FREQUENTLY ASKED QUESTIONS")
-    
-    with st.expander("How do I get access after payment?"):
-        st.write("Once you complete the payment via USDT (TRC20), send the transaction screenshot to our Telegram support. You will be added to the VIP channel instantly.")
-    
-    with st.expander("Which exchange should I use?"):
-        st.write("Our signals work on all major exchanges like Binance, Bybit, OKX, and Bitget. We primarily analyze Binance charts.")
-        
-    with st.expander("Is my capital safe? What is the risk management?"):
-        st.write("Trading involves risk. However, our bot operates with strict risk management (R-Multiple). We never suggest risking more than 2-3% of your capital per trade.")
-        
-    with st.expander("Can I cancel my subscription?"):
-        st.write("Yes, subscriptions are non-binding. You can choose not to renew at the end of your billing cycle. Lifetime access is a one-time payment.")
+    st.subheader("❓ FAQ")
+    with st.expander("How do I get access?"): st.write("Contact us on Telegram after USDT (TRC20) payment.")
+    with st.expander("Is my capital safe?"): st.write("We use strict risk management (max 2% risk per trade).")
+    with st.expander("Can I cancel?"): st.write("Yes, subscriptions are non-binding.")
 
 st.markdown("---")
 st.markdown("<p style='text-align: center; color: #45a29e; font-size: 0.8rem;'>© 2025 Crazytown Capital. All rights reserved.</p>", unsafe_allow_html=True)
