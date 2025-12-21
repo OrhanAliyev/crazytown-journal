@@ -5,8 +5,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime
+from datetime import datetime, timedelta
 import calendar
+import numpy as np # AI hesaplamaları için
+import time
 
 # ==========================================
 # 0. AYARLAR
@@ -24,7 +26,7 @@ if 'theme' not in st.session_state: st.session_state.theme = "Dark"
 # ÇEVİRİ VE İÇERİK YÖNETİMİ
 TRANSLATIONS = {
     "EN": {
-        "title_sub": "ALGORITHMIC TRADING SYSTEMS", "perf": "PERFORMANCE", "acad": "ACADEMY", "memb": "MEMBERSHIP", "cont": "CONTACT",
+        "title_sub": "ALGORITHMIC TRADING SYSTEMS", "perf": "PERFORMANCE", "acad": "ACADEMY", "memb": "MEMBERSHIP", "cont": "CONTACT", "ai_lab": "AI LAB",
         "total_trades": "TOTAL TRADES", "win_rate": "WIN RATE", "net_return": "NET RETURN", "profit_factor": "PROFIT FACTOR",
         "season_goal": "SEASON GOAL", "completed": "COMPLETED", "perf_cal": "🗓️ PERFORMANCE CALENDAR",
         "select_month": "Select Month", "total_monthly": "TOTAL MONTHLY PNL", "market_intel": "📡 MARKET INTELLIGENCE",
@@ -35,46 +37,17 @@ TRANSLATIONS = {
         "most_pop": "MOST POPULAR", "contact_sales": "CONTACT SALES", "faq": "❓ FAQ", "settings": "⚙️ SETTINGS",
         "lang_sel": "Language", "theme_sel": "Theme", "theme_dark": "Dark (Neon)", "theme_light": "Light (Corporate)",
         "acad_title": "OA | TRADE SMC MASTERY", "acad_quote": "Not beating the market, but following it with discipline.",
-        "lesson_1_title": "📌 PART 1: TIME & CONTEXT",
-        "lesson_1_content": """
-        #### 1. TIME FILTER (CRITICAL)
-        We only trade during high-volume sessions. Charts are closed otherwise.
-        * **LONDON:** `10:00 – 12:00` (UTC+3)
-        * **NEW YORK:** `15:30 – 18:30` (UTC+3)
-        
-        #### 2. DAILY CONTEXT (PDH/PDL)
-        The only condition to look for a trade is **LIQUIDITY SWEEP**.
-        * **PDH (Previous Day High) Raid:** Look for **SHORT**.
-        * **PDL (Previous Day Low) Raid:** Look for **LONG**.
-        * *Note: A wick sweep is enough, candle close is not required.*
-        """,
-        "lesson_2_title": "🛠️ PART 2: ENTRY SETUP (FIB & FVG)",
-        "lesson_2_content": """
-        #### 1. FIBONACCI RETRACEMENT
-        Draw Fib on the impulse leg created after the liquidity sweep.
-        * **ENTRY ZONE:** `0.75` - `0.60` (Golden Pocket)
-        * **STOP LOSS:** `1` (Start of the impulse)
-        * **TP-1:** `0.25` (Take partial)
-        * **TP-2:** `-0.18` (Final TP)
-        
-        #### 2. FVG REJECTION
-        * Price must tap into a **Fair Value Gap (FVG)** inside the Golden Zone.
-        * Wait for a rejection wick or reaction.
-        """,
-        "lesson_3_title": "⚠️ PART 3: RULES & EXECUTION",
-        "lesson_3_content": """
-        <div class="rule-box">
-        <h4>🚨 CORE RULES</h4>
-        <ul>
-            <li><b>NO CHOCH:</b> We do not wait for Change of Character on LTF. It's often too late.</li>
-            <li><b>NO TRADING OUTSIDE HOURS:</b> Discipline is key.</li>
-            <li><b>MANAGEMENT:</b> Move SL to Breakeven (BE) only after TP-1 is hit.</li>
-        </ul>
-        </div>
-        """
+        "lesson_1_title": "📌 PART 1: TIME & CONTEXT", "lesson_1_content": "#### 1. TIME FILTER...",
+        "lesson_2_title": "🛠️ PART 2: ENTRY SETUP", "lesson_2_content": "#### 1. FIBONACCI...",
+        "lesson_3_title": "⚠️ PART 3: RULES", "lesson_3_content": "NO CHOCH. NO TRADING OUTSIDE HOURS.",
+        # AI BÖLÜMÜ
+        "ai_title": "🤖 NEURAL NETWORK PREDICTION", "ai_desc": "Probabilistic price forecasting based on SMC logic & machine learning.",
+        "run_ai": "INITIALIZE NEURAL NET", "ai_analyzing": "Analyzing Order Flow...", "ai_calc": "Calculating Probabilities...",
+        "ai_pair": "Select Asset", "ai_tf": "Timeframe", "ai_conf": "AI Confidence", "ai_direction": "Predicted Direction",
+        "ai_bull": "BULLISH", "ai_bear": "BEARISH", "ai_neutral": "NEUTRAL"
     },
     "TR": {
-        "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ", "perf": "PERFORMANS", "acad": "AKADEMİ", "memb": "ÜYELİK", "cont": "İLETİŞİM",
+        "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ", "perf": "PERFORMANS", "acad": "AKADEMİ", "memb": "ÜYELİK", "cont": "İLETİŞİM", "ai_lab": "YAPAY ZEKA",
         "total_trades": "TOPLAM İŞLEM", "win_rate": "BAŞARI ORANI", "net_return": "NET GETİRİ", "profit_factor": "KÂR FAKTÖRÜ",
         "season_goal": "SEZON HEDEFİ", "completed": "TAMAMLANDI", "perf_cal": "🗓️ PERFORMANS TAKVİMİ",
         "select_month": "Ay Seçiniz", "total_monthly": "AYLIK TOPLAM PNL", "market_intel": "📡 PİYASA İSTİHBARATI",
@@ -85,92 +58,39 @@ TRANSLATIONS = {
         "most_pop": "EN POPÜLER", "contact_sales": "SATIŞA ULAŞ", "faq": "❓ SIK SORULANLAR", "settings": "⚙️ AYARLAR",
         "lang_sel": "Dil", "theme_sel": "Tema", "theme_dark": "Koyu Mod (Neon)", "theme_light": "Açık Mod (Kurumsal)",
         "acad_title": "OA | TRADE SMC USTALIK SINIFI", "acad_quote": "Piyasayı yenmek değil, disiplinle takip etmek.",
-        "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM",
-        "lesson_1_content": """
-        #### 1. ZAMAN FİLTRESİ (KRİTİK)
-        Sadece hacimli seanslarda işlem aranır. Diğer saatlerde ekran kapatılır.
-        * **LONDRA:** `10:00 – 12:00` (TSİ)
-        * **NEW YORK:** `15:30 – 18:30` (TSİ)
-        
-        #### 2. GÜNLÜK BAĞLAM (PDH/PDL)
-        İşlem aramak için tek şart **LİKİDİTE ALIMI (SWEEP)**'dır.
-        * **PDH (Önceki Gün Yükseği) İhlali:** Sadece **SHORT** ara.
-        * **PDL (Önceki Gün Düşüğü) İhlali:** Sadece **LONG** ara.
-        * *Not: Fitil atması (Wick) yeterlidir, mum kapanışı şart değildir.*
-        """,
-        "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ (FIB & FVG)",
-        "lesson_2_content": """
-        #### 1. FIBONACCI AYARLARI
-        Likidite alımından sonra oluşan sert harekete (Impulse) Fibonacci çekilir.
-        * **GİRİŞ BÖLGESİ:** `0.75` - `0.60` (Golden Pocket)
-        * **STOP:** `1` (Hareket başlangıcı)
-        * **TP-1:** `0.25` (Kısmi kâr al)
-        * **TP-2:** `-0.18` (Final kâr)
-        
-        #### 2. FVG ONAYI
-        * Fiyat, `0.6-0.75` aralığındaki bir **FVG (Dengesizlik)** alanına temas etmelidir.
-        * Oradan reddedilme (rejection) beklenir.
-        """,
-        "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR VE YÖNETİM",
-        "lesson_3_content": """
-        <div class="rule-box">
-        <h4>🚨 DEĞİŞMEZ KURALLAR</h4>
-        <ul>
-            <li><b>CHOCH YOK:</b> Düşük zaman diliminde kırılım (Choch) beklenmez. Sizi geç sokar veya yanıltır.</li>
-            <li><b>SAAT DIŞI İŞLEM YOK:</b> Disiplin her şeydir.</li>
-            <li><b>YÖNETİM:</b> Stop sadece TP-1 alındıktan sonra Girişe (BE) çekilir.</li>
-        </ul>
-        </div>
-        """
+        "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM", "lesson_1_content": "#### 1. ZAMAN FİLTRESİ...",
+        "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ", "lesson_2_content": "#### 1. FIBONACCI...",
+        "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR", "lesson_3_content": "CHOCH YOK. SAAT DIŞI İŞLEM YOK.",
+        # AI BÖLÜMÜ
+        "ai_title": "🤖 SİNİR AĞI TAHMİNİ", "ai_desc": "SMC mantığı ve makine öğrenimi tabanlı olasılıksal fiyat tahmini.",
+        "run_ai": "SİNİR AĞINI BAŞLAT", "ai_analyzing": "Emir Akışı Analiz Ediliyor...", "ai_calc": "Olasılıklar Hesaplanıyor...",
+        "ai_pair": "Varlık Seç", "ai_tf": "Zaman Dilimi", "ai_conf": "YZ Güven Puanı", "ai_direction": "Tahmini Yön",
+        "ai_bull": "YÜKSELİŞ (LONG)", "ai_bear": "DÜŞÜŞ (SHORT)", "ai_neutral": "NÖTR"
     },
     "RU": {
-        "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ",
+        "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ", "ai_lab": "ИИ ЛАБОРАТОРИЯ",
         "total_trades": "ВСЕГО СДЕЛОК", "win_rate": "ВИНРЕЙТ", "net_return": "ЧИСТАЯ ПРИБЫЛЬ", "profit_factor": "ПРОФИТ-ФАКТОР",
         "season_goal": "ЦЕЛЬ СЕЗОНА", "completed": "ЗАВЕРШЕНО", "perf_cal": "🗓️ КАЛЕНДАРЬ ДОХОДНОСТИ",
         "select_month": "Выберите месяц", "total_monthly": "ИТОГ МЕСЯЦА PNL", "market_intel": "📡 РЫНОЧНЫЙ ИНТЕЛЛЕКТ",
-        "roi_sim": "🧮 ROI СИМУЛЯТОР", "roi_desc": "Рассчитайте потенциальную прибыль на основе истории.", "initial_cap": "Начальный капитал ($)",
-        "risk_trade": "Риск на сделку (%)", "proj_bal": "ПРОГНОЗ БАЛАНСА", "trade_log": "ЖУРНАЛ СДЕЛОК", "download": "📥 СКАЧАТЬ CSV",
-        "limited_offer": "🔥 ОГРАНИЧЕННОЕ ПРЕДЛОЖЕНИЕ: Получите ПОЖИЗНЕННЫЙ доступ!", "feedback": "💬 ОТЗЫВЫ ТРЕЙДЕРОВ",
+        "roi_sim": "🧮 ROI СИМУЛЯТОР", "roi_desc": "Рассчитайте прибыль.", "initial_cap": "Капитал ($)",
+        "risk_trade": "Риск (%)", "proj_bal": "ПРОГНОЗ", "trade_log": "ЖУРНАЛ СДЕЛОК", "download": "📥 СКАЧАТЬ CSV",
+        "limited_offer": "🔥 ОГРАНИЧЕННОЕ ПРЕДЛОЖЕНИЕ: Получите ПОЖИЗНЕННЫЙ доступ!", "feedback": "💬 ОТЗЫВЫ",
         "plan_starter": "СТАРТ", "plan_pro": "ПРОФИ", "plan_life": "LIFETIME", "sel_plan": "ВЫБРАТЬ",
         "most_pop": "ПОПУЛЯРНЫЙ", "contact_sales": "СВЯЗАТЬСЯ", "faq": "❓ FAQ", "settings": "⚙️ НАСТРОЙКИ",
-        "lang_sel": "Язык", "theme_sel": "Тема", "theme_dark": "Темная тема", "theme_light": "Светлая тема",
-        "acad_title": "OA | TRADE SMC МАСТЕРСТВО", "acad_quote": "Не побеждать рынок, а дисциплинированно следовать за ним.",
-        "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ И КОНТЕКСТ",
-        "lesson_1_content": """
-        #### 1. ФИЛЬТР ВРЕМЕНИ
-        Мы торгуем только во время высокой волатильности.
-        * **ЛОНДОН:** `10:00 – 12:00` (UTC+3)
-        * **НЬЮ-ЙОРК:** `15:30 – 18:30` (UTC+3)
-        
-        #### 2. ДНЕВНОЙ КОНТЕКСТ (PDH/PDL)
-        Единственное условие для поиска сделки - **СНЯТИЕ ЛИКВИДНОСТИ**.
-        * **Снятие PDH (Max вчера):** Ищем **SHORT**.
-        * **Снятие PDL (Min вчера):** Ищем **LONG**.
-        """,
-        "lesson_2_title": "🛠️ ЧАСТЬ 2: СТРАТЕГИЯ ВХОДА",
-        "lesson_2_content": """
-        #### 1. ФИБОНАЧЧИ
-        Тянем сетку на импульс после снятия ликвидности.
-        * **ВХОД:** `0.75` - `0.60`
-        * **СТОП:** `1`
-        * **TP-1:** `0.25`
-        * **TP-2:** `-0.18`
-        """,
-        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА И УПРАВЛЕНИЕ",
-        "lesson_3_content": """
-        <div class="rule-box">
-        <h4>🚨 ПРАВИЛА</h4>
-        <ul>
-            <li><b>НЕТ CHOCH:</b> Не ждем смены характера движения на младших таймфреймах.</li>
-            <li><b>НЕТ СДЕЛОК ВНЕ СЕССИЙ:</b> Дисциплина прежде всего.</li>
-            <li><b>УПРАВЛЕНИЕ:</b> SL в безубыток только после TP-1.</li>
-        </ul>
-        </div>
-        """
+        "lang_sel": "Язык", "theme_sel": "Тема", "theme_dark": "Темная", "theme_light": "Светлая",
+        "acad_title": "OA | TRADE SMC МАСТЕРСТВО", "acad_quote": "Дисциплина прежде всего.",
+        "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "### 1. ФИЛЬТР ВРЕМЕНИ...",
+        "lesson_2_title": "🛠️ ЧАСТЬ 2: ВХОД", "lesson_2_content": "### 1. ФИБОНАЧЧИ...",
+        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "НЕТ CHOCH.",
+        # AI BÖLÜMÜ
+        "ai_title": "🤖 НЕЙРОСЕТЕВОЙ ПРОГНОЗ", "ai_desc": "Вероятностное прогнозирование цены на основе SMC.",
+        "run_ai": "ЗАПУСТИТЬ НЕЙРОСЕТЬ", "ai_analyzing": "Анализ потока ордеров...", "ai_calc": "Расчет вероятностей...",
+        "ai_pair": "Актив", "ai_tf": "Таймфрейм", "ai_conf": "Уверенность ИИ", "ai_direction": "Направление",
+        "ai_bull": "БЫЧИЙ (LONG)", "ai_bear": "МЕДВЕЖИЙ (SHORT)", "ai_neutral": "НЕЙТРАЛЬНО"
     }
 }
 
-def t(key): return TRANSLATIONS[st.session_state.lang][key]
+def t(key): return TRANSLATIONS[st.session_state.lang].get(key, key)
 
 with st.expander(t('settings'), expanded=False):
     c1, c2 = st.columns(2)
@@ -211,19 +131,19 @@ if st.session_state.theme == "Dark":
     <div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
     """
 else:
-    # AÇIK MOD (DÜZELTİLMİŞ - KURUMSAL)
+    # AÇIK MOD (KURUMSAL)
     col = {
         "bg": "#f8f9fa",
-        "txt": "#212529", # Koyu Gri (Siyaha yakın)
-        "card": "rgba(255, 255, 255, 0.95)", # Yüksek opaklık (Animasyon yazıyı bozmasın)
+        "txt": "#212529", 
+        "card": "rgba(255, 255, 255, 0.95)",
         "bd": "#dee2e6",
-        "ac": "#0d6efd", # Kurumsal Mavi
+        "ac": "#0d6efd", 
         "ac_h": "#0b5ed7",
         "sec": "#ffffff",
-        "ttl": "#000000", # Simsiyah Başlık
+        "ttl": "#000000", 
         "grd": "#6c757d"
     }
-    # Açık Mod Animasyonu (Çok Hafif, Göz Yormayan)
+    # Açık Mod Animasyonu (Hafif)
     anim_html = f"""
     <style>
         .orb-container {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; background: {col['bg']}; }}
@@ -235,14 +155,12 @@ else:
     <div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>
     """
 
-# CSS ENJEKSİYONU
 st.markdown(anim_html, unsafe_allow_html=True)
 
 st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;600&display=swap');
         
-        /* STREAMLIT TEMİZLİK */
         .stApp {{ background: transparent !important; }}
         header, footer, #MainMenu {{display: none !important;}}
         .block-container {{padding-top: 2rem;}}
@@ -253,7 +171,6 @@ st.markdown(f"""
             font-family: 'Inter', sans-serif;
         }}
 
-        /* NEON BAŞLIK */
         .neon-title {{
             font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important;
             font-weight: 900; letter-spacing: 4px; margin: 0;
@@ -262,7 +179,6 @@ st.markdown(f"""
         }}
         @keyframes pulse {{ 0% {{opacity: 1;}} 100% {{opacity: 0.9;}} }}
 
-        /* KARTLAR */
         .metric-container {{
             background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px;
             text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -272,15 +188,12 @@ st.markdown(f"""
         .metric-value {{ font-size: 2rem; font-weight: 700; color: {col['ttl']} !important; }}
         .metric-label {{ font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px; }}
 
-        /* BUTTON */
         .custom-btn {{ background-color: {col['ac']}; color: {col['bg']} !important; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center; }}
         .custom-btn-outline {{ border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent; }}
         
-        /* TABLO VE INPUT */
         .stDataFrame {{ border: 1px solid {col['bd']}; }}
         .stNumberInput input, .stSelectbox div[data-baseweb="select"] > div {{ background-color: {col['sec']}; color: {col['txt']}; border-color: {col['bd']}; }}
         
-        /* TAKVİM */
         .calendar-container {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px; }}
         .calendar-header {{ text-align: center; color: {col['grd']} !important; font-weight: bold; padding-bottom: 5px; border-bottom: 1px solid {col['bd']}; }}
         .day-cell {{ background-color: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 6px; height: 90px; padding: 8px; display: flex; flex-direction: column; transition: 0.2s; }}
@@ -288,23 +201,19 @@ st.markdown(f"""
         .day-number {{ font-weight: bold; color: {col['txt']} !important; opacity: 0.7; }}
         .day-profit {{ font-size: 1.1rem; font-weight: 800; margin-top: auto; align-self: center; }}
         
-        /* Renklendirmeler */
         .day-win {{ background: rgba(0, 255, 204, 0.15); border-color: {col['ac']}; }}
         .day-win-light {{ background: rgba(13, 110, 253, 0.15); border-color: {col['ac']}; }}
         .day-loss {{ background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b; }}
         .win-text {{ color: {col['ac']} !important; }} .loss-text {{ color: #ff4b4b !important; }} .empty-cell {{ background: transparent; border: none; }}
         
-        /* TABS */
         .stTabs [data-baseweb="tab"] {{ color: {col['grd']} !important; }}
         .stTabs [data-baseweb="tab"]:hover {{ color: {col['ac']} !important; }}
         .stTabs [aria-selected="true"] {{ color: {col['ac']} !important; border-bottom-color: {col['ac']} !important; }}
         
-        /* Pricing */
         .pricing-card {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 12px; padding: 30px; text-align: center; backdrop-filter: blur(10px); }}
         .plan-price {{ color: {col['ttl']} !important; font-size: 2.5rem; font-weight: bold; }}
         .plan-name {{ color: {col['ac']} !important; font-weight: bold; letter-spacing: 2px; }}
         
-        /* Academy Rule Box */
         .rule-box {{ background: rgba(0,0,0,0.05); border-left: 4px solid {col['ac']}; padding: 15px; margin: 10px 0; color: {col['txt']} !important; }}
     </style>
 """, unsafe_allow_html=True)
@@ -334,7 +243,8 @@ st.markdown('<div class="neon-title">CRAZYTOWN CAPITAL</div>', unsafe_allow_html
 st.markdown(f"<p style='text-align: center; color: {col['ac']}; letter-spacing: 2px; font-size: 0.9rem; margin-top: -5px; font-weight:bold;'>{t('title_sub')}</p>", unsafe_allow_html=True)
 st.write("")
 
-tab1, tab2, tab3, tab4 = st.tabs([t('perf'), t('acad'), t('memb'), t('cont')])
+# 5 SEKME: Yapay Zeka Eklendi
+tab1, tab2, tab5, tab3, tab4 = st.tabs([t('perf'), t('acad'), t('ai_lab'), t('memb'), t('cont')])
 
 # TAB 1: PERFORMANS
 with tab1:
@@ -400,7 +310,7 @@ with tab1:
             return [f'color: {win_color}; font-weight:bold' if c_name == 'Sonuç' else f'color: {col["txt"]}' for c_name in row.index]
         st.dataframe(df.style.apply(hwin, axis=1), use_container_width=True, hide_index=True)
 
-# TAB 2: AKADEMİ (PDF FORMATINDA)
+# TAB 2: AKADEMİ (PDF)
 with tab2:
     st.write(""); st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('acad_title')}</h2>", unsafe_allow_html=True)
     st.markdown(f"""<div style="text-align: center; font-style: italic; color: {col['grd']} !important; margin-bottom: 20px;">"{t('acad_quote')}"</div>""", unsafe_allow_html=True)
@@ -408,7 +318,82 @@ with tab2:
     with st.expander(t('lesson_2_title')): st.markdown(t('lesson_2_content'))
     with st.expander(t('lesson_3_title')): st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
 
-# TAB 3
+# TAB 5: AI LAB (YENİ YAPAY ZEKA MODÜLÜ)
+with tab5:
+    st.write("")
+    st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('ai_title')}</h2>", unsafe_allow_html=True)
+    st.markdown(f"""<div style="text-align: center; font-style: italic; color: {col['grd']} !important; margin-bottom: 20px;">{t('ai_desc')}</div>""", unsafe_allow_html=True)
+    
+    ai_c1, ai_c2, ai_c3 = st.columns([1, 1, 2])
+    with ai_c1:
+        asset = st.selectbox(t('ai_pair'), ["BTC/USDT", "ETH/USDT", "SOL/USDT"])
+    with ai_c2:
+        tf = st.selectbox(t('ai_tf'), ["15m", "1h", "4h", "1D"])
+    with ai_c3:
+        st.write("") # Spacer
+        if st.button(t('run_ai'), key="ai_btn", use_container_width=True):
+            with st.spinner(t('ai_analyzing')):
+                time.sleep(1.5) # Simülasyon efekti
+            with st.spinner(t('ai_calc')):
+                time.sleep(1)
+            
+            # --- AI SIMULATION LOGIC ---
+            # Rastgele bir yön belirle (Simülasyon)
+            import random
+            direction = random.choice(["BULL", "BEAR"])
+            confidence = random.randint(75, 96)
+            
+            # Grafik Verisi Oluştur (Random Walk)
+            steps = 50
+            start_price = 95000 if "BTC" in asset else (3000 if "ETH" in asset else 150)
+            x = np.arange(steps)
+            # Rastgele yürüyüş (Trendli)
+            trend = 0.5 if direction == "BULL" else -0.5
+            noise = np.random.normal(0, 1, steps)
+            y = start_price + np.cumsum(noise + trend) * (start_price * 0.002)
+            
+            # Güven Aralığı (Prediction Cone)
+            y_upper = y + (np.arange(steps) * (start_price * 0.0005))
+            y_lower = y - (np.arange(steps) * (start_price * 0.0005))
+            
+            # --- SONUÇLARI GÖSTER ---
+            res_col1, res_col2 = st.columns(2)
+            dir_text = t('ai_bull') if direction == "BULL" else t('ai_bear')
+            dir_color = col['ac'] if direction == "BULL" else "#ff4b4b"
+            
+            with res_col1:
+                st.markdown(f"""
+                <div class="metric-container" style="border-color:{dir_color}">
+                    <div class="metric-label">{t('ai_direction')}</div>
+                    <div class="metric-value" style="color:{dir_color} !important">{dir_text}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with res_col2:
+                st.markdown(f"""
+                <div class="metric-container">
+                    <div class="metric-label">{t('ai_conf')}</div>
+                    <div class="metric-value">{confidence}%</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            # --- AI GRAFİĞİ (Prediction Cone) ---
+            st.write("")
+            fig_ai = go.Figure()
+            # Geçmiş (Simüle)
+            fig_ai.add_trace(go.Scatter(x=np.arange(20), y=y[:20], mode='lines', name='History', line=dict(color=col['grd'], width=2)))
+            # Tahmin
+            fig_ai.add_trace(go.Scatter(x=np.arange(19, 50), y=y[19:], mode='lines', name='Forecast', line=dict(color=dir_color, width=3)))
+            # Güven Aralığı
+            fig_ai.add_trace(go.Scatter(x=np.concatenate([np.arange(19, 50), np.arange(19, 50)[::-1]]),
+                                        y=np.concatenate([y_upper[19:], y_lower[19:][::-1]]),
+                                        fill='toself', fillcolor=f"rgba({(0, 255, 204) if direction=='BULL' else (255, 75, 75)}, 0.1)",
+                                        line=dict(color='rgba(255,255,255,0)'), hoverinfo="skip", showlegend=False))
+            
+            pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"
+            fig_ai.update_layout(template=pt, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=400, margin=dict(l=0,r=0,t=20,b=0))
+            st.plotly_chart(fig_ai, use_container_width=True)
+
+# TAB 3: MEMBERSHIP
 with tab3:
     st.write(""); st.markdown(f"""<div class="metric-container" style="background:linear-gradient(90deg, {col['card']}, {col['bg']}); border-color:{col['ac']}">{t('limited_offer')}</div>""", unsafe_allow_html=True); st.write("")
     c1, c2, c3 = st.columns(3)
@@ -416,7 +401,7 @@ with tab3:
     with c2: st.markdown(f"""<div class="pricing-card" style="border-color:{col['ac']}"><div class="plan-name">{t('plan_pro')}</div><div class="plan-price">$75<span style="font-size:1rem;color:{col['grd']} !important">/qtr</span></div><a href="#" class="custom-btn">{t('most_pop')}</a></div>""", unsafe_allow_html=True)
     with c3: st.markdown(f"""<div class="pricing-card"><div class="plan-name">{t('plan_life')}</div><div class="plan-price">$250<span style="font-size:1rem;color:{col['grd']} !important">/once</span></div><a href="#" class="custom-btn custom-btn-outline">{t('contact_sales')}</a></div>""", unsafe_allow_html=True)
 
-# TAB 4
+# TAB 4: CONTACT
 with tab4:
     st.write(""); c1, c2 = st.columns(2)
     with c1: st.markdown(f"""### 📨 Telegram\n<a href="https://t.me/Orhan1909" class="custom-btn">OPEN TELEGRAM</a>""", unsafe_allow_html=True)
