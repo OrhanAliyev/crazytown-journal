@@ -87,27 +87,32 @@ st.markdown("""
         .day-cell {
             background-color: #15161a;
             border: 1px solid #2d3845;
-            border-radius: 6px;
+            border-radius: 8px;
             height: 100px;
-            padding: 8px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start;
+            gap: 5px;
             transition: all 0.2s ease;
         }
         .day-cell:hover {
             border-color: #66fcf1;
             transform: scale(1.02);
+            box-shadow: 0 4px 10px rgba(102, 252, 241, 0.1);
         }
         .day-number {
-            font-size: 0.9rem;
-            color: #888;
+            font-size: 1rem;
+            color: #8892b0;
+            align-self: flex-start;
             font-weight: bold;
         }
         .day-profit {
-            text-align: right;
-            font-size: 1.1rem;
-            font-weight: bold;
+            font-size: 1.2rem;
+            font-weight: 800;
+            align-self: center;
+            margin-top: auto;
+            margin-bottom: auto;
         }
         .day-win {
             background-color: rgba(102, 252, 241, 0.1);
@@ -175,7 +180,7 @@ st.markdown("<h1 style='text-align: center; font-size: 3rem; color: #FFFFFF;'>CR
 st.markdown("<p style='text-align: center; color: #66fcf1; margin-top: -15px; letter-spacing: 2px; font-size: 0.9rem;'>ALGORITHMIC TRADING SYSTEMS</p>", unsafe_allow_html=True)
 st.write("")
 
-# TABLARI GÜNCELLEDİK
+# TABLAR
 tab1, tab2, tab3, tab4 = st.tabs(["PERFORMANCE", "ACADEMY", "MEMBERSHIP", "CONTACT"])
 
 # ==========================================
@@ -230,7 +235,7 @@ with tab1:
             st.plotly_chart(fig_pie, use_container_width=True)
 
         # ==========================================
-        # YENİ ÖZELLİK: CUSTOM CSS TAKVİM IZGARASI
+        # CUSTOM CSS TAKVİM IZGARASI (HTML Grid)
         # ==========================================
         st.markdown("---")
         st.subheader("🗓️ PERFORMANCE CALENDAR")
@@ -254,8 +259,7 @@ with tab1:
                 # Günlük verileri grupla: {Gün Sayısı: Toplam R}
                 daily_profits = monthly_data.groupby(monthly_data['Tarih_Dt'].dt.day)['R_Kazanc'].sum().to_dict()
                 
-                # Takvim Matrisi Oluştur (Haftalık listeler halinde)
-                # calendar.monthcalendar bize [[0,0,1,2,3,4,5], [6,7...]] döner
+                # Takvim Matrisi Oluştur
                 cal_matrix = calendar.monthcalendar(selected_year, selected_month_int)
                 
                 # --- HTML OLUŞTURMA ---
@@ -271,14 +275,14 @@ with tab1:
                 for week in cal_matrix:
                     for day in week:
                         if day == 0:
-                            # Boş Kutu (Ayın öncesi/sonrası)
+                            # Boş Kutu
                             html_cal += '<div class="day-cell empty-cell"></div>'
                         else:
                             # Dolu Gün
                             profit = daily_profits.get(day, 0)
                             total_month_profit += profit
                             
-                            # Stil Belirle (Win/Loss/Neutral)
+                            # Stil Belirle
                             cell_class = "day-cell"
                             profit_class = ""
                             profit_text = ""
@@ -384,36 +388,36 @@ with tab1:
 with tab2:
     st.write("")
     st.markdown("<h2 style='text-align: center; color: #66fcf1;'>OA | TRADE SMC MASTERY</h2>", unsafe_allow_html=True)
-    st.markdown("""<div style="text-align: center; font-style: italic; color: #888; margin-bottom: 20px;">"Piyasayı yenmek değil, piyasanın yaptığı şeyi disiplinle takip etmek."</div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="text-align: center; font-style: italic; color: #888; margin-bottom: 20px;">"Piyasayı yenmek değil, piyasanın yaptığı şeyi disiplinle takip etmek." [cite: 88, 89]</div>""", unsafe_allow_html=True)
 
     with st.expander("📌 BÖLÜM 1: ZAMAN VE BAĞLAM (TEMEL KURALLAR)", expanded=True):
         st.markdown("""
-        ### 1. ZAMAN FİLTRESİ (Time Filter)
-        Sadece bu saatlerde ekran başında olunur. Diğer saatlerde grafik analiz edilmez.
-        * **LONDON SESSION:** `10:00 – 12:00` (TSİ)
-        * **NEW YORK SESSION:** `15:30 – 18:30` (TSİ)
+        ### 1. ZAMAN FİLTRESİ (Time Filter) [cite: 7, 16]
+        Sadece bu saatlerde ekran başında olunur. Diğer saatlerde grafik analiz edilmez[cite: 16].
+        * **LONDON SESSION:** `10:00 – 12:00` (TSİ) [cite: 16, 166]
+        * **NEW YORK SESSION:** `15:30 – 18:30` (TSİ) [cite: 16, 167]
         
-        ### 2. GÜNLÜK BAĞLAM (Daily Context)
-        İşlem aramak için tek bir şart vardır: **LİKİDİTE ALIMI.**
-        * **PDH (Previous Day High):** Önceki günün en yükseği ihlal edilirse → Sadece **SHORT** aranır.
-        * **PDL (Previous Day Low):** Önceki günün en düşüğü ihlal edilirse → Sadece **LONG** aranır.
+        ### 2. GÜNLÜK BAĞLAM (Daily Context) [cite: 21, 131]
+        İşlem aramak için tek bir şart vardır: **LİKİDİTE ALIMI.** [cite: 132]
+        * **PDH (Previous Day High):** Önceki günün en yükseği ihlal edilirse → Sadece **SHORT** aranır[cite: 138, 155].
+        * **PDL (Previous Day Low):** Önceki günün en düşüğü ihlal edilirse → Sadece **LONG** aranır[cite: 138, 156].
         
-        > **Not:** Kapanış (Close) şart değildir, fitil (Wick) atması yeterlidir.
+        > **Not:** Kapanış (Close) şart değildir, fitil (Wick) atması yeterlidir[cite: 144, 145].
         """)
 
     with st.expander("🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ (SETUP)"):
         st.markdown("""
-        ### 1. FIBONACCI AYARLARI
-        Bağlam oluştuğunda (Örn: PDH ihlali), oluşan sert harekete (Impulse) Fibonacci çekilir.
-        * **ENTRY BÖLGESİ:** `0.75` ile `0.60` arası
-        * **STOP:** `1` (Impulse başlangıcı)
-        * **TP-1:** `0.25`
-        * **TP-2:** `-0.18`
+        ### 1. FIBONACCI AYARLARI [cite: 55]
+        Bağlam oluştuğunda (Örn: PDH ihlali), oluşan sert harekete (Impulse) Fibonacci çekilir[cite: 55, 197].
+        * **ENTRY BÖLGESİ:** `0.75` ile `0.60` arası [cite: 55, 219]
+        * **STOP:** `1` (Impulse başlangıcı) [cite: 78, 220]
+        * **TP-1:** `0.25` [cite: 78, 222]
+        * **TP-2:** `-0.18` [cite: 78, 224]
         
-        ### 2. FVG (Fair Value Gap) REJECTION
+        ### 2. FVG (Fair Value Gap) REJECTION [cite: 228]
         Her `0.6-0.75` bölgesine gelen fiyata girilmez.
-        * O bölgede bir **FVG (Dengesizlik)** olmalı.
-        * Fiyat FVG'ye dokunup **red yemeli** (küçük mumlar, fitiller).
+        * O bölgede bir **FVG (Dengesizlik)** olmalı[cite: 242].
+        * Fiyat FVG'ye dokunup **red yemeli** (küçük mumlar, fitiller)[cite: 55, 246, 247].
         """)
 
     with st.expander("⚠️ BÖLÜM 3: UYGULAMA VE YASAKLAR (ÖNEMLİ)"):
@@ -421,20 +425,20 @@ with tab2:
         <div class="rule-box">
         <h4>🚨 ASLA YAPILMAYACAKLAR</h4>
         <ul>
-            <li><b>CHOCH (Karakter Değişimi) ARANMAZ!</b> Bizi oyundan erken atar veya geç sokar.</li>
-            <li>Zaman filtresi dışında işlem alınmaz.</li>
-            <li>PDH/PDL ihlali olmadan Fibonacci çekilmez.</li>
+            <li><b>CHOCH (Karakter Değişimi) ARANMAZ!</b> Bizi oyundan erken atar veya geç sokar[cite: 255, 260].</li>
+            <li>Zaman filtresi dışında işlem alınmaz[cite: 16].</li>
+            <li>PDH/PDL ihlali olmadan Fibonacci çekilmez[cite: 197].</li>
         </ul>
         </div>
 
         ### POZİSYON YÖNETİMİ
         1.  Emri `0.75 - 0.60` arasına at.
         2.  Stop `1` seviyesine koy.
-        3.  Fiyat `TP-1 (0.25)` geldiğinde **Stop'u Girişe (BE) Çek.**
-        4.  `TP-2 (-0.18)` gelene kadar dokunma.
+        3.  Fiyat `TP-1 (0.25)` geldiğinde **Stop'u Girişe (BE) Çek**[cite: 226, 339].
+        4.  `TP-2 (-0.18)` gelene kadar dokunma[cite: 344].
         """, unsafe_allow_html=True)
         
-    st.info("Bu sistem bir tahmin aracı değil, bir davranış modelidir. 30 gün boyunca kuralları esnetmeden uygulayın.")
+    st.info("Bu sistem bir tahmin aracı değil, bir davranış modelidir. 30 gün boyunca kuralları esnetmeden uygulayın[cite: 358, 467].")
 
 # ==========================================
 # TAB 3: MEMBERSHIP
