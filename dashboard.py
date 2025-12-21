@@ -126,7 +126,7 @@ st.markdown(f"""
         
         /* STREAMLIT ARKAPLANINI ŞEFFAF YAP (Bu olmazsa animasyon görünmez) */
         .stApp {{ background: transparent !important; }}
-        header, footer, #MainMenu, .stDeployButton {{display: none !important;}}
+        header, footer, #MainMenu {{display: none !important;}}
         .block-container {{padding-top: 2rem;}}
 
         /* YAZI VE RENKLER */
@@ -265,8 +265,8 @@ with tab1:
         with h: st.markdown(f"##### {t('trade_log')}")
         with d: st.download_button(label=t("download"), data=df.to_csv(index=False).encode('utf-8'), file_name='log.csv', mime='text/csv')
         def hwin(row):
-            c = col['ac'] if row['Sonuç'] == 'WIN' else '#ff4b4b'
-            return [f'color: {c}; font-weight:bold' if col == 'Sonuç' else f'color: {col["txt"]}' for col in row.index]
+            win_color = col['ac'] if row['Sonuç'] == 'WIN' else '#ff4b4b'
+            return [f'color: {win_color}; font-weight:bold' if c_name == 'Sonuç' else f'color: {col["txt"]}' for c_name in row.index]
         st.dataframe(df.style.apply(hwin, axis=1), use_container_width=True, hide_index=True)
 
 # TAB 2
