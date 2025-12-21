@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
+import calendar
 
 # ==========================================
 # 1. SAYFA VE STİL YAPILANDIRMASI
@@ -147,7 +148,7 @@ with tab1:
         col3.markdown(f'<div class="metric-container"><div class="metric-value" style="color:{"#66fcf1" if net_r_total>0 else "#ff4b4b"}">{net_r_total:.2f}R</div><div class="metric-label">NET RETURN</div></div>', unsafe_allow_html=True)
         col4.markdown(f'<div class="metric-container"><div class="metric-value">{pf:.2f}</div><div class="metric-label">PROFIT FACTOR</div></div>', unsafe_allow_html=True)
 
-        # --- YENİ ÖZELLİK: HEDEF TAKİPÇİSİ ---
+        # --- HEDEF TAKİPÇİSİ ---
         st.write(""); st.write("")
         target_r = 100.0  # HEDEF BURADAN DEĞİŞTİRİLEBİLİR
         current_progress = min(max(net_r_total / target_r, 0.0), 1.0)
@@ -174,45 +175,84 @@ with tab1:
             fig_pie.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', showlegend=False, margin=dict(l=20, r=20, t=10, b=20), height=300, annotations=[dict(text=f"{rate:.0f}%", x=0.5, y=0.5, font_size=24, showarrow=False, font_color="white")])
             st.plotly_chart(fig_pie, use_container_width=True)
 
-        # --- YENİ ÖZELLİK: AYLIK PERFORMANS ANALİZİ ---
+        # --- YENİ ÖZELLİK: DETAYLI TAKVİM HARİTASI (CALENDAR HEATMAP) ---
         st.markdown("---")
-        st.subheader("🗓️ MONTHLY BREAKDOWN")
+        st.subheader("🗓️ PERFORMANCE CALENDAR")
         
         try:
-            # Tarih dönüşümü (Hata yönetimi ile)
+            # Tarihleri İşle
             df['Tarih_Dt'] = pd.to_datetime(df['Tarih'], dayfirst=True, errors='coerce')
-            df['Ay_Yil'] = df['Tarih_Dt'].dt.strftime('%Y-%m')
+            df.dropna(subset=['Tarih_Dt'], inplace=True)
             
-            # Gruplama
-            monthly_grouped = df.groupby('Ay_Yil')['R_Kazanc'].sum().reset_index()
-            
-            if not monthly_grouped.empty:
-                colors = ['#66fcf1' if val > 0 else '#ff4b4b' for val in monthly_grouped['R_Kazanc']]
+            # Ay Seçimi Listesi
+            if not df.empty:
+                df = df.sort_values('Tarih_Dt')
+                available_months = df['Tarih_Dt'].dt.strftime('%Y-%m').unique()
+                selected_month = st.selectbox("Select Month", options=available_months, index=len(available_months)-1)
                 
-                fig_monthly = go.Figure(data=[
-                    go.Bar(
-                        x=monthly_grouped['Ay_Yil'], 
-                        y=monthly_grouped['R_Kazanc'],
-                        marker_color=colors,
-                        text=monthly_grouped['R_Kazanc'].apply(lambda x: f"{x:.2f}R"),
-                        textposition='auto'
-                    )
-                ])
+                # Seçilen aya göre filtrele
+                monthly_data = df[df['Tarih_Dt'].dt.strftime('%Y-%m') == selected_month].copy()
                 
-                fig_monthly.update_layout(
+                # O ayın her günü için boş bir DataFrame oluştur
+                year, month = map(int, selected_month.split('-'))
+                num_days = calendar.monthrange(year, month)[1]
+                all_days = [datetime(year, month, day) for day in range(1, num_days + 1)]
+                
+                calendar_df = pd.DataFrame({'Date': all_days})
+                calendar_df['Day'] = calendar_df['Date'].dt.day
+                calendar_df['Weekday'] = calendar_df['Date'].dt.weekday  # 0=Mon, 6=Sun
+                # Haftanın kaçıncı haftası olduğunu bul (Ay bazında 1, 2, 3...)
+                calendar_df['Week'] = calendar_df['Date'].apply(lambda d: (d.day - 1) // 7 + 1)
+                
+                # Gerçek verilerle birleştir (Aynı gün birden fazla işlem varsa topla)
+                daily_perf = monthly_data.groupby('Tarih_Dt')['R_Kazanc'].sum().reset_index()
+                calendar_df = calendar_df.merge(daily_perf, left_on='Date', right_on='Tarih_Dt', how='left').fillna(0)
+                
+                # Pivot Table oluştur (Heatmap için)
+                # Satırlar: Hafta Numarası, Sütunlar: Haftanın Günü
+                # Haftanın günlerini düzelt (Pzt=0... Paz=6)
+                pivot_table = calendar_df.pivot_table(index='Week', columns='Weekday', values='R_Kazanc', aggfunc='sum')
+                
+                # Eksik günleri (ay başı/sonu boşlukları) NaN yap veya 0 bırak
+                # Görselleştirme
+                days_label = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                
+                # Renk skalası: Kırmızı (Loss) -> Siyah (0) -> Yeşil (Win)
+                max_val = max(abs(calendar_df['R_Kazanc'].min()), abs(calendar_df['R_Kazanc'].max()), 1)
+                
+                fig_cal = go.Figure(data=go.Heatmap(
+                    z=pivot_table.values,
+                    x=days_label,
+                    y=pivot_table.index,
+                    colorscale=[[0, '#ff4b4b'], [0.5, '#1f2833'], [1, '#66fcf1']],
+                    zmin=-max_val, zmax=max_val,
+                    text=pivot_table.values,
+                    texttemplate="%{text:.2f}R",
+                    textfont={"color": "white", "size": 12},
+                    xgap=3, ygap=3,
+                    showscale=False
+                ))
+                
+                fig_cal.update_layout(
+                    title=f"{selected_month} Performance Heatmap",
                     template="plotly_dark",
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
-                    margin=dict(l=0, r=0, t=30, b=0),
-                    height=350,
-                    title_text="Net R Return by Month",
-                    yaxis=dict(gridcolor='#1f2833')
+                    height=300,
+                    yaxis=dict(title="", showgrid=False, zeroline=False, visible=False, autorange="reversed"), # Haftalar yukarıdan aşağı aksın
+                    xaxis=dict(title="", showgrid=False, zeroline=False, side="top")
                 )
-                st.plotly_chart(fig_monthly, use_container_width=True)
+                
+                st.plotly_chart(fig_cal, use_container_width=True)
+                
+                # Altına Aylık Toplam Özeti
+                month_total = monthly_data['R_Kazanc'].sum()
+                st.markdown(f"<div style='text-align:center; color: {'#66fcf1' if month_total > 0 else '#ff4b4b'}; font-weight:bold;'>MONTH TOTAL: {month_total:.2f}R</div>", unsafe_allow_html=True)
             else:
-                st.info("Aylık grafik için yeterli tarih verisi okunamadı.")
+                st.info("Takvim verisi yükleniyor...")
+                
         except Exception as e:
-            st.error(f"Grafik oluşturulurken hata: {e}")
+            st.error(f"Takvim hatası: {e}")
 
 
         # --- MARKET INTELLIGENCE ---
@@ -284,32 +324,32 @@ with tab2:
 
     with st.expander("📌 BÖLÜM 1: ZAMAN VE BAĞLAM (TEMEL KURALLAR)", expanded=True):
         st.markdown("""
-        ### 1. ZAMAN FİLTRESİ (Time Filter)
-        Sadece bu saatlerde ekran başında olunur. Diğer saatlerde grafik analiz edilmez.
-        * **LONDON SESSION:** `10:00 – 12:00` (TSİ)
-        * **NEW YORK SESSION:** `15:30 – 18:30` (TSİ)
+        ### [cite_start]1. ZAMAN FİLTRESİ (Time Filter) [cite: 7, 16]
+        Sadece bu saatlerde ekran başında olunur. [cite_start]Diğer saatlerde grafik analiz edilmez. [cite: 16]
+        * [cite_start]**LONDON SESSION:** `10:00 – 12:00` (TSİ) [cite: 16, 166]
+        * [cite_start]**NEW YORK SESSION:** `15:30 – 18:30` (TSİ) [cite: 16, 167]
         
-        ### 2. GÜNLÜK BAĞLAM (Daily Context)
-        İşlem aramak için tek bir şart vardır: **LİKİDİTE ALIMI.**
-        * **PDH (Previous Day High):** Önceki günün en yükseği ihlal edilirse → Sadece **SHORT** aranır.
-        * **PDL (Previous Day Low):** Önceki günün en düşüğü ihlal edilirse → Sadece **LONG** aranır.
+        ### [cite_start]2. GÜNLÜK BAĞLAM (Daily Context) [cite: 21, 131]
+        [cite_start]İşlem aramak için tek bir şart vardır: **LİKİDİTE ALIMI.** [cite: 131]
+        * [cite_start]**PDH (Previous Day High):** Önceki günün en yükseği ihlal edilirse → Sadece **SHORT** aranır. [cite: 155]
+        * [cite_start]**PDL (Previous Day Low):** Önceki günün en düşüğü ihlal edilirse → Sadece **LONG** aranır. [cite: 156]
         
-        > **Not:** Kapanış (Close) şart değildir, fitil (Wick) atması yeterlidir.
+        > [cite_start]**Not:** Kapanış (Close) şart değildir, fitil (Wick) atması yeterlidir. [cite: 21, 144]
         """)
 
     with st.expander("🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ (SETUP)"):
         st.markdown("""
-        ### 1. FIBONACCI AYARLARI
-        Bağlam oluştuğunda (Örn: PDH ihlali), oluşan sert harekete (Impulse) Fibonacci çekilir.
-        * **ENTRY BÖLGESİ:** `0.75` ile `0.60` arası
-        * **STOP:** `1` (Impulse başlangıcı)
-        * **TP-1:** `0.25`
-        * **TP-2:** `-0.18`
+        ### [cite_start]1. FIBONACCI AYARLARI [cite: 195, 219]
+        [cite_start]Bağlam oluştuğunda (Örn: PDH ihlali), oluşan sert harekete (Impulse) Fibonacci çekilir. [cite: 202, 208]
+        * [cite_start]**ENTRY BÖLGESİ:** `0.75` ile `0.60` arası [cite: 219, 55]
+        * [cite_start]**STOP:** `1` (Impulse başlangıcı) [cite: 220, 66]
+        * [cite_start]**TP-1:** `0.25` [cite: 222, 74]
+        * [cite_start]**TP-2:** `-0.18` [cite: 224, 77]
         
-        ### 2. FVG (Fair Value Gap) REJECTION
+        ### [cite_start]2. FVG (Fair Value Gap) REJECTION [cite: 228, 232]
         Her `0.6-0.75` bölgesine gelen fiyata girilmez.
-        * O bölgede bir **FVG (Dengesizlik)** olmalı.
-        * Fiyat FVG'ye dokunup **red yemeli** (küçük mumlar, fitiller).
+        * [cite_start]O bölgede bir **FVG (Dengesizlik)** olmalı. [cite: 242, 233]
+        * [cite_start]Fiyat FVG'ye dokunup **red yemeli** (küçük mumlar, fitiller). [cite: 245, 246]
         """)
 
     with st.expander("⚠️ BÖLÜM 3: UYGULAMA VE YASAKLAR (ÖNEMLİ)"):
@@ -317,20 +357,20 @@ with tab2:
         <div class="rule-box">
         <h4>🚨 ASLA YAPILMAYACAKLAR</h4>
         <ul>
-            <li><b>CHOCH (Karakter Değişimi) ARANMAZ!</b> Bizi oyundan erken atar veya geç sokar.</li>
-            <li>Zaman filtresi dışında işlem alınmaz.</li>
-            <li>PDH/PDL ihlali olmadan Fibonacci çekilmez.</li>
+            [cite_start]<li><b>CHOCH (Karakter Değişimi) ARANMAZ!</b> Bizi oyundan erken atar veya geç sokar. [cite: 42, 257]</li>
+            [cite_start]<li>Zaman filtresi dışında işlem alınmaz. [cite: 361]</li>
+            [cite_start]<li>PDH/PDL ihlali olmadan Fibonacci çekilmez. [cite: 201]</li>
         </ul>
         </div>
 
-        ### POZİSYON YÖNETİMİ
-        1.  Emri `0.75 - 0.60` arasına at.
-        2.  Stop `1` seviyesine koy.
-        3.  Fiyat `TP-1 (0.25)` geldiğinde **Stop'u Girişe (BE) Çek.**
-        4.  `TP-2 (-0.18)` gelene kadar dokunma.
+        ### [cite_start]POZİSYON YÖNETİMİ [cite: 320]
+        1.  [cite_start]Emri `0.75 - 0.60` arasına at. [cite: 219]
+        2.  [cite_start]Stop `1` seviyesine koy. [cite: 220]
+        3.  [cite_start]Fiyat `TP-1 (0.25)` geldiğinde **Stop'u Girişe (BE) Çek.** [cite: 339, 226]
+        4.  [cite_start]`TP-2 (-0.18)` gelene kadar dokunma. [cite: 227]
         """, unsafe_allow_html=True)
         
-    st.info("Bu sistem bir tahmin aracı değil, bir davranış modelidir. 30 gün boyunca kuralları esnetmeden uygulayın.")
+    [cite_start]st.info("Bu sistem bir tahmin aracı değil, bir davranış modelidir. 30 gün boyunca kuralları esnetmeden uygulayın. [cite: 358, 467]")
 
 # ==========================================
 # TAB 3: MEMBERSHIP
