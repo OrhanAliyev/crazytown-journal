@@ -7,8 +7,9 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime, timedelta
 import calendar
-import numpy as np # AI hesaplamaları için
+import numpy as np
 import time
+import requests # CANLI VERİ İÇİN EKLENDİ
 
 # ==========================================
 # 0. AYARLAR
@@ -37,14 +38,17 @@ TRANSLATIONS = {
         "most_pop": "MOST POPULAR", "contact_sales": "CONTACT SALES", "faq": "❓ FAQ", "settings": "⚙️ SETTINGS",
         "lang_sel": "Language", "theme_sel": "Theme", "theme_dark": "Dark (Neon)", "theme_light": "Light (Corporate)",
         "acad_title": "OA | TRADE SMC MASTERY", "acad_quote": "Not beating the market, but following it with discipline.",
-        "lesson_1_title": "📌 PART 1: TIME & CONTEXT", "lesson_1_content": "#### 1. TIME FILTER...",
-        "lesson_2_title": "🛠️ PART 2: ENTRY SETUP", "lesson_2_content": "#### 1. FIBONACCI...",
-        "lesson_3_title": "⚠️ PART 3: RULES", "lesson_3_content": "NO CHOCH. NO TRADING OUTSIDE HOURS.",
-        # AI BÖLÜMÜ
-        "ai_title": "🤖 NEURAL NETWORK PREDICTION", "ai_desc": "Probabilistic price forecasting based on SMC logic & machine learning.",
-        "run_ai": "INITIALIZE NEURAL NET", "ai_analyzing": "Analyzing Order Flow...", "ai_calc": "Calculating Probabilities...",
-        "ai_pair": "Select Asset", "ai_tf": "Timeframe", "ai_conf": "AI Confidence", "ai_direction": "Predicted Direction",
-        "ai_bull": "BULLISH", "ai_bear": "BEARISH", "ai_neutral": "NEUTRAL"
+        "lesson_1_title": "📌 PART 1: TIME & CONTEXT",
+        "lesson_1_content": "#### 1. TIME FILTER...",
+        "lesson_2_title": "🛠️ PART 2: ENTRY SETUP",
+        "lesson_2_content": "#### 1. FIBONACCI...",
+        "lesson_3_title": "⚠️ PART 3: RULES",
+        "lesson_3_content": "NO CHOCH. NO TRADING OUTSIDE HOURS.",
+        "ai_title": "🤖 QUANTITATIVE AI ENGINE", "ai_desc": "Real-time market data processing with probabilistic forecasting models.",
+        "run_ai": "RUN ANALYSIS", "ai_analyzing": "Fetching Binance Data...", "ai_calc": "Running Technical Models...",
+        "ai_pair": "Asset Class", "ai_tf": "Timeframe", "ai_conf": "Signal Strength", "ai_direction": "Market Bias",
+        "ai_bull": "BULLISH", "ai_bear": "BEARISH", "ai_neutral": "NEUTRAL",
+        "ai_price": "Current Price"
     },
     "TR": {
         "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ", "perf": "PERFORMANS", "acad": "AKADEMİ", "memb": "ÜYELİK", "cont": "İLETİŞİM", "ai_lab": "YAPAY ZEKA",
@@ -58,14 +62,17 @@ TRANSLATIONS = {
         "most_pop": "EN POPÜLER", "contact_sales": "SATIŞA ULAŞ", "faq": "❓ SIK SORULANLAR", "settings": "⚙️ AYARLAR",
         "lang_sel": "Dil", "theme_sel": "Tema", "theme_dark": "Koyu Mod (Neon)", "theme_light": "Açık Mod (Kurumsal)",
         "acad_title": "OA | TRADE SMC USTALIK SINIFI", "acad_quote": "Piyasayı yenmek değil, disiplinle takip etmek.",
-        "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM", "lesson_1_content": "#### 1. ZAMAN FİLTRESİ...",
-        "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ", "lesson_2_content": "#### 1. FIBONACCI...",
-        "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR", "lesson_3_content": "CHOCH YOK. SAAT DIŞI İŞLEM YOK.",
-        # AI BÖLÜMÜ
-        "ai_title": "🤖 SİNİR AĞI TAHMİNİ", "ai_desc": "SMC mantığı ve makine öğrenimi tabanlı olasılıksal fiyat tahmini.",
-        "run_ai": "SİNİR AĞINI BAŞLAT", "ai_analyzing": "Emir Akışı Analiz Ediliyor...", "ai_calc": "Olasılıklar Hesaplanıyor...",
-        "ai_pair": "Varlık Seç", "ai_tf": "Zaman Dilimi", "ai_conf": "YZ Güven Puanı", "ai_direction": "Tahmini Yön",
-        "ai_bull": "YÜKSELİŞ (LONG)", "ai_bear": "DÜŞÜŞ (SHORT)", "ai_neutral": "NÖTR"
+        "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM",
+        "lesson_1_content": "#### 1. ZAMAN FİLTRESİ...",
+        "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ",
+        "lesson_2_content": "#### 1. FIBONACCI...",
+        "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR",
+        "lesson_3_content": "CHOCH YOK. SAAT DIŞI İŞLEM YOK.",
+        "ai_title": "🤖 QUANT YAPAY ZEKA MOTORU", "ai_desc": "Gerçek zamanlı piyasa verileri ve olasılıksal tahmin modelleri.",
+        "run_ai": "ANALİZİ BAŞLAT", "ai_analyzing": "Binance Verileri Çekiliyor...", "ai_calc": "Teknik Modeller Çalıştırılıyor...",
+        "ai_pair": "Varlık Seçimi", "ai_tf": "Zaman Dilimi", "ai_conf": "Sinyal Gücü", "ai_direction": "Piyasa Yönü",
+        "ai_bull": "YÜKSELİŞ (BULL)", "ai_bear": "DÜŞÜŞ (BEAR)", "ai_neutral": "NÖTR",
+        "ai_price": "Anlık Fiyat"
     },
     "RU": {
         "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ", "ai_lab": "ИИ ЛАБОРАТОРИЯ",
@@ -82,11 +89,11 @@ TRANSLATIONS = {
         "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "### 1. ФИЛЬТР ВРЕМЕНИ...",
         "lesson_2_title": "🛠️ ЧАСТЬ 2: ВХОД", "lesson_2_content": "### 1. ФИБОНАЧЧИ...",
         "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "НЕТ CHOCH.",
-        # AI BÖLÜMÜ
-        "ai_title": "🤖 НЕЙРОСЕТЕВОЙ ПРОГНОЗ", "ai_desc": "Вероятностное прогнозирование цены на основе SMC.",
-        "run_ai": "ЗАПУСТИТЬ НЕЙРОСЕТЬ", "ai_analyzing": "Анализ потока ордеров...", "ai_calc": "Расчет вероятностей...",
-        "ai_pair": "Актив", "ai_tf": "Таймфрейм", "ai_conf": "Уверенность ИИ", "ai_direction": "Направление",
-        "ai_bull": "БЫЧИЙ (LONG)", "ai_bear": "МЕДВЕЖИЙ (SHORT)", "ai_neutral": "НЕЙТРАЛЬНО"
+        "ai_title": "🤖 QUANT AI ENGINE", "ai_desc": "Анализ данных в реальном времени.",
+        "run_ai": "ЗАПУСК АНАЛИЗА", "ai_analyzing": "Загрузка данных Binance...", "ai_calc": "Расчет моделей...",
+        "ai_pair": "Актив", "ai_tf": "Таймфрейм", "ai_conf": "Сила сигнала", "ai_direction": "Направление",
+        "ai_bull": "БЫЧИЙ", "ai_bear": "МЕДВЕЖИЙ", "ai_neutral": "НЕЙТРАЛЬНО",
+        "ai_price": "Текущая цена"
     }
 }
 
@@ -106,120 +113,51 @@ with st.expander(t('settings'), expanded=False):
 # 1. DİNAMİK RENK PALETİ VE CSS
 # ==========================================
 if st.session_state.theme == "Dark":
-    # KOYU MOD (NEON)
-    col = {
-        "bg": "#050505",
-        "txt": "#e0e0e0",
-        "card": "rgba(20, 20, 25, 0.7)", 
-        "bd": "#333",
-        "ac": "#00ffcc", # Neon Turkuaz
-        "ac_h": "#00cca3",
-        "sec": "#111",
-        "ttl": "#ffffff",
-        "grd": "#aaaaaa"
-    }
-    # Koyu Mod Animasyonu (Parlak Küreler)
-    anim_html = f"""
-    <style>
-        .orb-container {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; background: {col['bg']}; }}
-        .orb {{ position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.6; animation: moveOrb 20s infinite alternate; }}
-        .orb1 {{ top: 10%; left: 10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #00ffcc 0%, transparent 70%); }}
-        .orb2 {{ bottom: 10%; right: 10%; width: 40vw; height: 40vw; background: radial-gradient(circle, #9900ff 0%, transparent 70%); animation-duration: 25s; animation-direction: alternate-reverse; }}
-        .orb3 {{ top: 40%; left: 40%; width: 30vw; height: 30vw; background: radial-gradient(circle, #ff007f 0%, transparent 70%); animation-duration: 18s; }}
-        @keyframes moveOrb {{ 0% {{ transform: translate(0, 0) scale(1); }} 100% {{ transform: translate(50px, 50px) scale(1.1); }} }}
-    </style>
-    <div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
-    """
+    col = {"bg": "#050505", "txt": "#e0e0e0", "card": "rgba(20, 20, 25, 0.7)", "bd": "#333", "ac": "#00ffcc", "ac_h": "#00cca3", "sec": "#111", "ttl": "#ffffff", "grd": "#aaaaaa"}
+    anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;}} .orb1 {{top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);}} .orb2 {{bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);animation-duration:25s;animation-direction:alternate-reverse;}} @keyframes moveOrb {{0%{{transform:translate(0,0) scale(1);}}100%{{transform:translate(50px,50px) scale(1.1);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>"""
 else:
-    # AÇIK MOD (KURUMSAL)
-    col = {
-        "bg": "#f8f9fa",
-        "txt": "#212529", 
-        "card": "rgba(255, 255, 255, 0.95)",
-        "bd": "#dee2e6",
-        "ac": "#0d6efd", 
-        "ac_h": "#0b5ed7",
-        "sec": "#ffffff",
-        "ttl": "#000000", 
-        "grd": "#6c757d"
-    }
-    # Açık Mod Animasyonu (Hafif)
-    anim_html = f"""
-    <style>
-        .orb-container {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; background: {col['bg']}; }}
-        .orb {{ position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.2; animation: moveOrb 25s infinite alternate; }}
-        .orb1 {{ top: -10%; left: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #0d6efd 0%, transparent 60%); }}
-        .orb2 {{ bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #6610f2 0%, transparent 60%); animation-duration: 30s; }}
-        @keyframes moveOrb {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(30px, 30px); }} }}
-    </style>
-    <div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>
-    """
+    col = {"bg": "#f8f9fa", "txt": "#212529", "card": "rgba(255, 255, 255, 0.95)", "bd": "#dee2e6", "ac": "#0d6efd", "ac_h": "#0b5ed7", "sec": "#ffffff", "ttl": "#000000", "grd": "#6c757d"}
+    anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.2;animation:moveOrb 25s infinite alternate;}} .orb1 {{top:-10%;left:-10%;width:60vw;height:60vw;background:radial-gradient(circle,#0d6efd 0%,transparent 60%);}} .orb2 {{bottom:-10%;right:-10%;width:60vw;height:60vw;background:radial-gradient(circle,#6610f2 0%,transparent 60%);animation-duration:30s;}} @keyframes moveOrb {{0%{{transform:translate(0,0);}}100%{{transform:translate(30px,30px);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>"""
 
 st.markdown(anim_html, unsafe_allow_html=True)
-
 st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;600&display=swap');
-        
-        .stApp {{ background: transparent !important; }}
-        header, footer, #MainMenu {{display: none !important;}}
+        .stApp {{background: transparent !important;}} header, footer, #MainMenu {{display: none !important;}}
         .block-container {{padding-top: 2rem;}}
-
-        /* YAZI RENGİ ZORLAMA (Light mode hatası için) */
-        h1, h2, h3, h4, h5, h6, p, li, div, span, label {{ 
-            color: {col['txt']} !important; 
-            font-family: 'Inter', sans-serif;
-        }}
-
-        .neon-title {{
-            font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important;
-            font-weight: 900; letter-spacing: 4px; margin: 0;
-            {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""}
-            animation: pulse 3s infinite alternate;
-        }}
-        @keyframes pulse {{ 0% {{opacity: 1;}} 100% {{opacity: 0.9;}} }}
-
-        .metric-container {{
-            background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px;
-            text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-        }}
-        .metric-container:hover {{ transform: translateY(-5px); border-color: {col['ac']}; }}
-        .metric-value {{ font-size: 2rem; font-weight: 700; color: {col['ttl']} !important; }}
-        .metric-label {{ font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px; }}
-
-        .custom-btn {{ background-color: {col['ac']}; color: {col['bg']} !important; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center; }}
-        .custom-btn-outline {{ border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent; }}
-        
-        .stDataFrame {{ border: 1px solid {col['bd']}; }}
-        .stNumberInput input, .stSelectbox div[data-baseweb="select"] > div {{ background-color: {col['sec']}; color: {col['txt']}; border-color: {col['bd']}; }}
-        
-        .calendar-container {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px; }}
-        .calendar-header {{ text-align: center; color: {col['grd']} !important; font-weight: bold; padding-bottom: 5px; border-bottom: 1px solid {col['bd']}; }}
-        .day-cell {{ background-color: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 6px; height: 90px; padding: 8px; display: flex; flex-direction: column; transition: 0.2s; }}
-        .day-cell:hover {{ border-color: {col['ac']}; transform: scale(1.03); z-index: 5; }}
-        .day-number {{ font-weight: bold; color: {col['txt']} !important; opacity: 0.7; }}
-        .day-profit {{ font-size: 1.1rem; font-weight: 800; margin-top: auto; align-self: center; }}
-        
-        .day-win {{ background: rgba(0, 255, 204, 0.15); border-color: {col['ac']}; }}
-        .day-win-light {{ background: rgba(13, 110, 253, 0.15); border-color: {col['ac']}; }}
-        .day-loss {{ background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b; }}
-        .win-text {{ color: {col['ac']} !important; }} .loss-text {{ color: #ff4b4b !important; }} .empty-cell {{ background: transparent; border: none; }}
-        
-        .stTabs [data-baseweb="tab"] {{ color: {col['grd']} !important; }}
-        .stTabs [data-baseweb="tab"]:hover {{ color: {col['ac']} !important; }}
-        .stTabs [aria-selected="true"] {{ color: {col['ac']} !important; border-bottom-color: {col['ac']} !important; }}
-        
-        .pricing-card {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 12px; padding: 30px; text-align: center; backdrop-filter: blur(10px); }}
-        .plan-price {{ color: {col['ttl']} !important; font-size: 2.5rem; font-weight: bold; }}
-        .plan-name {{ color: {col['ac']} !important; font-weight: bold; letter-spacing: 2px; }}
-        
-        .rule-box {{ background: rgba(0,0,0,0.05); border-left: 4px solid {col['ac']}; padding: 15px; margin: 10px 0; color: {col['txt']} !important; }}
+        h1, h2, h3, h4, h5, h6, p, li, div, span, label {{color: {col['txt']} !important; font-family: 'Inter', sans-serif;}}
+        .neon-title {{font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important; font-weight: 900; letter-spacing: 4px; margin: 0; {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""} animation: pulse 3s infinite alternate;}}
+        @keyframes pulse {{0%{{opacity:1;}}100%{{opacity:0.9;}}}}
+        .metric-container {{background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px; text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s;}}
+        .metric-container:hover {{transform: translateY(-5px); border-color: {col['ac']};}}
+        .metric-value {{font-size: 2rem; font-weight: 700; color: {col['ttl']} !important;}}
+        .metric-label {{font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px;}}
+        .custom-btn {{background-color: {col['ac']}; color: {col['bg']} !important; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center;}}
+        .custom-btn-outline {{border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent;}}
+        .stDataFrame {{border: 1px solid {col['bd']};}}
+        .stNumberInput input, .stSelectbox div[data-baseweb="select"] > div {{background-color: {col['sec']}; color: {col['txt']}; border-color: {col['bd']};}}
+        .calendar-container {{display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px;}}
+        .calendar-header {{text-align: center; color: {col['grd']} !important; font-weight: bold; padding-bottom: 5px; border-bottom: 1px solid {col['bd']};}}
+        .day-cell {{background-color: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 6px; height: 90px; padding: 8px; display: flex; flex-direction: column; transition: 0.2s;}}
+        .day-cell:hover {{border-color: {col['ac']}; transform: scale(1.03); z-index: 5;}}
+        .day-number {{font-weight: bold; color: {col['txt']} !important; opacity: 0.7;}}
+        .day-profit {{font-size: 1.1rem; font-weight: 800; margin-top: auto; align-self: center;}}
+        .day-win {{background: rgba(0, 255, 204, 0.15); border-color: {col['ac']};}}
+        .day-win-light {{background: rgba(13, 110, 253, 0.15); border-color: {col['ac']};}}
+        .day-loss {{background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b;}}
+        .win-text {{color: {col['ac']} !important;}} .loss-text {{color: #ff4b4b !important;}} .empty-cell {{background: transparent; border: none;}}
+        .stTabs [data-baseweb="tab"] {{color: {col['grd']} !important;}}
+        .stTabs [data-baseweb="tab"]:hover {{color: {col['ac']} !important;}}
+        .stTabs [aria-selected="true"] {{color: {col['ac']} !important; border-bottom-color: {col['ac']} !important;}}
+        .pricing-card {{background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 12px; padding: 30px; text-align: center; backdrop-filter: blur(10px);}}
+        .plan-price {{color: {col['ttl']} !important; font-size: 2.5rem; font-weight: bold;}}
+        .plan-name {{color: {col['ac']} !important; font-weight: bold; letter-spacing: 2px;}}
+        .rule-box {{background: rgba(0,0,0,0.05); border-left: 4px solid {col['ac']}; padding: 15px; margin: 10px 0; color: {col['txt']} !important;}}
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. VERİ VE UI
+# 2. VERİ YÜKLEME
 # ==========================================
 @st.cache_data(ttl=60)
 def load_data():
@@ -235,6 +173,24 @@ def load_data():
     except: return pd.DataFrame()
 df = load_data()
 
+# ==========================================
+# 3. CANLI VERİ FONKSİYONU (BINANCE)
+# ==========================================
+def get_binance_data(symbol, interval, limit=100):
+    url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
+    try:
+        response = requests.get(url)
+        data = response.json()
+        df = pd.DataFrame(data, columns=['time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'qav', 'num_trades', 'taker_base_vol', 'taker_quote_vol', 'ignore'])
+        df['time'] = pd.to_datetime(df['time'], unit='ms')
+        df['close'] = df['close'].astype(float)
+        return df
+    except:
+        return pd.DataFrame()
+
+# ==========================================
+# 4. ARAYÜZ
+# ==========================================
 wt = "light" if st.session_state.theme == "Light" else "dark"
 components.html(f"""<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>{{"symbols": [{{"proName": "BINANCE:BTCUSDT", "title": "Bitcoin"}}, {{"proName": "BINANCE:ETHUSDT", "title": "Ethereum"}}, {{"proName": "BINANCE:SOLUSDT", "title": "Solana"}}], "showSymbolLogo": true, "colorTheme": "{wt}", "isTransparent": true, "displayMode": "adaptive", "locale": "en"}}</script></div>""", height=50)
 
@@ -243,7 +199,7 @@ st.markdown('<div class="neon-title">CRAZYTOWN CAPITAL</div>', unsafe_allow_html
 st.markdown(f"<p style='text-align: center; color: {col['ac']}; letter-spacing: 2px; font-size: 0.9rem; margin-top: -5px; font-weight:bold;'>{t('title_sub')}</p>", unsafe_allow_html=True)
 st.write("")
 
-# 5 SEKME: Yapay Zeka Eklendi
+# TABLARI GENİŞLET (AI LAB EKLENDİ)
 tab1, tab2, tab5, tab3, tab4 = st.tabs([t('perf'), t('acad'), t('ai_lab'), t('memb'), t('cont')])
 
 # TAB 1: PERFORMANS
@@ -318,80 +274,98 @@ with tab2:
     with st.expander(t('lesson_2_title')): st.markdown(t('lesson_2_content'))
     with st.expander(t('lesson_3_title')): st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
 
-# TAB 5: AI LAB (YENİ YAPAY ZEKA MODÜLÜ)
+# TAB 5: AI LAB (YENİ YAPAY ZEKA MODÜLÜ - CANLI VERİ)
 with tab5:
     st.write("")
     st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('ai_title')}</h2>", unsafe_allow_html=True)
     st.markdown(f"""<div style="text-align: center; font-style: italic; color: {col['grd']} !important; margin-bottom: 20px;">{t('ai_desc')}</div>""", unsafe_allow_html=True)
     
     ai_c1, ai_c2, ai_c3 = st.columns([1, 1, 2])
-    with ai_c1:
-        asset = st.selectbox(t('ai_pair'), ["BTC/USDT", "ETH/USDT", "SOL/USDT"])
-    with ai_c2:
-        tf = st.selectbox(t('ai_tf'), ["15m", "1h", "4h", "1D"])
+    with ai_c1: asset = st.selectbox(t('ai_pair'), ["BTC/USDT", "ETH/USDT", "SOL/USDT"])
+    with ai_c2: tf = st.selectbox(t('ai_tf'), ["15m", "1h", "4h", "1d"])
+    
+    # Binance Sembolü Temizleme (Slash kaldırma)
+    symbol_api = asset.replace("/", "")
+    
     with ai_c3:
-        st.write("") # Spacer
+        st.write("") 
         if st.button(t('run_ai'), key="ai_btn", use_container_width=True):
             with st.spinner(t('ai_analyzing')):
-                time.sleep(1.5) # Simülasyon efekti
-            with st.spinner(t('ai_calc')):
-                time.sleep(1)
-            
-            # --- AI SIMULATION LOGIC ---
-            # Rastgele bir yön belirle (Simülasyon)
-            import random
-            direction = random.choice(["BULL", "BEAR"])
-            confidence = random.randint(75, 96)
-            
-            # Grafik Verisi Oluştur (Random Walk)
-            steps = 50
-            start_price = 95000 if "BTC" in asset else (3000 if "ETH" in asset else 150)
-            x = np.arange(steps)
-            # Rastgele yürüyüş (Trendli)
-            trend = 0.5 if direction == "BULL" else -0.5
-            noise = np.random.normal(0, 1, steps)
-            y = start_price + np.cumsum(noise + trend) * (start_price * 0.002)
-            
-            # Güven Aralığı (Prediction Cone)
-            y_upper = y + (np.arange(steps) * (start_price * 0.0005))
-            y_lower = y - (np.arange(steps) * (start_price * 0.0005))
-            
-            # --- SONUÇLARI GÖSTER ---
-            res_col1, res_col2 = st.columns(2)
-            dir_text = t('ai_bull') if direction == "BULL" else t('ai_bear')
-            dir_color = col['ac'] if direction == "BULL" else "#ff4b4b"
-            
-            with res_col1:
-                st.markdown(f"""
-                <div class="metric-container" style="border-color:{dir_color}">
-                    <div class="metric-label">{t('ai_direction')}</div>
-                    <div class="metric-value" style="color:{dir_color} !important">{dir_text}</div>
-                </div>
-                """, unsafe_allow_html=True)
-            with res_col2:
-                st.markdown(f"""
-                <div class="metric-container">
-                    <div class="metric-label">{t('ai_conf')}</div>
-                    <div class="metric-value">{confidence}%</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            # --- AI GRAFİĞİ (Prediction Cone) ---
-            st.write("")
-            fig_ai = go.Figure()
-            # Geçmiş (Simüle)
-            fig_ai.add_trace(go.Scatter(x=np.arange(20), y=y[:20], mode='lines', name='History', line=dict(color=col['grd'], width=2)))
-            # Tahmin
-            fig_ai.add_trace(go.Scatter(x=np.arange(19, 50), y=y[19:], mode='lines', name='Forecast', line=dict(color=dir_color, width=3)))
-            # Güven Aralığı
-            fig_ai.add_trace(go.Scatter(x=np.concatenate([np.arange(19, 50), np.arange(19, 50)[::-1]]),
-                                        y=np.concatenate([y_upper[19:], y_lower[19:][::-1]]),
-                                        fill='toself', fillcolor=f"rgba({(0, 255, 204) if direction=='BULL' else (255, 75, 75)}, 0.1)",
-                                        line=dict(color='rgba(255,255,255,0)'), hoverinfo="skip", showlegend=False))
-            
-            pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"
-            fig_ai.update_layout(template=pt, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=400, margin=dict(l=0,r=0,t=20,b=0))
-            st.plotly_chart(fig_ai, use_container_width=True)
+                # CANLI VERİ ÇEKME
+                live_df = get_binance_data(symbol_api, tf)
+                time.sleep(0.5) 
+                
+            if not live_df.empty:
+                # TEKNİK ANALİZ (BASİT YZ SİMÜLASYONU)
+                current_price = live_df['close'].iloc[-1]
+                # Hareketli Ortalama (SMA 20)
+                live_df['SMA'] = live_df['close'].rolling(window=20).mean()
+                sma_val = live_df['SMA'].iloc[-1]
+                
+                # Basit RSI Hesaplama
+                delta = live_df['close'].diff()
+                gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+                loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+                rs = gain / loss
+                live_df['RSI'] = 100 - (100 / (1 + rs))
+                rsi_val = live_df['RSI'].iloc[-1]
+                
+                # Karar Mekanizması (Logic)
+                if current_price > sma_val and rsi_val > 50:
+                    direction = "BULL"
+                    confidence = min(int(rsi_val) + 10, 95)
+                elif current_price < sma_val and rsi_val < 50:
+                    direction = "BEAR"
+                    confidence = min(int(100 - rsi_val) + 10, 95)
+                else:
+                    direction = "NEUTRAL"
+                    confidence = 50
+                
+                # GÖRSELLEŞTİRME
+                res_col1, res_col2, res_col3 = st.columns(3)
+                dir_text = t('ai_bull') if direction == "BULL" else (t('ai_bear') if direction == "BEAR" else t('ai_neutral'))
+                dir_color = col['ac'] if direction == "BULL" else ("#ff4b4b" if direction == "BEAR" else col['grd'])
+                
+                with res_col1: st.markdown(f"""<div class="metric-container"><div class="metric-label">{t('ai_price')}</div><div class="metric-value">${current_price:,.2f}</div></div>""", unsafe_allow_html=True)
+                with res_col2: st.markdown(f"""<div class="metric-container" style="border-color:{dir_color}"><div class="metric-label">{t('ai_direction')}</div><div class="metric-value" style="color:{dir_color} !important">{dir_text}</div></div>""", unsafe_allow_html=True)
+                with res_col3: st.markdown(f"""<div class="metric-container"><div class="metric-label">{t('ai_conf')}</div><div class="metric-value">{confidence}%</div></div>""", unsafe_allow_html=True)
+                
+                # FORECAST CHART (PROJECTION CONE)
+                st.write("")
+                fig_ai = go.Figure()
+                
+                # Geçmiş Veri
+                last_50 = live_df.tail(50).reset_index(drop=True)
+                fig_ai.add_trace(go.Scatter(x=last_50.index, y=last_50['close'], mode='lines', name='Price', line=dict(color=col['txt'], width=2)))
+                
+                # Tahmin Konisi (Forecast Cone - Volatilite Bazlı)
+                last_idx = last_50.index[-1]
+                volatility = last_50['close'].std() * 0.5 # Volatilite katsayısı
+                steps = 15
+                future_x = np.arange(last_idx, last_idx + steps)
+                
+                # Yön Eğimi
+                slope = volatility * 0.1 if direction == "BULL" else (-volatility * 0.1 if direction == "BEAR" else 0)
+                base_forecast = [current_price + (i * slope) for i in range(steps)]
+                
+                upper_bound = [p + (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
+                lower_bound = [p - (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
+                
+                # Koniyi Çiz
+                fig_ai.add_trace(go.Scatter(x=np.concatenate([future_x, future_x[::-1]]), 
+                                            y=np.concatenate([upper_bound, lower_bound[::-1]]), 
+                                            fill='toself', fillcolor=f"rgba({(0,255,204) if direction=='BULL' else (255,75,75)}, 0.15)", 
+                                            line=dict(color='rgba(0,0,0,0)'), showlegend=False, name='Forecast Zone'))
+                
+                # Tahmin Çizgisi
+                fig_ai.add_trace(go.Scatter(x=future_x, y=base_forecast, mode='lines', name='AI Projection', line=dict(color=dir_color, width=2, dash='dot')))
+                
+                pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"
+                fig_ai.update_layout(template=pt, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=400, margin=dict(l=0,r=0,t=20,b=0), xaxis=dict(showgrid=False), yaxis=dict(gridcolor=col['bd']))
+                st.plotly_chart(fig_ai, use_container_width=True)
+                
+            else:
+                st.error("API Error: Binance data could not be fetched.")
 
 # TAB 3: MEMBERSHIP
 with tab3:
