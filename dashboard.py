@@ -1,15 +1,14 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime, timedelta
+from datetime import datetime
 import calendar
 import numpy as np
 import time
-import requests # CANLI VERİ İÇİN EKLENDİ
+import yfinance as yf  # BINANCE YERİNE DAHA STABİL VERİ KAYNAĞI
 
 # ==========================================
 # 0. AYARLAR
@@ -24,7 +23,9 @@ st.set_page_config(
 if 'lang' not in st.session_state: st.session_state.lang = "TR"
 if 'theme' not in st.session_state: st.session_state.theme = "Dark"
 
-# ÇEVİRİ VE İÇERİK YÖNETİMİ
+# ==========================================
+# 1. ÇEVİRİ VE İÇERİK (AKADEMİ DÜZELTİLDİ)
+# ==========================================
 TRANSLATIONS = {
     "EN": {
         "title_sub": "ALGORITHMIC TRADING SYSTEMS", "perf": "PERFORMANCE", "acad": "ACADEMY", "memb": "MEMBERSHIP", "cont": "CONTACT", "ai_lab": "AI LAB",
@@ -38,17 +39,50 @@ TRANSLATIONS = {
         "most_pop": "MOST POPULAR", "contact_sales": "CONTACT SALES", "faq": "❓ FAQ", "settings": "⚙️ SETTINGS",
         "lang_sel": "Language", "theme_sel": "Theme", "theme_dark": "Dark (Neon)", "theme_light": "Light (Corporate)",
         "acad_title": "OA | TRADE SMC MASTERY", "acad_quote": "Not beating the market, but following it with discipline.",
+        
+        # AKADEMİ (FULL)
         "lesson_1_title": "📌 PART 1: TIME & CONTEXT",
-        "lesson_1_content": "#### 1. TIME FILTER...",
+        "lesson_1_content": """
+        #### 1. TIME FILTER (CRITICAL)
+        We only trade during high-volume sessions.
+        * **LONDON:** `10:00 – 12:00` (UTC+3)
+        * **NEW YORK:** `15:30 – 18:30` (UTC+3)
+        
+        #### 2. DAILY CONTEXT (PDH/PDL)
+        The only condition: **LIQUIDITY SWEEP**.
+        * **PDH Raid:** Look for **SHORT**.
+        * **PDL Raid:** Look for **LONG**.
+        * *Wick sweep is enough.*
+        """,
         "lesson_2_title": "🛠️ PART 2: ENTRY SETUP",
-        "lesson_2_content": "#### 1. FIBONACCI...",
+        "lesson_2_content": """
+        #### 1. FIBONACCI SETTINGS
+        Draw Fib on the impulse leg.
+        * **ENTRY:** `0.75` - `0.60` (Golden Pocket)
+        * **STOP:** `1.0`
+        * **TP-1:** `0.25`
+        * **TP-2:** `-0.18`
+        
+        #### 2. FVG CONFIRMATION
+        * Must tap into a **Fair Value Gap** inside the zone.
+        """,
         "lesson_3_title": "⚠️ PART 3: RULES",
-        "lesson_3_content": "NO CHOCH. NO TRADING OUTSIDE HOURS.",
-        "ai_title": "🤖 QUANTITATIVE AI ENGINE", "ai_desc": "Real-time market data processing with probabilistic forecasting models.",
-        "run_ai": "RUN ANALYSIS", "ai_analyzing": "Fetching Binance Data...", "ai_calc": "Running Technical Models...",
-        "ai_pair": "Asset Class", "ai_tf": "Timeframe", "ai_conf": "Signal Strength", "ai_direction": "Market Bias",
-        "ai_bull": "BULLISH", "ai_bear": "BEARISH", "ai_neutral": "NEUTRAL",
-        "ai_price": "Current Price"
+        "lesson_3_content": """
+        <div class="rule-box">
+        <h4>🚨 STRICT RULES</h4>
+        <ul>
+            <li><b>NO CHOCH:</b> Don't wait for LTF confirmation.</li>
+            <li><b>NO TRADING OUTSIDE HOURS:</b> Discipline is key.</li>
+            <li><b>MANAGEMENT:</b> Move SL to BE only after TP-1.</li>
+        </ul>
+        </div>
+        """,
+        
+        # AI LAB
+        "ai_title": "🤖 QUANTITATIVE AI ENGINE", "ai_desc": "Real-time market data & probabilistic forecasting.",
+        "run_ai": "RUN ANALYSIS", "ai_analyzing": "Fetching Market Data...", "ai_calc": "Calculating Models...",
+        "ai_pair": "Asset", "ai_tf": "Timeframe", "ai_conf": "Signal Strength", "ai_direction": "Market Bias",
+        "ai_bull": "BULLISH", "ai_bear": "BEARISH", "ai_neutral": "NEUTRAL", "ai_price": "Current Price"
     },
     "TR": {
         "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ", "perf": "PERFORMANS", "acad": "AKADEMİ", "memb": "ÜYELİK", "cont": "İLETİŞİM", "ai_lab": "YAPAY ZEKA",
@@ -62,22 +96,56 @@ TRANSLATIONS = {
         "most_pop": "EN POPÜLER", "contact_sales": "SATIŞA ULAŞ", "faq": "❓ SIK SORULANLAR", "settings": "⚙️ AYARLAR",
         "lang_sel": "Dil", "theme_sel": "Tema", "theme_dark": "Koyu Mod (Neon)", "theme_light": "Açık Mod (Kurumsal)",
         "acad_title": "OA | TRADE SMC USTALIK SINIFI", "acad_quote": "Piyasayı yenmek değil, disiplinle takip etmek.",
+        
+        # AKADEMİ (FULL)
         "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM",
-        "lesson_1_content": "#### 1. ZAMAN FİLTRESİ...",
+        "lesson_1_content": """
+        #### 1. ZAMAN FİLTRESİ (KRİTİK)
+        Sadece hacimli seanslarda işlem aranır. Diğer saatlerde ekran kapatılır.
+        * **LONDRA:** `10:00 – 12:00` (TSİ)
+        * **NEW YORK:** `15:30 – 18:30` (TSİ)
+        
+        #### 2. GÜNLÜK BAĞLAM (PDH/PDL)
+        İşlem aramak için tek şart **LİKİDİTE ALIMI (SWEEP)**'dır.
+        * **PDH (Önceki Gün Yükseği) İhlali:** Sadece **SHORT**.
+        * **PDL (Önceki Gün Düşüğü) İhlali:** Sadece **LONG**.
+        * *Not: Fitil atması (Wick) yeterlidir.*
+        """,
         "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ",
-        "lesson_2_content": "#### 1. FIBONACCI...",
+        "lesson_2_content": """
+        #### 1. FIBONACCI AYARLARI
+        Likidite alımından sonra oluşan sert harekete (Impulse) Fibonacci çekilir.
+        * **GİRİŞ BÖLGESİ:** `0.75` - `0.60` (Golden Pocket)
+        * **STOP:** `1` (Hareket başlangıcı)
+        * **TP-1:** `0.25`
+        * **TP-2:** `-0.18`
+        
+        #### 2. FVG ONAYI
+        * Fiyat, `0.6-0.75` aralığındaki bir **FVG (Dengesizlik)** alanına temas etmelidir.
+        * Oradan reddedilme (rejection) beklenir.
+        """,
         "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR",
-        "lesson_3_content": "CHOCH YOK. SAAT DIŞI İŞLEM YOK.",
-        "ai_title": "🤖 QUANT YAPAY ZEKA MOTORU", "ai_desc": "Gerçek zamanlı piyasa verileri ve olasılıksal tahmin modelleri.",
-        "run_ai": "ANALİZİ BAŞLAT", "ai_analyzing": "Binance Verileri Çekiliyor...", "ai_calc": "Teknik Modeller Çalıştırılıyor...",
+        "lesson_3_content": """
+        <div class="rule-box">
+        <h4>🚨 DEĞİŞMEZ KURALLAR</h4>
+        <ul>
+            <li><b>CHOCH YOK:</b> Düşük zaman diliminde kırılım (Choch) beklenmez.</li>
+            <li><b>SAAT DIŞI İŞLEM YOK:</b> Disiplin her şeydir.</li>
+            <li><b>YÖNETİM:</b> Stop sadece TP-1 alındıktan sonra Girişe (BE) çekilir.</li>
+        </ul>
+        </div>
+        """,
+        
+        # AI LAB
+        "ai_title": "🤖 QUANT YAPAY ZEKA MOTORU", "ai_desc": "Gerçek zamanlı veriler ve olasılıksal tahmin modelleri.",
+        "run_ai": "ANALİZİ BAŞLAT", "ai_analyzing": "Veriler Çekiliyor...", "ai_calc": "Hesaplanıyor...",
         "ai_pair": "Varlık Seçimi", "ai_tf": "Zaman Dilimi", "ai_conf": "Sinyal Gücü", "ai_direction": "Piyasa Yönü",
-        "ai_bull": "YÜKSELİŞ (BULL)", "ai_bear": "DÜŞÜŞ (BEAR)", "ai_neutral": "NÖTR",
-        "ai_price": "Anlık Fiyat"
+        "ai_bull": "YÜKSELİŞ (BULL)", "ai_bear": "DÜŞÜŞ (BEAR)", "ai_neutral": "NÖTR", "ai_price": "Anlık Fiyat"
     },
     "RU": {
         "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ", "ai_lab": "ИИ ЛАБОРАТОРИЯ",
         "total_trades": "ВСЕГО СДЕЛОК", "win_rate": "ВИНРЕЙТ", "net_return": "ЧИСТАЯ ПРИБЫЛЬ", "profit_factor": "ПРОФИТ-ФАКТОР",
-        "season_goal": "ЦЕЛЬ СЕЗОНА", "completed": "ЗАВЕРШЕНО", "perf_cal": "🗓️ КАЛЕНДАРЬ ДОХОДНОСТИ",
+        "season_goal": "ЦЕЛЬ СЕЗОНА", "completed": "ЗАВЕРШЕНО", "perf_cal": "🗓️ КАЛЕНДАРЬ",
         "select_month": "Выберите месяц", "total_monthly": "ИТОГ МЕСЯЦА PNL", "market_intel": "📡 РЫНОЧНЫЙ ИНТЕЛЛЕКТ",
         "roi_sim": "🧮 ROI СИМУЛЯТОР", "roi_desc": "Рассчитайте прибыль.", "initial_cap": "Капитал ($)",
         "risk_trade": "Риск (%)", "proj_bal": "ПРОГНОЗ", "trade_log": "ЖУРНАЛ СДЕЛОК", "download": "📥 СКАЧАТЬ CSV",
@@ -86,14 +154,13 @@ TRANSLATIONS = {
         "most_pop": "ПОПУЛЯРНЫЙ", "contact_sales": "СВЯЗАТЬСЯ", "faq": "❓ FAQ", "settings": "⚙️ НАСТРОЙКИ",
         "lang_sel": "Язык", "theme_sel": "Тема", "theme_dark": "Темная", "theme_light": "Светлая",
         "acad_title": "OA | TRADE SMC МАСТЕРСТВО", "acad_quote": "Дисциплина прежде всего.",
-        "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "### 1. ФИЛЬТР ВРЕМЕНИ...",
-        "lesson_2_title": "🛠️ ЧАСТЬ 2: ВХОД", "lesson_2_content": "### 1. ФИБОНАЧЧИ...",
-        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "НЕТ CHOCH.",
+        "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "### 1. ФИЛЬТР ВРЕМЕНИ\n* **ЛОНДОН:** 10:00–12:00\n* **НЬЮ-ЙОРК:** 15:30–18:30",
+        "lesson_2_title": "🛠️ ЧАСТЬ 2: ВХОД", "lesson_2_content": "### FIBONACCI\n* **Вход:** 0.60-0.75",
+        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "<div class='rule-box'>НЕТ CHOCH.</div>",
         "ai_title": "🤖 QUANT AI ENGINE", "ai_desc": "Анализ данных в реальном времени.",
-        "run_ai": "ЗАПУСК АНАЛИЗА", "ai_analyzing": "Загрузка данных Binance...", "ai_calc": "Расчет моделей...",
-        "ai_pair": "Актив", "ai_tf": "Таймфрейм", "ai_conf": "Сила сигнала", "ai_direction": "Направление",
-        "ai_bull": "БЫЧИЙ", "ai_bear": "МЕДВЕЖИЙ", "ai_neutral": "НЕЙТРАЛЬНО",
-        "ai_price": "Текущая цена"
+        "run_ai": "ЗАПУСК", "ai_analyzing": "Загрузка...", "ai_calc": "Расчет...",
+        "ai_pair": "Актив", "ai_tf": "Таймфрейм", "ai_conf": "Сила", "ai_direction": "Направление",
+        "ai_bull": "БЫЧИЙ", "ai_bear": "МЕДВЕЖИЙ", "ai_neutral": "НЕЙТРАЛЬНО", "ai_price": "Цена"
     }
 }
 
@@ -110,11 +177,11 @@ with st.expander(t('settings'), expanded=False):
         if nt != st.session_state.theme: st.session_state.theme = nt; st.rerun()
 
 # ==========================================
-# 1. DİNAMİK RENK PALETİ VE CSS
+# 2. DİNAMİK RENK PALETİ
 # ==========================================
 if st.session_state.theme == "Dark":
-    col = {"bg": "#050505", "txt": "#e0e0e0", "card": "rgba(20, 20, 25, 0.7)", "bd": "#333", "ac": "#00ffcc", "ac_h": "#00cca3", "sec": "#111", "ttl": "#ffffff", "grd": "#aaaaaa"}
-    anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;}} .orb1 {{top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);}} .orb2 {{bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);animation-duration:25s;animation-direction:alternate-reverse;}} @keyframes moveOrb {{0%{{transform:translate(0,0) scale(1);}}100%{{transform:translate(50px,50px) scale(1.1);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>"""
+    col = {"bg": "#050505", "txt": "#e0e0e0", "card": "rgba(20, 20, 25, 0.8)", "bd": "#333", "ac": "#00ffcc", "ac_h": "#00cca3", "sec": "#111", "ttl": "#ffffff", "grd": "#aaaaaa"}
+    anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;}} .orb1 {{top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);}} .orb2 {{bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);animation-duration:25s;animation-direction:alternate-reverse;}} .orb3 {{top:40%;left:40%;width:30vw;height:30vw;background:radial-gradient(circle,#ff007f 0%,transparent 70%);animation-duration:18s;}} @keyframes moveOrb {{0%{{transform:translate(0,0) scale(1);}}100%{{transform:translate(50px,50px) scale(1.1);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>"""
 else:
     col = {"bg": "#f8f9fa", "txt": "#212529", "card": "rgba(255, 255, 255, 0.95)", "bd": "#dee2e6", "ac": "#0d6efd", "ac_h": "#0b5ed7", "sec": "#ffffff", "ttl": "#000000", "grd": "#6c757d"}
     anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.2;animation:moveOrb 25s infinite alternate;}} .orb1 {{top:-10%;left:-10%;width:60vw;height:60vw;background:radial-gradient(circle,#0d6efd 0%,transparent 60%);}} .orb2 {{bottom:-10%;right:-10%;width:60vw;height:60vw;background:radial-gradient(circle,#6610f2 0%,transparent 60%);animation-duration:30s;}} @keyframes moveOrb {{0%{{transform:translate(0,0);}}100%{{transform:translate(30px,30px);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>"""
@@ -157,10 +224,10 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. VERİ YÜKLEME
+# 3. VERİ FONKSİYONLARI (GSPREAD & YFINANCE)
 # ==========================================
 @st.cache_data(ttl=60)
-def load_data():
+def load_sheet_data():
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
         if "gcp_service_account" in st.secrets: creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp_service_account"], scope)
@@ -171,22 +238,31 @@ def load_data():
         if 'R_Kazanc' in df.columns: df['R_Kazanc'] = df['R_Kazanc'].astype(str).str.replace(',', '.'); df['R_Kazanc'] = pd.to_numeric(df['R_Kazanc'], errors='coerce').fillna(0)
         return df
     except: return pd.DataFrame()
-df = load_data()
 
-# ==========================================
-# 3. CANLI VERİ FONKSİYONU (BINANCE)
-# ==========================================
-def get_binance_data(symbol, interval, limit=100):
-    url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
+df = load_sheet_data()
+
+# CANLI VERİ ÇEKME (YAHOO FINANCE - ÇOK DAHA STABİL)
+def get_market_data(symbol, interval):
+    # Binance sembollerini Yahoo Finance formatına çevir
+    map_sym = {"BTC/USDT": "BTC-USD", "ETH/USDT": "ETH-USD", "SOL/USDT": "SOL-USD"}
+    map_res = {"15m": "15m", "1h": "1h", "4h": "1h", "1d": "1d"} # YF 4h desteklemez, 1h alıp resample yapılabilir veya 1h kullanılır
+    
+    ticker = map_sym.get(symbol, "BTC-USD")
+    res = map_res.get(interval, "1h")
+    
     try:
-        response = requests.get(url)
-        data = response.json()
-        df = pd.DataFrame(data, columns=['time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'qav', 'num_trades', 'taker_base_vol', 'taker_quote_vol', 'ignore'])
-        df['time'] = pd.to_datetime(df['time'], unit='ms')
-        df['close'] = df['close'].astype(float)
-        return df
+        data = yf.download(ticker, period="5d", interval=res, progress=False)
+        if not data.empty:
+            data.reset_index(inplace=True)
+            # Sütun isimlerini düzelt (YF bazen MultiIndex döner)
+            if isinstance(data.columns, pd.MultiIndex):
+                data.columns = [c[0] for c in data.columns]
+            # Standartlaştır
+            data = data.rename(columns={"Date": "time", "Datetime": "time", "Close": "close", "Open": "open", "High": "high", "Low": "low"})
+            return data
     except:
         return pd.DataFrame()
+    return pd.DataFrame()
 
 # ==========================================
 # 4. ARAYÜZ
@@ -199,7 +275,7 @@ st.markdown('<div class="neon-title">CRAZYTOWN CAPITAL</div>', unsafe_allow_html
 st.markdown(f"<p style='text-align: center; color: {col['ac']}; letter-spacing: 2px; font-size: 0.9rem; margin-top: -5px; font-weight:bold;'>{t('title_sub')}</p>", unsafe_allow_html=True)
 st.write("")
 
-# TABLARI GENİŞLET (AI LAB EKLENDİ)
+# TABLARI GENİŞLET
 tab1, tab2, tab5, tab3, tab4 = st.tabs([t('perf'), t('acad'), t('ai_lab'), t('memb'), t('cont')])
 
 # TAB 1: PERFORMANS
@@ -266,7 +342,7 @@ with tab1:
             return [f'color: {win_color}; font-weight:bold' if c_name == 'Sonuç' else f'color: {col["txt"]}' for c_name in row.index]
         st.dataframe(df.style.apply(hwin, axis=1), use_container_width=True, hide_index=True)
 
-# TAB 2: AKADEMİ (PDF)
+# TAB 2: AKADEMİ (FULL İÇERİK GERİ GELDİ)
 with tab2:
     st.write(""); st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('acad_title')}</h2>", unsafe_allow_html=True)
     st.markdown(f"""<div style="text-align: center; font-style: italic; color: {col['grd']} !important; margin-bottom: 20px;">"{t('acad_quote')}"</div>""", unsafe_allow_html=True)
@@ -274,7 +350,7 @@ with tab2:
     with st.expander(t('lesson_2_title')): st.markdown(t('lesson_2_content'))
     with st.expander(t('lesson_3_title')): st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
 
-# TAB 5: AI LAB (YENİ YAPAY ZEKA MODÜLÜ - CANLI VERİ)
+# TAB 5: AI LAB (CANLI VERİ - YFINANCE İLE DÜZELTİLDİ)
 with tab5:
     st.write("")
     st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('ai_title')}</h2>", unsafe_allow_html=True)
@@ -282,35 +358,30 @@ with tab5:
     
     ai_c1, ai_c2, ai_c3 = st.columns([1, 1, 2])
     with ai_c1: asset = st.selectbox(t('ai_pair'), ["BTC/USDT", "ETH/USDT", "SOL/USDT"])
-    with ai_c2: tf = st.selectbox(t('ai_tf'), ["15m", "1h", "4h", "1d"])
-    
-    # Binance Sembolü Temizleme (Slash kaldırma)
-    symbol_api = asset.replace("/", "")
+    with ai_c2: tf = st.selectbox(t('ai_tf'), ["1h", "4h", "1d"])
     
     with ai_c3:
         st.write("") 
         if st.button(t('run_ai'), key="ai_btn", use_container_width=True):
             with st.spinner(t('ai_analyzing')):
-                # CANLI VERİ ÇEKME
-                live_df = get_binance_data(symbol_api, tf)
+                live_df = get_market_data(asset, tf)
                 time.sleep(0.5) 
                 
-            if not live_df.empty:
-                # TEKNİK ANALİZ (BASİT YZ SİMÜLASYONU)
-                current_price = live_df['close'].iloc[-1]
-                # Hareketli Ortalama (SMA 20)
+            if not live_df.empty and len(live_df) > 20:
+                # TEKNİK ANALİZ
+                current_price = float(live_df['close'].iloc[-1])
                 live_df['SMA'] = live_df['close'].rolling(window=20).mean()
-                sma_val = live_df['SMA'].iloc[-1]
+                sma_val = float(live_df['SMA'].iloc[-1])
                 
-                # Basit RSI Hesaplama
+                # RSI
                 delta = live_df['close'].diff()
                 gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
                 loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
                 rs = gain / loss
                 live_df['RSI'] = 100 - (100 / (1 + rs))
-                rsi_val = live_df['RSI'].iloc[-1]
+                rsi_val = float(live_df['RSI'].iloc[-1])
                 
-                # Karar Mekanizması (Logic)
+                # SİNYAL MANTIĞI
                 if current_price > sma_val and rsi_val > 50:
                     direction = "BULL"
                     confidence = min(int(rsi_val) + 10, 95)
@@ -321,7 +392,6 @@ with tab5:
                     direction = "NEUTRAL"
                     confidence = 50
                 
-                # GÖRSELLEŞTİRME
                 res_col1, res_col2, res_col3 = st.columns(3)
                 dir_text = t('ai_bull') if direction == "BULL" else (t('ai_bear') if direction == "BEAR" else t('ai_neutral'))
                 dir_color = col['ac'] if direction == "BULL" else ("#ff4b4b" if direction == "BEAR" else col['grd'])
@@ -330,42 +400,30 @@ with tab5:
                 with res_col2: st.markdown(f"""<div class="metric-container" style="border-color:{dir_color}"><div class="metric-label">{t('ai_direction')}</div><div class="metric-value" style="color:{dir_color} !important">{dir_text}</div></div>""", unsafe_allow_html=True)
                 with res_col3: st.markdown(f"""<div class="metric-container"><div class="metric-label">{t('ai_conf')}</div><div class="metric-value">{confidence}%</div></div>""", unsafe_allow_html=True)
                 
-                # FORECAST CHART (PROJECTION CONE)
+                # GRAFİK
                 st.write("")
                 fig_ai = go.Figure()
-                
-                # Geçmiş Veri
                 last_50 = live_df.tail(50).reset_index(drop=True)
                 fig_ai.add_trace(go.Scatter(x=last_50.index, y=last_50['close'], mode='lines', name='Price', line=dict(color=col['txt'], width=2)))
                 
-                # Tahmin Konisi (Forecast Cone - Volatilite Bazlı)
+                # Prediction Cone
                 last_idx = last_50.index[-1]
-                volatility = last_50['close'].std() * 0.5 # Volatilite katsayısı
+                volatility = last_50['close'].std() * 0.5
                 steps = 15
                 future_x = np.arange(last_idx, last_idx + steps)
-                
-                # Yön Eğimi
                 slope = volatility * 0.1 if direction == "BULL" else (-volatility * 0.1 if direction == "BEAR" else 0)
                 base_forecast = [current_price + (i * slope) for i in range(steps)]
-                
                 upper_bound = [p + (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
                 lower_bound = [p - (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
                 
-                # Koniyi Çiz
-                fig_ai.add_trace(go.Scatter(x=np.concatenate([future_x, future_x[::-1]]), 
-                                            y=np.concatenate([upper_bound, lower_bound[::-1]]), 
-                                            fill='toself', fillcolor=f"rgba({(0,255,204) if direction=='BULL' else (255,75,75)}, 0.15)", 
-                                            line=dict(color='rgba(0,0,0,0)'), showlegend=False, name='Forecast Zone'))
-                
-                # Tahmin Çizgisi
+                fig_ai.add_trace(go.Scatter(x=np.concatenate([future_x, future_x[::-1]]), y=np.concatenate([upper_bound, lower_bound[::-1]]), fill='toself', fillcolor=f"rgba({(0,255,204) if direction=='BULL' else (255,75,75)}, 0.15)", line=dict(color='rgba(0,0,0,0)'), showlegend=False))
                 fig_ai.add_trace(go.Scatter(x=future_x, y=base_forecast, mode='lines', name='AI Projection', line=dict(color=dir_color, width=2, dash='dot')))
                 
                 pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"
                 fig_ai.update_layout(template=pt, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=400, margin=dict(l=0,r=0,t=20,b=0), xaxis=dict(showgrid=False), yaxis=dict(gridcolor=col['bd']))
                 st.plotly_chart(fig_ai, use_container_width=True)
-                
             else:
-                st.error("API Error: Binance data could not be fetched.")
+                st.error("Market data unavailable. Try again later.")
 
 # TAB 3: MEMBERSHIP
 with tab3:
