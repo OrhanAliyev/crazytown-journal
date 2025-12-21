@@ -142,7 +142,7 @@ if st.session_state.theme == "Dark":
         "sec": "#111",
         "ttl": "#ffffff",
         "grd": "#aaaaaa",
-        "ai_bg": "#0e0e0e" # Resolv kartı için koyu arka plan
+        "ai_bg": "#0e0e0e" # Resolv tarzı koyu arka plan
     }
     # Koyu Mod Animasyonu
     anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;}} .orb1 {{top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);}} .orb2 {{bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);animation-duration:25s;animation-direction:alternate-reverse;}} .orb3 {{top:40%;left:40%;width:30vw;height:30vw;background:radial-gradient(circle,#ff007f 0%,transparent 70%);animation-duration:18s;}} @keyframes moveOrb {{0%{{transform:translate(0,0) scale(1);}}100%{{transform:translate(50px,50px) scale(1.1);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>"""
@@ -182,7 +182,7 @@ st.markdown(f"""
         .ai-card {{
             background-color: {col['ai_bg']};
             border: 1px solid {col['bd']};
-            /* Dinamik kenar rengi python içinde verilecek, burada default */
+            /* Dinamik kenar rengi python içinde verilecek */
             border-left-width: 6px; 
             border-left-style: solid;
             border-radius: 8px;
@@ -275,7 +275,7 @@ def load_data():
     except: return pd.DataFrame()
 df = load_data()
 
-# --- HİBRİT VERİ MOTORU ---
+# --- HİBRİT VERİ MOTORU (Coingecko -> Binance -> Simulation) ---
 def get_market_data_robust(symbol, interval):
     # Kullanıcı "BTC" girebilir, biz "BTC-USD" yaparız
     symbol = symbol.upper().strip()
@@ -455,9 +455,13 @@ with tab5:
             score = 50
             if current_price > sma_val: score += 20
             else: score -= 20
+            
             if rsi_val > 50: score += 10
             else: score -= 10
+            
+            # Momentum
             if change_24h > 0: score += 10
+            
             score = max(0, min(100, score))
             
             # KARAR
