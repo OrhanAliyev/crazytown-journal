@@ -70,6 +70,60 @@ st.markdown("""
         .stDataFrame {border: 1px solid #2d3845;}
         [data-testid="stSidebar"] {display: none;}
         
+        /* --- CALENDAR GRID CSS --- */
+        .calendar-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .calendar-header {
+            text-align: center;
+            font-weight: bold;
+            color: #8892b0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #2d3845;
+        }
+        .day-cell {
+            background-color: #15161a;
+            border: 1px solid #2d3845;
+            border-radius: 6px;
+            height: 100px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+        .day-cell:hover {
+            border-color: #66fcf1;
+            transform: scale(1.02);
+        }
+        .day-number {
+            font-size: 0.9rem;
+            color: #888;
+            font-weight: bold;
+        }
+        .day-profit {
+            text-align: right;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .day-win {
+            background-color: rgba(102, 252, 241, 0.1);
+            border-color: rgba(102, 252, 241, 0.3);
+        }
+        .day-loss {
+            background-color: rgba(255, 75, 75, 0.1);
+            border-color: rgba(255, 75, 75, 0.3);
+        }
+        .win-text {color: #66fcf1;}
+        .loss-text {color: #ff4b4b;}
+        .empty-cell {
+            background-color: transparent;
+            border: none;
+        }
+        
         /* Progress Bar Rengi */
         .stProgress > div > div > div > div {
             background-color: #66fcf1;
@@ -121,7 +175,7 @@ st.markdown("<h1 style='text-align: center; font-size: 3rem; color: #FFFFFF;'>CR
 st.markdown("<p style='text-align: center; color: #66fcf1; margin-top: -15px; letter-spacing: 2px; font-size: 0.9rem;'>ALGORITHMIC TRADING SYSTEMS</p>", unsafe_allow_html=True)
 st.write("")
 
-# TABLARI GÜNCELLEDİK: ACADEMY EKLENDİ
+# TABLARI GÜNCELLEDİK
 tab1, tab2, tab3, tab4 = st.tabs(["PERFORMANCE", "ACADEMY", "MEMBERSHIP", "CONTACT"])
 
 # ==========================================
@@ -175,7 +229,9 @@ with tab1:
             fig_pie.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', showlegend=False, margin=dict(l=20, r=20, t=10, b=20), height=300, annotations=[dict(text=f"{rate:.0f}%", x=0.5, y=0.5, font_size=24, showarrow=False, font_color="white")])
             st.plotly_chart(fig_pie, use_container_width=True)
 
-        # --- YENİ ÖZELLİK: DETAYLI TAKVİM HARİTASI (CALENDAR HEATMAP) ---
+        # ==========================================
+        # YENİ ÖZELLİK: CUSTOM CSS TAKVİM IZGARASI
+        # ==========================================
         st.markdown("---")
         st.subheader("🗓️ PERFORMANCE CALENDAR")
         
@@ -184,75 +240,83 @@ with tab1:
             df['Tarih_Dt'] = pd.to_datetime(df['Tarih'], dayfirst=True, errors='coerce')
             df.dropna(subset=['Tarih_Dt'], inplace=True)
             
-            # Ay Seçimi Listesi
             if not df.empty:
                 df = df.sort_values('Tarih_Dt')
+                
+                # Ay Seçimi
                 available_months = df['Tarih_Dt'].dt.strftime('%Y-%m').unique()
-                selected_month = st.selectbox("Select Month", options=available_months, index=len(available_months)-1)
+                selected_month_str = st.selectbox("Select Month", options=available_months, index=len(available_months)-1)
                 
-                # Seçilen aya göre filtrele
-                monthly_data = df[df['Tarih_Dt'].dt.strftime('%Y-%m') == selected_month].copy()
+                # Seçilen aya göre veri filtrele
+                selected_year, selected_month_int = map(int, selected_month_str.split('-'))
+                monthly_data = df[df['Tarih_Dt'].dt.strftime('%Y-%m') == selected_month_str].copy()
                 
-                # O ayın her günü için boş bir DataFrame oluştur
-                year, month = map(int, selected_month.split('-'))
-                num_days = calendar.monthrange(year, month)[1]
-                all_days = [datetime(year, month, day) for day in range(1, num_days + 1)]
+                # Günlük verileri grupla: {Gün Sayısı: Toplam R}
+                daily_profits = monthly_data.groupby(monthly_data['Tarih_Dt'].dt.day)['R_Kazanc'].sum().to_dict()
                 
-                calendar_df = pd.DataFrame({'Date': all_days})
-                calendar_df['Day'] = calendar_df['Date'].dt.day
-                calendar_df['Weekday'] = calendar_df['Date'].dt.weekday  # 0=Mon, 6=Sun
-                # Haftanın kaçıncı haftası olduğunu bul (Ay bazında 1, 2, 3...)
-                calendar_df['Week'] = calendar_df['Date'].apply(lambda d: (d.day - 1) // 7 + 1)
+                # Takvim Matrisi Oluştur (Haftalık listeler halinde)
+                # calendar.monthcalendar bize [[0,0,1,2,3,4,5], [6,7...]] döner
+                cal_matrix = calendar.monthcalendar(selected_year, selected_month_int)
                 
-                # Gerçek verilerle birleştir (Aynı gün birden fazla işlem varsa topla)
-                daily_perf = monthly_data.groupby('Tarih_Dt')['R_Kazanc'].sum().reset_index()
-                calendar_df = calendar_df.merge(daily_perf, left_on='Date', right_on='Tarih_Dt', how='left').fillna(0)
+                # --- HTML OLUŞTURMA ---
+                html_cal = '<div class="calendar-container">'
                 
-                # Pivot Table oluştur (Heatmap için)
-                # Satırlar: Hafta Numarası, Sütunlar: Haftanın Günü
-                # Haftanın günlerini düzelt (Pzt=0... Paz=6)
-                pivot_table = calendar_df.pivot_table(index='Week', columns='Weekday', values='R_Kazanc', aggfunc='sum')
+                # Header (Paz, Sal, Çar...)
+                days_tr = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                for day_name in days_tr:
+                    html_cal += f'<div class="calendar-header">{day_name}</div>'
                 
-                # Eksik günleri (ay başı/sonu boşlukları) NaN yap veya 0 bırak
-                # Görselleştirme
-                days_label = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                # Günleri Döngüye Al
+                total_month_profit = 0
+                for week in cal_matrix:
+                    for day in week:
+                        if day == 0:
+                            # Boş Kutu (Ayın öncesi/sonrası)
+                            html_cal += '<div class="day-cell empty-cell"></div>'
+                        else:
+                            # Dolu Gün
+                            profit = daily_profits.get(day, 0)
+                            total_month_profit += profit
+                            
+                            # Stil Belirle (Win/Loss/Neutral)
+                            cell_class = "day-cell"
+                            profit_class = ""
+                            profit_text = ""
+                            
+                            if day in daily_profits:
+                                if profit > 0:
+                                    cell_class += " day-win"
+                                    profit_class = "win-text"
+                                    profit_text = f"+{profit:.2f}R"
+                                elif profit < 0:
+                                    cell_class += " day-loss"
+                                    profit_class = "loss-text"
+                                    profit_text = f"{profit:.2f}R"
+                                else:
+                                    profit_text = "0.00R"
+                            
+                            # Kutu HTML'i
+                            html_cal += f'''
+                            <div class="{cell_class}">
+                                <div class="day-number">{day}</div>
+                                <div class="day-profit {profit_class}">{profit_text}</div>
+                            </div>
+                            '''
                 
-                # Renk skalası: Kırmızı (Loss) -> Siyah (0) -> Yeşil (Win)
-                max_val = max(abs(calendar_df['R_Kazanc'].min()), abs(calendar_df['R_Kazanc'].max()), 1)
+                html_cal += '</div>'
                 
-                fig_cal = go.Figure(data=go.Heatmap(
-                    z=pivot_table.values,
-                    x=days_label,
-                    y=pivot_table.index,
-                    colorscale=[[0, '#ff4b4b'], [0.5, '#1f2833'], [1, '#66fcf1']],
-                    zmin=-max_val, zmax=max_val,
-                    text=pivot_table.values,
-                    texttemplate="%{text:.2f}R",
-                    textfont={"color": "white", "size": 12},
-                    xgap=3, ygap=3,
-                    showscale=False
-                ))
+                # Ekrana Bas
+                st.markdown(html_cal, unsafe_allow_html=True)
                 
-                fig_cal.update_layout(
-                    title=f"{selected_month} Performance Heatmap",
-                    template="plotly_dark",
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    height=300,
-                    yaxis=dict(title="", showgrid=False, zeroline=False, visible=False, autorange="reversed"), # Haftalar yukarıdan aşağı aksın
-                    xaxis=dict(title="", showgrid=False, zeroline=False, side="top")
-                )
-                
-                st.plotly_chart(fig_cal, use_container_width=True)
-                
-                # Altına Aylık Toplam Özeti
-                month_total = monthly_data['R_Kazanc'].sum()
-                st.markdown(f"<div style='text-align:center; color: {'#66fcf1' if month_total > 0 else '#ff4b4b'}; font-weight:bold;'>MONTH TOTAL: {month_total:.2f}R</div>", unsafe_allow_html=True)
+                # Ay Toplamı Göster
+                color_total = '#66fcf1' if total_month_profit > 0 else '#ff4b4b'
+                st.markdown(f"<div style='text-align:center; margin-top:15px; font-size:1.2rem; font-weight:bold; color:{color_total}'>TOTAL MONTHLY PNL: {total_month_profit:.2f}R</div>", unsafe_allow_html=True)
+
             else:
-                st.info("Takvim verisi yükleniyor...")
+                st.info("Veri bekleniyor...")
                 
         except Exception as e:
-            st.error(f"Takvim hatası: {e}")
+            st.error(f"Takvim oluşturulurken hata: {e}")
 
 
         # --- MARKET INTELLIGENCE ---
@@ -324,32 +388,32 @@ with tab2:
 
     with st.expander("📌 BÖLÜM 1: ZAMAN VE BAĞLAM (TEMEL KURALLAR)", expanded=True):
         st.markdown("""
-        ### 1. ZAMAN FİLTRESİ (Time Filter) [cite: 16]
-        Sadece bu saatlerde ekran başında olunur. [cite_start]Diğer saatlerde grafik analiz edilmez. [cite: 16]
-        * [cite_start]**LONDON SESSION:** `10:00 – 12:00` (TSİ) [cite: 16, 166]
-        * [cite_start]**NEW YORK SESSION:** `15:30 – 18:30` (TSİ) [cite: 16, 167]
+        ### 1. ZAMAN FİLTRESİ (Time Filter)
+        Sadece bu saatlerde ekran başında olunur. Diğer saatlerde grafik analiz edilmez.
+        * **LONDON SESSION:** `10:00 – 12:00` (TSİ)
+        * **NEW YORK SESSION:** `15:30 – 18:30` (TSİ)
         
-        ### [cite_start]2. GÜNLÜK BAĞLAM (Daily Context) [cite: 21]
-        [cite_start]İşlem aramak için tek bir şart vardır: **LİKİDİTE ALIMI.** [cite: 21, 131, 132]
-        * [cite_start]**PDH (Previous Day High):** Önceki günün en yükseği ihlal edilirse → Sadece **SHORT** aranır. [cite: 23, 114, 155]
-        * [cite_start]**PDL (Previous Day Low):** Önceki günün en düşüğü ihlal edilirse → Sadece **LONG** aranır. [cite: 23, 115, 156]
+        ### 2. GÜNLÜK BAĞLAM (Daily Context)
+        İşlem aramak için tek bir şart vardır: **LİKİDİTE ALIMI.**
+        * **PDH (Previous Day High):** Önceki günün en yükseği ihlal edilirse → Sadece **SHORT** aranır.
+        * **PDL (Previous Day Low):** Önceki günün en düşüğü ihlal edilirse → Sadece **LONG** aranır.
         
-        > [cite_start]**Not:** Kapanış (Close) şart değildir, fitil (Wick) atması yeterlidir. [cite: 21, 144]
+        > **Not:** Kapanış (Close) şart değildir, fitil (Wick) atması yeterlidir.
         """)
 
     with st.expander("🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ (SETUP)"):
         st.markdown("""
-        ### [cite_start]1. FIBONACCI AYARLARI [cite: 55]
-        [cite_start]Bağlam oluştuğunda (Örn: PDH ihlali), oluşan sert harekete (Impulse) Fibonacci çekilir. [cite: 55, 197, 199]
-        * [cite_start]**ENTRY BÖLGESİ:** `0.75` ile `0.60` arası [cite: 55, 219]
-        * [cite_start]**STOP:** `1` (Impulse başlangıcı) [cite: 78, 220]
-        * [cite_start]**TP-1:** `0.25` [cite: 78, 222]
-        * [cite_start]**TP-2:** `-0.18` [cite: 78, 224]
+        ### 1. FIBONACCI AYARLARI
+        Bağlam oluştuğunda (Örn: PDH ihlali), oluşan sert harekete (Impulse) Fibonacci çekilir.
+        * **ENTRY BÖLGESİ:** `0.75` ile `0.60` arası
+        * **STOP:** `1` (Impulse başlangıcı)
+        * **TP-1:** `0.25`
+        * **TP-2:** `-0.18`
         
-        ### [cite_start]2. FVG (Fair Value Gap) REJECTION [cite: 55, 228]
-        [cite_start]Her `0.6-0.75` bölgesine gelen fiyata girilmez. [cite: 242]
-        * [cite_start]O bölgede bir **FVG (Dengesizlik)** olmalı. [cite: 55, 241, 242]
-        * [cite_start]Fiyat FVG'ye dokunup **red yemeli** (küçük mumlar, fitiller). [cite: 55, 246]
+        ### 2. FVG (Fair Value Gap) REJECTION
+        Her `0.6-0.75` bölgesine gelen fiyata girilmez.
+        * O bölgede bir **FVG (Dengesizlik)** olmalı.
+        * Fiyat FVG'ye dokunup **red yemeli** (küçük mumlar, fitiller).
         """)
 
     with st.expander("⚠️ BÖLÜM 3: UYGULAMA VE YASAKLAR (ÖNEMLİ)"):
@@ -357,17 +421,17 @@ with tab2:
         <div class="rule-box">
         <h4>🚨 ASLA YAPILMAYACAKLAR</h4>
         <ul>
-            [cite_start]<li><b>CHOCH (Karakter Değişimi) ARANMAZ!</b> Bizi oyundan erken atar veya geç sokar. [cite: 42, 255, 257, 284]</li>
-            [cite_start]<li>Zaman filtresi dışında işlem alınmaz. [cite: 16, 161]</li>
-            [cite_start]<li>PDH/PDL ihlali olmadan Fibonacci çekilmez. [cite: 4, 131, 200, 201]</li>
+            <li><b>CHOCH (Karakter Değişimi) ARANMAZ!</b> Bizi oyundan erken atar veya geç sokar.</li>
+            <li>Zaman filtresi dışında işlem alınmaz.</li>
+            <li>PDH/PDL ihlali olmadan Fibonacci çekilmez.</li>
         </ul>
         </div>
 
-        ### [cite_start]POZİSYON YÖNETİMİ [cite: 327]
-        1.  [cite_start]Emri `0.75 - 0.60` arasına at. [cite: 219]
-        2.  [cite_start]Stop `1` seviyesine koy. [cite: 220]
-        3.  [cite_start]Fiyat `TP-1 (0.25)` geldiğinde **Stop'u Girişe (BE) Çek.** [cite: 78, 226, 339]
-        4.  [cite_start]`TP-2 (-0.18)` gelene kadar dokunma. [cite: 330, 344]
+        ### POZİSYON YÖNETİMİ
+        1.  Emri `0.75 - 0.60` arasına at.
+        2.  Stop `1` seviyesine koy.
+        3.  Fiyat `TP-1 (0.25)` geldiğinde **Stop'u Girişe (BE) Çek.**
+        4.  `TP-2 (-0.18)` gelene kadar dokunma.
         """, unsafe_allow_html=True)
         
     st.info("Bu sistem bir tahmin aracı değil, bir davranış modelidir. 30 gün boyunca kuralları esnetmeden uygulayın.")
