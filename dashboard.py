@@ -262,27 +262,25 @@ with tab1:
                 # Takvim Matrisi Oluştur
                 cal_matrix = calendar.monthcalendar(selected_year, selected_month_int)
                 
-                # --- HTML OLUŞTURMA ---
-                html_cal = '<div class="calendar-container">'
+                # --- HTML OLUŞTURMA (TEK PARÇA STRING) ---
+                # Hata Çözümü: Indentation (girinti) olmadığı için Streamlit bunu kod bloğu sanmayacak.
+                html_parts = ['<div class="calendar-container">']
                 
-                # Header (Paz, Sal, Çar...)
+                # Header
                 days_tr = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
                 for day_name in days_tr:
-                    html_cal += f'<div class="calendar-header">{day_name}</div>'
+                    html_parts.append(f'<div class="calendar-header">{day_name}</div>')
                 
-                # Günleri Döngüye Al
+                # Günler
                 total_month_profit = 0
                 for week in cal_matrix:
                     for day in week:
                         if day == 0:
-                            # Boş Kutu
-                            html_cal += '<div class="day-cell empty-cell"></div>'
+                            html_parts.append('<div class="day-cell empty-cell"></div>')
                         else:
-                            # Dolu Gün
                             profit = daily_profits.get(day, 0)
                             total_month_profit += profit
                             
-                            # Stil Belirle
                             cell_class = "day-cell"
                             profit_class = ""
                             profit_text = ""
@@ -299,18 +297,16 @@ with tab1:
                                 else:
                                     profit_text = "0.00R"
                             
-                            # Kutu HTML'i
-                            html_cal += f'''
-                            <div class="{cell_class}">
-                                <div class="day-number">{day}</div>
-                                <div class="day-profit {profit_class}">{profit_text}</div>
-                            </div>
-                            '''
+                            # Tek satırda HTML
+                            html_parts.append(f'<div class="{cell_class}"><div class="day-number">{day}</div><div class="day-profit {profit_class}">{profit_text}</div></div>')
                 
-                html_cal += '</div>'
+                html_parts.append('</div>')
+                
+                # Listeyi birleştir
+                final_html = "".join(html_parts)
                 
                 # Ekrana Bas
-                st.markdown(html_cal, unsafe_allow_html=True)
+                st.markdown(final_html, unsafe_allow_html=True)
                 
                 # Ay Toplamı Göster
                 color_total = '#66fcf1' if total_month_profit > 0 else '#ff4b4b'
@@ -388,36 +384,36 @@ with tab1:
 with tab2:
     st.write("")
     st.markdown("<h2 style='text-align: center; color: #66fcf1;'>OA | TRADE SMC MASTERY</h2>", unsafe_allow_html=True)
-    st.markdown("""<div style="text-align: center; font-style: italic; color: #888; margin-bottom: 20px;">"Piyasayı yenmek değil, piyasanın yaptığı şeyi disiplinle takip etmek." [cite: 88, 89]</div>""", unsafe_allow_html=True)
+    st.markdown("""<div style="text-align: center; font-style: italic; color: #888; margin-bottom: 20px;">"Piyasayı yenmek değil, piyasanın yaptığı şeyi disiplinle takip etmek."</div>""", unsafe_allow_html=True)
 
     with st.expander("📌 BÖLÜM 1: ZAMAN VE BAĞLAM (TEMEL KURALLAR)", expanded=True):
         st.markdown("""
-        ### 1. ZAMAN FİLTRESİ (Time Filter) [cite: 7, 16]
-        Sadece bu saatlerde ekran başında olunur. Diğer saatlerde grafik analiz edilmez[cite: 16].
-        * **LONDON SESSION:** `10:00 – 12:00` (TSİ) [cite: 16, 166]
-        * **NEW YORK SESSION:** `15:30 – 18:30` (TSİ) [cite: 16, 167]
+        ### 1. ZAMAN FİLTRESİ (Time Filter)
+        Sadece bu saatlerde ekran başında olunur. Diğer saatlerde grafik analiz edilmez.
+        * **LONDON SESSION:** `10:00 – 12:00` (TSİ)
+        * **NEW YORK SESSION:** `15:30 – 18:30` (TSİ)
         
-        ### 2. GÜNLÜK BAĞLAM (Daily Context) [cite: 21, 131]
-        İşlem aramak için tek bir şart vardır: **LİKİDİTE ALIMI.** [cite: 132]
-        * **PDH (Previous Day High):** Önceki günün en yükseği ihlal edilirse → Sadece **SHORT** aranır[cite: 138, 155].
-        * **PDL (Previous Day Low):** Önceki günün en düşüğü ihlal edilirse → Sadece **LONG** aranır[cite: 138, 156].
+        ### 2. GÜNLÜK BAĞLAM (Daily Context)
+        İşlem aramak için tek bir şart vardır: **LİKİDİTE ALIMI.**
+        * **PDH (Previous Day High):** Önceki günün en yükseği ihlal edilirse → Sadece **SHORT** aranır.
+        * **PDL (Previous Day Low):** Önceki günün en düşüğü ihlal edilirse → Sadece **LONG** aranır.
         
-        > **Not:** Kapanış (Close) şart değildir, fitil (Wick) atması yeterlidir[cite: 144, 145].
+        > **Not:** Kapanış (Close) şart değildir, fitil (Wick) atması yeterlidir.
         """)
 
     with st.expander("🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ (SETUP)"):
         st.markdown("""
-        ### 1. FIBONACCI AYARLARI [cite: 55]
-        Bağlam oluştuğunda (Örn: PDH ihlali), oluşan sert harekete (Impulse) Fibonacci çekilir[cite: 55, 197].
-        * **ENTRY BÖLGESİ:** `0.75` ile `0.60` arası [cite: 55, 219]
-        * **STOP:** `1` (Impulse başlangıcı) [cite: 78, 220]
-        * **TP-1:** `0.25` [cite: 78, 222]
-        * **TP-2:** `-0.18` [cite: 78, 224]
+        ### 1. FIBONACCI AYARLARI
+        Bağlam oluştuğunda (Örn: PDH ihlali), oluşan sert harekete (Impulse) Fibonacci çekilir.
+        * **ENTRY BÖLGESİ:** `0.75` ile `0.60` arası
+        * **STOP:** `1` (Impulse başlangıcı)
+        * **TP-1:** `0.25`
+        * **TP-2:** `-0.18`
         
-        ### 2. FVG (Fair Value Gap) REJECTION [cite: 228]
+        ### 2. FVG (Fair Value Gap) REJECTION
         Her `0.6-0.75` bölgesine gelen fiyata girilmez.
-        * O bölgede bir **FVG (Dengesizlik)** olmalı[cite: 242].
-        * Fiyat FVG'ye dokunup **red yemeli** (küçük mumlar, fitiller)[cite: 55, 246, 247].
+        * O bölgede bir **FVG (Dengesizlik)** olmalı.
+        * Fiyat FVG'ye dokunup **red yemeli** (küçük mumlar, fitiller).
         """)
 
     with st.expander("⚠️ BÖLÜM 3: UYGULAMA VE YASAKLAR (ÖNEMLİ)"):
@@ -425,20 +421,20 @@ with tab2:
         <div class="rule-box">
         <h4>🚨 ASLA YAPILMAYACAKLAR</h4>
         <ul>
-            <li><b>CHOCH (Karakter Değişimi) ARANMAZ!</b> Bizi oyundan erken atar veya geç sokar[cite: 255, 260].</li>
-            <li>Zaman filtresi dışında işlem alınmaz[cite: 16].</li>
-            <li>PDH/PDL ihlali olmadan Fibonacci çekilmez[cite: 197].</li>
+            <li><b>CHOCH (Karakter Değişimi) ARANMAZ!</b> Bizi oyundan erken atar veya geç sokar.</li>
+            <li>Zaman filtresi dışında işlem alınmaz.</li>
+            <li>PDH/PDL ihlali olmadan Fibonacci çekilmez.</li>
         </ul>
         </div>
 
         ### POZİSYON YÖNETİMİ
         1.  Emri `0.75 - 0.60` arasına at.
         2.  Stop `1` seviyesine koy.
-        3.  Fiyat `TP-1 (0.25)` geldiğinde **Stop'u Girişe (BE) Çek**[cite: 226, 339].
-        4.  `TP-2 (-0.18)` gelene kadar dokunma[cite: 344].
+        3.  Fiyat `TP-1 (0.25)` geldiğinde **Stop'u Girişe (BE) Çek**.
+        4.  `TP-2 (-0.18)` gelene kadar dokunma.
         """, unsafe_allow_html=True)
         
-    st.info("Bu sistem bir tahmin aracı değil, bir davranış modelidir. 30 gün boyunca kuralları esnetmeden uygulayın[cite: 358, 467].")
+    st.info("Bu sistem bir tahmin aracı değil, bir davranış modelidir. 30 gün boyunca kuralları esnetmeden uygulayın.")
 
 # ==========================================
 # TAB 3: MEMBERSHIP
