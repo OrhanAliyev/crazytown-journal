@@ -110,7 +110,7 @@ TRANSLATIONS = {
         "ai_trend": "Тренд", "ai_rsi": "RSI", "ai_supp": "Поддержка", "ai_res": "Сопротивление",
         "ai_score": "Оценка уверенности", "ai_dec": "РЕШЕНИЕ",
         "bull": "БЫЧИЙ 🟢", "bear": "МЕДВЕЖИЙ 🔴", "neutral": "НЕЙТРАЛЬНО ⚪",
-        "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖА 🔻", "wait": "ЖДАТЬ ✋",
+        "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖ 🔻", "wait": "ЖДАТЬ ✋",
         "data_source": "Источник"
     }
 }
@@ -142,7 +142,7 @@ if st.session_state.theme == "Dark":
         "sec": "#111",
         "ttl": "#ffffff",
         "grd": "#aaaaaa",
-        "ai_bg": "#121212" # Resolv benzeri çok koyu gri
+        "ai_bg": "#0e0e0e"
     }
     # Koyu Mod Animasyonu
     anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;}} .orb1 {{top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);}} .orb2 {{bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);animation-duration:25s;animation-direction:alternate-reverse;}} .orb3 {{top:40%;left:40%;width:30vw;height:30vw;background:radial-gradient(circle,#ff007f 0%,transparent 70%);animation-duration:18s;}} @keyframes moveOrb {{0%{{transform:translate(0,0) scale(1);}}100%{{transform:translate(50px,50px) scale(1.1);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>"""
@@ -405,12 +405,13 @@ with tab2:
     with st.expander(t('lesson_2_title')): st.markdown(t('lesson_2_content'))
     with st.expander(t('lesson_3_title')): st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
 
-# TAB 5: AI LAB (PRO VERSION)
+# TAB 5: AI LAB (YENİLENMİŞ ARAMA MOTORLU & RESOLV STYLE)
 with tab5:
     st.write("")
     st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('ai_title')}</h2>", unsafe_allow_html=True)
     st.markdown(f"""<div style="text-align: center; font-style: italic; color: {col['grd']} !important; margin-bottom: 20px;">{t('ai_desc')}</div>""", unsafe_allow_html=True)
     
+    # ARAMA BÖLÜMÜ
     ai_c1, ai_c2, ai_c3 = st.columns([2, 1, 1])
     with ai_c1: user_symbol = st.text_input(t('ai_input_label'), value="BTC")
     with ai_c2: tf = st.selectbox(t('ai_tf'), ["1h", "4h", "1d"])
@@ -456,50 +457,50 @@ with tab5:
             elif score <= 40: decision = t('sell'); dec_col = "#cc0000"; trend_text = t('bear'); direction = "BEAR"
             else: decision = t('wait'); dec_col = "#aaaaaa"; trend_text = t('neutral'); direction = "NEUTRAL"
             
-            # --- DÜZELTİLMİŞ HTML KODU (ST.MARKDOWN İLE) ---
+            # --- DÜZELTİLMİŞ HTML KODU ---
             html_card = f"""
-            <div class="ai-card" style="border-left-color: {dec_col} !important;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div class="ai-header">{user_symbol.upper()} / USD</div>
-                        <div class="ai-sub" style="color:{dec_col} !important;">{change_24h:+.2f}% (24h)</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="ai-header">${current_price:,.4f}</div>
-                    </div>
-                </div>
-                <hr style="border-color: {col['bd']}; margin: 15px 0;">
-                
-                <div class="ai-grid">
-                    <div class="ai-item">
-                        <div class="ai-label">{t('ai_trend')}</div>
-                        <div class="ai-val" style="color:{dec_col} !important">{trend_text}</div>
-                    </div>
-                    <div class="ai-item">
-                        <div class="ai-label">{t('ai_rsi')}</div>
-                        <div class="ai-val">{rsi_val:.2f}</div>
-                    </div>
-                    <div class="ai-item">
-                        <div class="ai-label">{t('ai_supp')}</div>
-                        <div class="ai-val">${supp:,.4f}</div>
-                    </div>
-                    <div class="ai-item">
-                        <div class="ai-label">{t('ai_res')}</div>
-                        <div class="ai-val">${res:,.4f}</div>
-                    </div>
-                </div>
-                
-                <div class="ai-label" style="margin-top:15px;">{t('ai_score')}:</div>
-                <div style="background:#333; border-radius:10px; height:10px; width:100%; margin-top:5px; overflow:hidden;">
-                    <div style="background: linear-gradient(90deg, #ff4b4b, #ffff00, #00ffcc); width:{score}%; height:100%;"></div>
-                </div>
-                <div style="text-align:right; font-size:0.8rem; color:#888;">{score}/100</div>
-                
-                <div class="ai-decision" style="border: 2px solid {dec_col}; color: {dec_col} !important;">
-                    {t('ai_dec')}: {decision}
-                </div>
-            </div>
-            """
+<div class="ai-card" style="border-left-color: {dec_col} !important;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <div class="ai-header">{user_symbol.upper()} / USD</div>
+            <div class="ai-sub" style="color:{dec_col} !important;">{change_24h:+.2f}% (24h)</div>
+        </div>
+        <div style="text-align:right;">
+            <div class="ai-header">${current_price:,.4f}</div>
+        </div>
+    </div>
+    <hr style="border-color: {col['bd']}; margin: 15px 0;">
+    
+    <div class="ai-grid">
+        <div class="ai-item">
+            <div class="ai-label">{t('ai_trend')}</div>
+            <div class="ai-val" style="color:{dec_col} !important">{trend_text}</div>
+        </div>
+        <div class="ai-item">
+            <div class="ai-label">{t('ai_rsi')}</div>
+            <div class="ai-val">{rsi_val:.2f}</div>
+        </div>
+        <div class="ai-item">
+            <div class="ai-label">{t('ai_supp')}</div>
+            <div class="ai-val">${supp:,.4f}</div>
+        </div>
+        <div class="ai-item">
+            <div class="ai-label">{t('ai_res')}</div>
+            <div class="ai-val">${res:,.4f}</div>
+        </div>
+    </div>
+    
+    <div class="ai-label" style="margin-top:15px;">{t('ai_score')}:</div>
+    <div style="background:#333; border-radius:10px; height:10px; width:100%; margin-top:5px; overflow:hidden;">
+        <div style="background: linear-gradient(90deg, #ff4b4b, #ffff00, #00ffcc); width:{score}%; height:100%;"></div>
+    </div>
+    <div style="text-align:right; font-size:0.8rem; color:#888;">{score}/100</div>
+    
+    <div class="ai-decision" style="border: 2px solid {dec_col}; color: {dec_col} !important;">
+        {t('ai_dec')}: {decision}
+    </div>
+</div>
+"""
             st.markdown(html_card, unsafe_allow_html=True)
             
             st.caption(f"{t('data_source')}: {source}")
@@ -521,7 +522,6 @@ with tab5:
             upper_bound = [p + (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
             lower_bound = [p - (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
             
-            # Renk formatı düzeltmesi
             f_col = "rgba(0, 255, 204, 0.15)" if "BULL" in trend_text else "rgba(255, 75, 75, 0.15)"
             
             fig_ai.add_trace(go.Scatter(x=np.concatenate([future_x, future_x[::-1]]), y=np.concatenate([upper_bound, lower_bound[::-1]]), fill='toself', fillcolor=f_col, line=dict(color='rgba(0,0,0,0)'), showlegend=False))
