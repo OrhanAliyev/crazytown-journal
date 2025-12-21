@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
+import plotly.express as px  # <-- BU EKSİKTİ, EKLENDİ!
 import plotly.graph_objects as go
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -20,13 +21,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# YFINANCE KONTROLÜ
+# YFINANCE KONTROLÜ (Hata vermemesi için)
 try:
     import yfinance as yf
     YF_AVAILABLE = True
 except ImportError:
     YF_AVAILABLE = False
-    st.error("⚠️ 'yfinance' kütüphanesi eksik. Lütfen 'requirements.txt' dosyasına 'yfinance' ekleyin.")
+    st.toast("⚠️ yfinance modülü eksik, canlı veri yerine demo çalışabilir.", icon="⚠️")
 
 if 'lang' not in st.session_state: st.session_state.lang = "TR"
 if 'theme' not in st.session_state: st.session_state.theme = "Dark"
@@ -93,7 +94,7 @@ TRANSLATIONS = {
         "most_pop": "ПОПУЛЯРНЫЙ", "contact_sales": "СВЯЗАТЬСЯ", "faq": "❓ FAQ", "settings": "⚙️ НАСТРОЙКИ",
         "lang_sel": "Язык", "theme_sel": "Тема", "theme_dark": "Темная", "theme_light": "Светлая",
         "acad_title": "OA | TRADE SMC МАСТЕРСТВО", "acad_quote": "Дисциплина прежде всего.",
-        "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "### 1. ФИЛЬТР ВРЕМЕНИ\n* **ЛОНДОН:** 10:00–12:00\n* **НЬЮ-ЙОРК:** 15:30–18:30\n### 2. КОНТЕКСТ\n* **Снятие ликвидности** обязательно.",
+        "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "### 1. ФИЛЬТР ВРЕМЕНИ\n* **ЛОНДОН:** 10:00–12:00\n* **НЬЮ-ЙОРК:** 15:30–18:30",
         "lesson_2_title": "🛠️ ЧАСТЬ 2: ВХОД", "lesson_2_content": "### 1. ФИБОНАЧЧИ\n* **Вход:** 0.60-0.75\n### 2. FVG\n* Подтверждение через FVG.",
         "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "<div class='rule-box'>НЕТ CHOCH. ДИСЦИПЛИНА.</div>",
         "ai_title": "🤖 QUANT AI ENGINE", "ai_desc": "Анализ данных в реальном времени.",
@@ -119,46 +120,125 @@ with st.expander(t('settings'), expanded=False):
 # 1. DİNAMİK RENK PALETİ VE CSS
 # ==========================================
 if st.session_state.theme == "Dark":
-    col = {"bg": "#050505", "txt": "#e0e0e0", "card": "rgba(20, 20, 25, 0.8)", "bd": "#333", "ac": "#00ffcc", "ac_h": "#00cca3", "sec": "#111", "ttl": "#ffffff", "grd": "#aaaaaa"}
-    anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;}} .orb1 {{top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);}} .orb2 {{bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);animation-duration:25s;animation-direction:alternate-reverse;}} .orb3 {{top:40%;left:40%;width:30vw;height:30vw;background:radial-gradient(circle,#ff007f 0%,transparent 70%);animation-duration:18s;}} @keyframes moveOrb {{0%{{transform:translate(0,0) scale(1);}}100%{{transform:translate(50px,50px) scale(1.1);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>"""
+    # KOYU MOD (NEON)
+    col = {
+        "bg": "#050505",
+        "txt": "#e0e0e0",
+        "card": "rgba(20, 20, 25, 0.7)", 
+        "bd": "#333",
+        "ac": "#00ffcc", # Neon Turkuaz
+        "ac_h": "#00cca3",
+        "sec": "#111",
+        "ttl": "#ffffff",
+        "grd": "#aaaaaa"
+    }
+    # Koyu Mod Animasyonu (Parlak Küreler)
+    anim_html = f"""
+    <style>
+        .orb-container {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; background: {col['bg']}; }}
+        .orb {{ position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.6; animation: moveOrb 20s infinite alternate; }}
+        .orb1 {{ top: 10%; left: 10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #00ffcc 0%, transparent 70%); }}
+        .orb2 {{ bottom: 10%; right: 10%; width: 40vw; height: 40vw; background: radial-gradient(circle, #9900ff 0%, transparent 70%); animation-duration: 25s; animation-direction: alternate-reverse; }}
+        .orb3 {{ top: 40%; left: 40%; width: 30vw; height: 30vw; background: radial-gradient(circle, #ff007f 0%, transparent 70%); animation-duration: 18s; }}
+        @keyframes moveOrb {{ 0% {{ transform: translate(0, 0) scale(1); }} 100% {{ transform: translate(50px, 50px) scale(1.1); }} }}
+    </style>
+    <div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+    """
 else:
-    col = {"bg": "#f8f9fa", "txt": "#212529", "card": "rgba(255, 255, 255, 0.95)", "bd": "#dee2e6", "ac": "#0d6efd", "ac_h": "#0b5ed7", "sec": "#ffffff", "ttl": "#000000", "grd": "#6c757d"}
-    anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.2;animation:moveOrb 25s infinite alternate;}} .orb1 {{top:-10%;left:-10%;width:60vw;height:60vw;background:radial-gradient(circle,#0d6efd 0%,transparent 60%);}} .orb2 {{bottom:-10%;right:-10%;width:60vw;height:60vw;background:radial-gradient(circle,#6610f2 0%,transparent 60%);animation-duration:30s;}} @keyframes moveOrb {{0%{{transform:translate(0,0);}}100%{{transform:translate(30px,30px);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>"""
+    # AÇIK MOD (KURUMSAL)
+    col = {
+        "bg": "#f8f9fa",
+        "txt": "#212529", 
+        "card": "rgba(255, 255, 255, 0.95)",
+        "bd": "#dee2e6",
+        "ac": "#0d6efd", 
+        "ac_h": "#0b5ed7",
+        "sec": "#ffffff",
+        "ttl": "#000000", 
+        "grd": "#6c757d"
+    }
+    # Açık Mod Animasyonu (Hafif)
+    anim_html = f"""
+    <style>
+        .orb-container {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; background: {col['bg']}; }}
+        .orb {{ position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.2; animation: moveOrb 25s infinite alternate; }}
+        .orb1 {{ top: -10%; left: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #0d6efd 0%, transparent 60%); }}
+        .orb2 {{ bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #6610f2 0%, transparent 60%); animation-duration: 30s; }}
+        @keyframes moveOrb {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(30px, 30px); }} }}
+    </style>
+    <div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>
+    """
 
 st.markdown(anim_html, unsafe_allow_html=True)
+
 st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;600&display=swap');
-        .stApp {{background: transparent !important;}} header, footer, #MainMenu {{display: none !important;}}
+        
+        /* STREAMLIT TEMİZLİK */
+        .stApp {{ background: transparent !important; }}
+        header, footer, #MainMenu {{display: none !important;}}
         .block-container {{padding-top: 2rem;}}
-        h1, h2, h3, h4, h5, h6, p, li, div, span, label {{color: {col['txt']} !important; font-family: 'Inter', sans-serif;}}
-        .neon-title {{font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important; font-weight: 900; letter-spacing: 4px; margin: 0; {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""} animation: pulse 3s infinite alternate;}}
-        @keyframes pulse {{0%{{opacity:1;}}100%{{opacity:0.9;}}}}
-        .metric-container {{background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px; text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s;}}
-        .metric-container:hover {{transform: translateY(-5px); border-color: {col['ac']};}}
-        .metric-value {{font-size: 2rem; font-weight: 700; color: {col['ttl']} !important;}}
-        .metric-label {{font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px;}}
-        .custom-btn {{background-color: {col['ac']}; color: {col['bg']} !important; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center;}}
-        .custom-btn-outline {{border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent;}}
-        .stDataFrame {{border: 1px solid {col['bd']};}}
-        .stNumberInput input, .stSelectbox div[data-baseweb="select"] > div {{background-color: {col['sec']}; color: {col['txt']}; border-color: {col['bd']};}}
-        .calendar-container {{display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px;}}
-        .calendar-header {{text-align: center; color: {col['grd']} !important; font-weight: bold; padding-bottom: 5px; border-bottom: 1px solid {col['bd']};}}
-        .day-cell {{background-color: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 6px; height: 90px; padding: 8px; display: flex; flex-direction: column; transition: 0.2s;}}
-        .day-cell:hover {{border-color: {col['ac']}; transform: scale(1.03); z-index: 5;}}
-        .day-number {{font-weight: bold; color: {col['txt']} !important; opacity: 0.7;}}
-        .day-profit {{font-size: 1.1rem; font-weight: 800; margin-top: auto; align-self: center;}}
-        .day-win {{background: rgba(0, 255, 204, 0.15); border-color: {col['ac']};}}
-        .day-win-light {{background: rgba(13, 110, 253, 0.15); border-color: {col['ac']};}}
-        .day-loss {{background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b;}}
-        .win-text {{color: {col['ac']} !important;}} .loss-text {{color: #ff4b4b !important;}} .empty-cell {{background: transparent; border: none;}}
-        .stTabs [data-baseweb="tab"] {{color: {col['grd']} !important;}}
-        .stTabs [data-baseweb="tab"]:hover {{color: {col['ac']} !important;}}
-        .stTabs [aria-selected="true"] {{color: {col['ac']} !important; border-bottom-color: {col['ac']} !important;}}
-        .pricing-card {{background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 12px; padding: 30px; text-align: center; backdrop-filter: blur(10px);}}
-        .plan-price {{color: {col['ttl']} !important; font-size: 2.5rem; font-weight: bold;}}
-        .plan-name {{color: {col['ac']} !important; font-weight: bold; letter-spacing: 2px;}}
-        .rule-box {{background: rgba(0,0,0,0.05); border-left: 4px solid {col['ac']}; padding: 15px; margin: 10px 0; color: {col['txt']} !important;}}
+
+        /* YAZI RENGİ ZORLAMA (Light mode hatası için) */
+        h1, h2, h3, h4, h5, h6, p, li, div, span, label {{ 
+            color: {col['txt']} !important; 
+            font-family: 'Inter', sans-serif;
+        }}
+
+        /* NEON BAŞLIK */
+        .neon-title {{
+            font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important;
+            font-weight: 900; letter-spacing: 4px; margin: 0;
+            {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""}
+            animation: pulse 3s infinite alternate;
+        }}
+        @keyframes pulse {{ 0% {{opacity: 1;}} 100% {{opacity: 0.9;}} }}
+
+        /* KARTLAR */
+        .metric-container {{
+            background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px;
+            text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }}
+        .metric-container:hover {{ transform: translateY(-5px); border-color: {col['ac']}; }}
+        .metric-value {{ font-size: 2rem; font-weight: 700; color: {col['ttl']} !important; }}
+        .metric-label {{ font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px; }}
+
+        /* BUTTON */
+        .custom-btn {{ background-color: {col['ac']}; color: {col['bg']} !important; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center; }}
+        .custom-btn-outline {{ border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent; }}
+        
+        /* TABLO VE INPUT */
+        .stDataFrame {{ border: 1px solid {col['bd']}; }}
+        .stNumberInput input, .stSelectbox div[data-baseweb="select"] > div {{ background-color: {col['sec']}; color: {col['txt']}; border-color: {col['bd']}; }}
+        
+        /* TAKVİM */
+        .calendar-container {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px; }}
+        .calendar-header {{ text-align: center; color: {col['grd']} !important; font-weight: bold; padding-bottom: 5px; border-bottom: 1px solid {col['bd']}; }}
+        .day-cell {{ background-color: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 6px; height: 90px; padding: 8px; display: flex; flex-direction: column; transition: 0.2s; }}
+        .day-cell:hover {{ border-color: {col['ac']}; transform: scale(1.03); z-index: 5; }}
+        .day-number {{ font-weight: bold; color: {col['txt']} !important; opacity: 0.7; }}
+        .day-profit {{ font-size: 1.1rem; font-weight: 800; margin-top: auto; align-self: center; }}
+        
+        /* Renklendirmeler */
+        .day-win {{ background: rgba(0, 255, 204, 0.15); border-color: {col['ac']}; }}
+        .day-win-light {{ background: rgba(13, 110, 253, 0.15); border-color: {col['ac']}; }}
+        .day-loss {{ background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b; }}
+        .win-text {{ color: {col['ac']} !important; }} .loss-text {{ color: #ff4b4b !important; }} .empty-cell {{ background: transparent; border: none; }}
+        
+        /* TABS */
+        .stTabs [data-baseweb="tab"] {{ color: {col['grd']} !important; }}
+        .stTabs [data-baseweb="tab"]:hover {{ color: {col['ac']} !important; }}
+        .stTabs [aria-selected="true"] {{ color: {col['ac']} !important; border-bottom-color: {col['ac']} !important; }}
+        
+        /* Pricing */
+        .pricing-card {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 12px; padding: 30px; text-align: center; backdrop-filter: blur(10px); }}
+        .plan-price {{ color: {col['ttl']} !important; font-size: 2.5rem; font-weight: bold; }}
+        .plan-name {{ color: {col['ac']} !important; font-weight: bold; letter-spacing: 2px; }}
+        
+        /* Academy Rule Box */
+        .rule-box {{ background: rgba(0,0,0,0.05); border-left: 4px solid {col['ac']}; padding: 15px; margin: 10px 0; color: {col['txt']} !important; }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -232,6 +312,8 @@ with tab1:
             fig.update_layout(template=pt, paper_bgcolor=bg, plot_bgcolor=bg, margin=dict(l=0, r=0, t=10, b=0), height=300, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor=col['bd']))
             st.plotly_chart(fig, use_container_width=True)
         with g2:
+            # HATA DÜZELTME: color_discrete_map'teki 'col' global değişkeni ile 'col' döngüsü karışıyordu.
+            # px.pie'yi düzeltiyoruz.
             fp = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.7, color='Sonuç', color_discrete_map={'WIN':col['ac'], 'LOSS':'#ff4b4b'})
             fp.update_layout(template=pt, paper_bgcolor=bg, showlegend=False, margin=dict(l=20, r=20, t=10, b=20), height=300, annotations=[dict(text=f"{rate:.0f}%", x=0.5, y=0.5, font_size=24, showarrow=False, font_color=col['ttl'])])
             st.plotly_chart(fp, use_container_width=True)
@@ -266,9 +348,12 @@ with tab1:
         st.markdown("---"); h, d = st.columns([4, 1])
         with h: st.markdown(f"##### {t('trade_log')}")
         with d: st.download_button(label=t("download"), data=df.to_csv(index=False).encode('utf-8'), file_name='log.csv', mime='text/csv')
+        
+        # HATA DÜZELTME: Değişken adı çakışmasını önledik.
         def hwin(row):
             win_color = col['ac'] if row['Sonuç'] == 'WIN' else '#ff4b4b'
             return [f'color: {win_color}; font-weight:bold' if c_name == 'Sonuç' else f'color: {col["txt"]}' for c_name in row.index]
+        
         st.dataframe(df.style.apply(hwin, axis=1), use_container_width=True, hide_index=True)
 
 # TAB 2: AKADEMİ
