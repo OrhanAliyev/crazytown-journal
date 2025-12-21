@@ -12,7 +12,7 @@ import time
 import requests
 
 # ==========================================
-# 0. AYARLAR VE KÜTÜPHANE KONTROLÜ
+# 0. AYARLAR
 # ==========================================
 st.set_page_config(
     page_title="Crazytown Capital",
@@ -21,39 +21,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# YFINANCE KONTROLÜ (Yedek)
-try:
-    import yfinance as yf
-    YF_AVAILABLE = True
-except ImportError:
-    YF_AVAILABLE = False
-
 if 'lang' not in st.session_state: st.session_state.lang = "TR"
 if 'theme' not in st.session_state: st.session_state.theme = "Dark"
-if 'user_trades' not in st.session_state: 
-    st.session_state.user_trades = pd.DataFrame(columns=['Tarih', 'Parite', 'R_Kazanc', 'Sonuç'])
 if 'legal_accepted' not in st.session_state: st.session_state.legal_accepted = False
 
 # ==========================================
-# 1. ÇEVİRİ VE İÇERİK (GÜNCELLENMİŞ VE GENİŞLETİLMİŞ)
+# 1. ORİJİNAL ÇEVİRİ VE İÇERİK
 # ==========================================
 TRANSLATIONS = {
     "EN": {
         "title_sub": "ALGORITHMIC TRADING SYSTEMS", "perf": "PERFORMANCE", "acad": "ACADEMY", "memb": "MEMBERSHIP", "cont": "CONTACT", "ai_lab": "AI LAB", "radar": "📡 RADAR",
         "total_trades": "TOTAL TRADES", "win_rate": "WIN RATE", "net_return": "NET RETURN", "profit_factor": "PROFIT FACTOR",
-        "perf_mode": "Data Mode", "mode_system": "System Data (Auto)", "mode_user": "My Journal (Manual)",
-        "add_trade": "Add New Trade", "date": "Date", "pair": "Pair", "pnl_r": "PnL (R)", "add_btn": "Save Trade",
-        "ai_reason": "ANALYSIS REASONING", "legal_title": "LEGAL DISCLAIMER & RISK WARNING",
-        "legal_text": "Investment information, comments, and recommendations contained herein are NOT within the scope of investment advisory services. Investment advisory services are offered individually by authorized institutions considering your risk and return preferences. The content here is for educational purposes only.",
-        "acad_psych": "🧠 TRADING PSYCHOLOGY", "acad_risk": "🛡️ RISK MANAGEMENT",
-        "reason_rsi_ob": "RSI is Overbought (>70). High probability of pullback.",
-        "reason_rsi_os": "RSI is Oversold (<30). Potential reversal up.",
-        "reason_trend_bull": "Price is above SMA20. Trend is Bullish.",
-        "reason_trend_bear": "Price is below SMA20. Trend is Bearish.",
-        "reason_macd_buy": "MACD Line crossed above Signal Line (Bullish Crossover).",
-        "reason_macd_sell": "MACD Line crossed below Signal Line (Bearish Crossover).",
-        "accept_terms": "I have read and accept the Legal Disclaimer and KVKK text.",
-        "plan_starter_desc": "Perfect for beginners.", "plan_pro_desc": "For serious traders.", "plan_life_desc": "One time payment, forever access.",
         "season_goal": "SEASON GOAL", "completed": "COMPLETED", "perf_cal": "🗓️ PERFORMANCE CALENDAR",
         "select_month": "Select Month", "total_monthly": "TOTAL MONTHLY PNL", "roi_sim": "🧮 ROI SIMULATOR", 
         "proj_bal": "PROJECTED BALANCE", "trade_log": "TRADE LOG", "download": "📥 DOWNLOAD CSV",
@@ -69,24 +47,12 @@ TRANSLATIONS = {
         "ai_input_label": "Enter Symbol (e.g. BTC, ETH, SOL, PEPE)", "ai_trend": "General Trend", "ai_rsi": "RSI Indicator", 
         "ai_supp": "Est. Support", "ai_res": "Est. Resistance", "ai_score": "Crazytown Confidence Score", "ai_dec": "AI DECISION",
         "bull": "BULLISH 🟢", "bear": "BEARISH 🔴", "neutral": "NEUTRAL ⚪", "s_buy": "STRONG BUY 🚀", "buy": "BUY 🟢", 
-        "sell": "SELL 🔴", "s_sell": "STRONG SELL 🔻", "wait": "WAIT ✋", "data_source": "Data Source", "err_msg": "Coin not found."
+        "sell": "SELL 🔴", "s_sell": "STRONG SELL 🔻", "wait": "WAIT ✋", "data_source": "Data Source", "err_msg": "Coin not found.",
+        "legal_title": "LEGAL DISCLAIMER", "legal_text": "Not investment advice.", "accept_terms": "I accept."
     },
     "TR": {
         "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ", "perf": "PERFORMANS", "acad": "AKADEMİ", "memb": "ÜYELİK", "cont": "İLETİŞİM", "ai_lab": "YAPAY ZEKA", "radar": "📡 RADAR",
         "total_trades": "TOPLAM İŞLEM", "win_rate": "BAŞARI ORANI", "net_return": "NET GETİRİ", "profit_factor": "KÂR FAKTÖRÜ",
-        "perf_mode": "Veri Modu", "mode_system": "Sistem Verisi (Otomatik)", "mode_user": "Kişisel Günlüğüm (Manuel)",
-        "add_trade": "Yeni İşlem Ekle", "date": "Tarih", "pair": "Parite", "pnl_r": "Kâr/Zarar (R)", "add_btn": "İşlemi Kaydet",
-        "ai_reason": "ANALİZ GEREKÇESİ", "legal_title": "YASAL UYARI VE SORUMLULUK BEYANI",
-        "legal_text": "Burada yer alan yatırım bilgi, yorum ve tavsiyeleri yatırım danışmanlığı kapsamında değildir. Yatırım danışmanlığı hizmeti; aracı kurumlar, portföy yönetim şirketleri, mevduat kabul etmeyen bankalar ile müşteri arasında imzalanacak yatırım danışmanlığı sözleşmesi çerçevesinde sunulmaktadır. Burada yer alan yorum ve tavsiyeler, yorum ve tavsiyede bulunanların kişisel görüşlerine dayanmaktadır. Bu görüşler mali durumunuz ile risk ve getiri tercihlerinize uygun olmayabilir. Bu nedenle, sadece burada yer alan bilgilere dayanılarak yatırım kararı verilmesi beklentilerinize uygun sonuçlar doğurmayabilir.",
-        "acad_psych": "🧠 İŞLEM PSİKOLOJİSİ", "acad_risk": "🛡️ RİSK YÖNETİMİ",
-        "reason_rsi_ob": "RSI Aşırı Alım Bölgesinde (>70). Düzeltme/Düşüş ihtimali yüksek.",
-        "reason_rsi_os": "RSI Aşırı Satım Bölgesinde (<30). Tepki yükselişi beklenebilir.",
-        "reason_trend_bull": "Fiyat 20 Günlük Ortalamanın (SMA) üzerinde. Ana trend YÜKSELİŞ.",
-        "reason_trend_bear": "Fiyat 20 Günlük Ortalamanın (SMA) altında. Ana trend DÜŞÜŞ.",
-        "reason_macd_buy": "MACD, Sinyal çizgisini yukarı kesti (AL Sinyali).",
-        "reason_macd_sell": "MACD, Sinyal çizgisini aşağı kesti (SAT Sinyali).",
-        "accept_terms": "Yasal Uyarıyı, KVKK ve Risk Metnini okudum, onaylıyorum.",
-        "plan_starter_desc": "Yeni başlayanlar için ideal.", "plan_pro_desc": "Ciddi traderlar için.", "plan_life_desc": "Tek seferlik ödeme, ömür boyu erişim.",
         "season_goal": "SEZON HEDEFİ", "completed": "TAMAMLANDI", "perf_cal": "🗓️ PERFORMANS TAKVİMİ",
         "select_month": "Ay Seçiniz", "total_monthly": "AYLIK TOPLAM PNL", "roi_sim": "🧮 ROI SİMÜLATÖRÜ", 
         "proj_bal": "TAHMİNİ BAKİYE", "trade_log": "İŞLEM GEÇMİŞİ", "download": "📥 CSV İNDİR",
@@ -102,24 +68,12 @@ TRANSLATIONS = {
         "ai_input_label": "Coin Sembolü (Örn: TAO, BTC, ETH, PEPE)", "ai_trend": "Genel Trend", "ai_rsi": "RSI Göstergesi", 
         "ai_supp": "Tahmini Destek", "ai_res": "Tahmini Direnç", "ai_score": "Crazytown Güven Skoru", "ai_dec": "YZ KARARI",
         "bull": "BOĞA (YÜKSELİŞ) 🟢", "bear": "AYI (DÜŞÜŞ) 🔴", "neutral": "NÖTR ⚪", "s_buy": "GÜÇLÜ AL 🚀", "buy": "AL 🟢", 
-        "sell": "SAT 🔴", "s_sell": "GÜÇLÜ SAT 🔻", "wait": "BEKLE ✋", "data_source": "Veri Kaynağı", "err_msg": "Coin bulunamadı."
+        "sell": "SAT 🔴", "s_sell": "GÜÇLÜ SAT 🔻", "wait": "BEKLE ✋", "data_source": "Veri Kaynağı", "err_msg": "Coin bulunamadı.",
+        "legal_title": "YASAL UYARI", "legal_text": "Burada yer alan bilgi, yorum ve tavsiyeler yatırım danışmanlığı kapsamında değildir.", "accept_terms": "Okudum, onaylıyorum."
     },
     "RU": {
         "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ", "ai_lab": "ИИ ЛАБОРАТОРИЯ", "radar": "📡 РАДАР",
         "total_trades": "ВСЕГО СДЕЛОК", "win_rate": "ВИНРЕЙТ", "net_return": "ЧИСТАЯ ПРИБЫЛЬ", "profit_factor": "ПРОФИТ-ФАКТОР",
-        "perf_mode": "Режим данных", "mode_system": "Системные данные", "mode_user": "Мой журнал",
-        "add_trade": "Добавить сделку", "date": "Дата", "pair": "Пара", "pnl_r": "PnL (R)", "add_btn": "Сохранить",
-        "ai_reason": "ОБОСНОВАНИЕ АНАЛИЗА", "legal_title": "ОТКАЗ ОТ ОТВЕТСТВЕННОСТИ",
-        "legal_text": "Инвестиционная информация, комментарии и рекомендации, содержащиеся здесь, НЕ входят в сферу инвестиционного консультирования. Содержание предназначено только для образовательных целей.",
-        "acad_psych": "🧠 ПСИХОЛОГИЯ", "acad_risk": "🛡️ РИСК-МЕНЕДЖМЕНТ",
-        "reason_rsi_ob": "RSI перекуплен (>70). Вероятно падение.",
-        "reason_rsi_os": "RSI перепродан (<30). Вероятен рост.",
-        "reason_trend_bull": "Цена выше SMA20. Тренд БЫЧИЙ.",
-        "reason_trend_bear": "Цена ниже SMA20. Тренд МЕДВЕЖИЙ.",
-        "reason_macd_buy": "MACD пересек сигнальную линию вверх.",
-        "reason_macd_sell": "MACD пересек сигнальную линию вниз.",
-        "accept_terms": "Я прочитал и принимаю условия.",
-        "plan_starter_desc": "Для новичков.", "plan_pro_desc": "Для профи.", "plan_life_desc": "Один раз и навсегда.",
         "season_goal": "ЦЕЛЬ СЕЗОНА", "completed": "ЗАВЕРШЕНО", "perf_cal": "🗓️ КАЛЕНДАРЬ",
         "select_month": "Выберите месяц", "total_monthly": "ИТОГ МЕСЯЦА PNL", "roi_sim": "🧮 ROI СИМУЛЯТОР", 
         "proj_bal": "ПРОГНОЗ", "trade_log": "ЖУРНАЛ", "download": "📥 СКАЧАТЬ",
@@ -136,7 +90,8 @@ TRANSLATIONS = {
         "ai_supp": "Поддержка", "ai_res": "Сопротивление", "ai_score": "Оценка уверенности", "ai_dec": "РЕШЕНИЕ",
         "bull": "БЫЧИЙ 🟢", "bear": "МЕДВЕЖИЙ 🔴", "neutral": "НЕЙТРАЛЬНО ⚪", "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", 
         "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖ 🔻", "wait": "ЖДАТЬ ✋", 
-        "data_source": "Источник", "err_msg": "Монета не найдена."
+        "data_source": "Источник", "err_msg": "Монета не найдена.",
+        "legal_title": "ОТКАЗ ОТ ОТВЕТСТВЕННОСТИ", "legal_text": "Не является инвестиционным советом.", "accept_terms": "Я принимаю."
     }
 }
 
@@ -178,34 +133,22 @@ st.markdown(f"""
         .stApp {{ background: transparent !important; }}
         header, footer, #MainMenu {{display: none !important;}}
         .block-container {{padding-top: 1.5rem; padding-bottom: 3rem;}}
-
         h1, h2, h3, h4, h5, h6, p, li, div, span, label {{ color: {col['txt']} !important; font-family: 'Inter', sans-serif; }}
-
-        /* MOBİL UYUMLU TAKVİM */
         .calendar-container {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 15px; }}
         .day-cell {{ background-color: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 4px; height: 80px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; }}
         .day-number {{ font-weight: bold; font-size: 0.9rem; opacity: 0.7; }}
         .day-profit {{ font-size: 0.9rem; font-weight: 800; align-self: center; }}
-
         @media only screen and (max-width: 600px) {{
             .calendar-container {{ gap: 2px; }}
             .day-cell {{ height: 50px !important; padding: 2px !important; }}
             .day-number {{ font-size: 0.7rem !important; }}
             .day-profit {{ font-size: 0.6rem !important; }}
             .neon-title {{ font-size: 1.8rem !important; }}
-            .metric-value {{ font-size: 1.2rem !important; }}
-            .ai-header {{ font-size: 1.2rem !important; }}
-            .ai-decision {{ font-size: 1.4rem !important; }}
-            .pro-grid {{ grid-template-columns: 1fr !important; }}
-            .ai-grid {{ grid-template-columns: 1fr !important; gap: 10px !important; }}
         }}
-
         .neon-title {{ font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important; font-weight: 900; letter-spacing: 4px; margin: 0; {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""} animation: pulse 3s infinite alternate; }}
         .metric-container {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
         .metric-value {{ font-size: 2rem; font-weight: 700; color: {col['ttl']} !important; }}
         .metric-label {{ font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px; }}
-        
-        /* AI CARD STYLING */
         .ai-card {{ background-color: {col['ai_bg']}; border: 1px solid {col['bd']}; border-left-width: 6px; border-left-style: solid; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }}
         .ai-header {{ font-size: 1.6rem; font-weight: 800; color: {col['ttl']} !important; margin-bottom: 5px; }}
         .ai-sub {{ font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; }}
@@ -214,33 +157,20 @@ st.markdown(f"""
         .ai-label {{ font-size: 0.85rem; color: {col['grd']} !important; margin-bottom: 3px; }}
         .ai-val {{ font-size: 1.2rem; font-weight: 800; color: {col['ttl']} !important; }}
         .ai-decision {{ font-size: 1.8rem; font-weight: 900; text-align: left; margin-top: 15px; display: flex; align-items: center; gap: 10px; }}
-
-        .pro-grid {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }}
-        .pro-item {{ background: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 8px; padding: 10px; text-align: left; }}
-        .pro-name {{ font-weight: 800; color: {col['ttl']} !important; font-size: 0.8rem; margin-bottom: 3px; }}
-        .pro-status {{ font-weight: bold; font-size: 0.9rem; }}
-
         .day-win {{ background: rgba(0, 255, 204, 0.15); border-color: {col['ac']}; }}
         .day-win-light {{ background: rgba(13, 110, 253, 0.15); border-color: {col['ac']}; }}
         .day-loss {{ background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b; }}
         .win-text {{ color: {col['ac']} !important; }} .loss-text {{ color: #ff4b4b !important; }} .empty-cell {{ background: transparent; border: none; }}
-        
         .stTabs [data-baseweb="tab"] {{ color: {col['grd']} !important; }}
         .stTabs [aria-selected="true"] {{ color: {col['ac']} !important; border-bottom-color: {col['ac']} !important; }}
         .custom-btn {{ background-color: {col['ac']}; color: {col['bg']} !important; padding: 10px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center; }}
         .custom-btn-outline {{ border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent; }}
         .stTextInput input, .stSelectbox div[data-baseweb="select"] > div {{ background-color: {col['sec']}; color: {col['txt']}; border-color: {col['bd']}; }}
-        
-        /* Glassmorphism for Membership */
-        .glass-card {{ background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 30px; text-align: center; transition: transform 0.3s; }}
-        .glass-card:hover {{ transform: translateY(-5px); border-color: {col['ac']}; }}
-        .price-tag {{ font-size: 2.5rem; font-weight: 900; color: {col['ttl']}; margin: 15px 0; }}
-        .plan-desc {{ color: {col['grd']}; font-size: 0.9rem; margin-bottom: 20px; min-height: 40px; }}
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. VERİ YÜKLEME (GÜVENLİ)
+# 3. VERİ YÜKLEME (ORİJİNAL - BOZULMAMIŞ HALİ)
 # ==========================================
 @st.cache_data(ttl=60)
 def load_data():
@@ -255,6 +185,7 @@ def load_data():
             return df
     except: pass
     
+    # EĞER GSHEET BAĞLANTISI YOKSA
     dates = pd.date_range(end=datetime.today(), periods=20)
     demo_data = {
         'Tarih': dates.strftime("%d.%m.%Y"),
@@ -265,6 +196,7 @@ def load_data():
     }
     return pd.DataFrame(demo_data)
 
+# >>> BURASI ÖNEMLİ: ESKİ SİSTEM GİBİ DİREKT YÜKLÜYORUZ <<<
 df = load_data()
 
 # --- VERİ MOTORU ---
@@ -311,86 +243,75 @@ st.markdown('<div class="neon-title">CRAZYTOWN CAPITAL</div>', unsafe_allow_html
 st.markdown(f"<p style='text-align: center; color: {col['ac']}; letter-spacing: 2px; font-size: 0.9rem; margin-top: -5px; font-weight:bold;'>{t('title_sub')}</p>", unsafe_allow_html=True)
 st.write("")
 
-# 6 SEKME (RADAR EKLENDİ)
 tab1, tab2, tab5, tab6, tab3, tab4 = st.tabs([t('perf'), t('acad'), t('ai_lab'), t('radar'), t('memb'), t('cont')])
 
 # ==========================================
-# TAB 1: PERFORMANS (HİBRİT SİSTEM)
+# TAB 1: PERFORMANS (ESKİ HALİNE DÖNDÜ)
 # ==========================================
 with tab1:
-    col_mode, col_blank = st.columns([1, 3])
-    with col_mode:
-        data_mode = st.radio(t("perf_mode"), [t("mode_system"), t("mode_user")], label_visibility="collapsed")
+    # BURADA ARTIK KARIŞIK SEÇİMLER YOK. DİREKT 'df' GÖSTERİLİYOR.
+    tot = len(df); win = len(df[df['Sonuç'] == 'WIN']); rate = (win / tot * 100) if tot > 0 else 0; net_r = df['R_Kazanc'].sum()
+    gp = df[df['R_Kazanc'] > 0]['R_Kazanc'].sum(); gl = abs(df[df['R_Kazanc'] < 0]['R_Kazanc'].sum()); pf = (gp / gl) if gl > 0 else 0
+    nc = col['ac'] if net_r > 0 else "#ff4b4b"
+    c1, c2, c3, c4 = st.columns(4)
+    c1.markdown(f'<div class="metric-container"><div class="metric-value">{tot}</div><div class="metric-label">{t("total_trades")}</div></div>', unsafe_allow_html=True)
+    c2.markdown(f'<div class="metric-container"><div class="metric-value">{rate:.1f}%</div><div class="metric-label">{t("win_rate")}</div></div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="metric-container"><div class="metric-value" style="color:{nc} !important">{net_r:.2f}R</div><div class="metric-label">{t("net_return")}</div></div>', unsafe_allow_html=True)
+    c4.markdown(f'<div class="metric-container"><div class="metric-value">{pf:.2f}</div><div class="metric-label">{t("profit_factor")}</div></div>', unsafe_allow_html=True)
+    st.write(""); st.write(""); prog = min(max(net_r / 100.0, 0.0), 1.0)
+    st.markdown(f"""<div style="display:flex; justify-content:space-between; font-size:0.8rem; color:{col['grd']} !important; margin-bottom:5px;"><span>{t('season_goal')} (100R)</span><span style="color:{col['ac']} !important">{int(prog*100)}% {t('completed')}</span></div>""", unsafe_allow_html=True)
+    st.progress(prog); st.write("")
     
-    st.markdown("---")
+    pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"; bg = "rgba(0,0,0,0)"
+    g1, g2 = st.columns([2, 1])
+    with g1:
+        df['Cum'] = df['R_Kazanc'].cumsum(); fig = go.Figure()
+        fc = f"rgba(0, 255, 204, 0.2)" if st.session_state.theme == "Dark" else f"rgba(13, 110, 253, 0.2)"
+        fig.add_trace(go.Scatter(x=df['Tarih'], y=df['Cum'], mode='lines', fill='tozeroy', line=dict(color=col['ac'], width=2), fillcolor=fc))
+        fig.update_layout(template=pt, paper_bgcolor=bg, plot_bgcolor=bg, margin=dict(l=0, r=0, t=10, b=0), height=300, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor=col['bd']))
+        st.plotly_chart(fig, use_container_width=True)
+    with g2:
+        fp = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.7, color='Sonuç', color_discrete_map={'WIN':col['ac'], 'LOSS':'#ff4b4b'})
+        fp.update_layout(template=pt, paper_bgcolor=bg, showlegend=False, margin=dict(l=20, r=20, t=10, b=20), height=300, annotations=[dict(text=f"{rate:.0f}%", x=0.5, y=0.5, font_size=24, showarrow=False, font_color=col['ttl'])])
+        st.plotly_chart(fp, use_container_width=True)
 
-    if data_mode == t("mode_system"):
-        active_df = df.copy()
-    else:
-        # Kişisel Veri
-        with st.expander(f"➕ {t('add_trade')}", expanded=False):
-            uc1, uc2, uc3, uc4 = st.columns(4)
-            u_date = uc1.date_input(t("date"), datetime.today())
-            u_pair = uc2.text_input(t("pair"), "BTC/USDT")
-            u_pnl = uc3.number_input(t("pnl_r"), value=0.0, step=0.1)
-            u_res = "WIN" if u_pnl > 0 else ("LOSS" if u_pnl < 0 else "BREAKEVEN")
-            
-            if uc4.button(t("add_btn"), use_container_width=True):
-                new_row = pd.DataFrame([{'Tarih': u_date.strftime("%d.%m.%Y"), 'Parite': u_pair.upper(), 'R_Kazanc': u_pnl, 'Sonuç': u_res}])
-                st.session_state.user_trades = pd.concat([st.session_state.user_trades, new_row], ignore_index=True)
-                st.rerun()
-        active_df = st.session_state.user_trades
+    st.markdown("---"); st.subheader(t("perf_cal"))
+    try:
+        df['Tarih_Dt'] = pd.to_datetime(df['Tarih'], dayfirst=True, errors='coerce'); df.dropna(subset=['Tarih_Dt'], inplace=True)
+        if not df.empty:
+            df = df.sort_values('Tarih_Dt'); ms = df['Tarih_Dt'].dt.strftime('%Y-%m').unique(); sm = st.selectbox(t("select_month"), options=ms, index=len(ms)-1)
+            y, m = map(int, sm.split('-')); md = df[df['Tarih_Dt'].dt.strftime('%Y-%m') == sm].copy(); dp = md.groupby(md['Tarih_Dt'].dt.day)['R_Kazanc'].sum().to_dict(); cm = calendar.monthcalendar(y, m)
+            hc = ['<div class="calendar-container">']; dn = ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pa'] if st.session_state.lang == "TR" else (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+            for d in dn: hc.append(f'<div class="calendar-header">{d}</div>')
+            mt = 0
+            for w in cm:
+                for d in w:
+                    if d == 0: hc.append('<div class="day-cell empty-cell"></div>')
+                    else:
+                        v = dp.get(d, 0); mt += v; cc, pc, pt = "day-cell", "", "-"
+                        if d in dp:
+                            if v > 0: cc += " day-win" if st.session_state.theme == "Dark" else " day-win-light"; pc = "win-text"; pt = f"+{v:.1f}"
+                            elif v < 0: cc += " day-loss"; pc = "loss-text"; pt = f"{v:.1f}"
+                        hc.append(f'<div class="{cc}"><div class="day-number">{d}</div><div class="day-profit {pc}">{pt}</div></div>')
+            hc.append('</div>'); st.markdown("".join(hc), unsafe_allow_html=True); st.markdown(f"<div style='text-align:center; margin-top:15px; font-size:1.2rem; font-weight:bold; color:{col['ac'] if mt>0 else '#ff4b4b'} !important'>{t('total_monthly')}: {mt:.2f}R</div>", unsafe_allow_html=True)
+    except Exception as e: st.error(str(e))
 
-    if not active_df.empty:
-        active_df['R_Kazanc'] = pd.to_numeric(active_df['R_Kazanc'], errors='coerce').fillna(0)
-        tot = len(active_df); win = len(active_df[active_df['R_Kazanc'] > 0]); rate = (win / tot * 100) if tot > 0 else 0; net_r = active_df['R_Kazanc'].sum()
-        gp = active_df[active_df['R_Kazanc'] > 0]['R_Kazanc'].sum(); gl = abs(active_df[active_df['R_Kazanc'] < 0]['R_Kazanc'].sum()); pf = (gp / gl) if gl > 0 else 0
-        nc = col['ac'] if net_r > 0 else "#ff4b4b"
-        
-        c1, c2, c3, c4 = st.columns(4)
-        c1.markdown(f'<div class="metric-container"><div class="metric-value">{tot}</div><div class="metric-label">{t("total_trades")}</div></div>', unsafe_allow_html=True)
-        c2.markdown(f'<div class="metric-container"><div class="metric-value">{rate:.1f}%</div><div class="metric-label">{t("win_rate")}</div></div>', unsafe_allow_html=True)
-        c3.markdown(f'<div class="metric-container"><div class="metric-value" style="color:{nc} !important">{net_r:.2f}R</div><div class="metric-label">{t("net_return")}</div></div>', unsafe_allow_html=True)
-        c4.markdown(f'<div class="metric-container"><div class="metric-value">{pf:.2f}</div><div class="metric-label">{t("profit_factor")}</div></div>', unsafe_allow_html=True)
-        
-        st.write(""); g1, g2 = st.columns([2, 1])
-        with g1:
-            active_df['Cum'] = active_df['R_Kazanc'].cumsum(); fig = go.Figure()
-            fc = f"rgba(0, 255, 204, 0.2)" if st.session_state.theme == "Dark" else f"rgba(13, 110, 253, 0.2)"
-            fig.add_trace(go.Scatter(x=active_df.index, y=active_df['Cum'], mode='lines', fill='tozeroy', line=dict(color=col['ac'], width=2), fillcolor=fc))
-            fig.update_layout(template="plotly_dark" if st.session_state.theme=="Dark" else "plotly_white", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=300, margin=dict(l=0, r=0, t=10, b=0), xaxis=dict(showgrid=False))
-            st.plotly_chart(fig, use_container_width=True)
-        with g2:
-            fp = px.pie(values=[win, len(active_df)-win], names=['WIN', 'LOSS'], hole=0.7, color_discrete_sequence=[col['ac'], '#ff4b4b'])
-            fp.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', showlegend=False, margin=dict(l=20, r=20, t=10, b=20), height=300, annotations=[dict(text=f"{rate:.0f}%", x=0.5, y=0.5, font_size=24, showarrow=False, font_color=col['ttl'])])
-            st.plotly_chart(fp, use_container_width=True)
-
-        st.markdown("---"); st.subheader(t("perf_cal"))
-        try:
-            active_df['Tarih_Dt'] = pd.to_datetime(active_df['Tarih'], dayfirst=True, errors='coerce'); active_df.dropna(subset=['Tarih_Dt'], inplace=True)
-            if not active_df.empty:
-                active_df = active_df.sort_values('Tarih_Dt'); ms = active_df['Tarih_Dt'].dt.strftime('%Y-%m').unique()
-                if len(ms) > 0:
-                    sm = st.selectbox(t("select_month"), options=ms, index=len(ms)-1); y, m = map(int, sm.split('-')); md = active_df[active_df['Tarih_Dt'].dt.strftime('%Y-%m') == sm].copy()
-                    dp = md.groupby(md['Tarih_Dt'].dt.day)['R_Kazanc'].sum().to_dict(); cm = calendar.monthcalendar(y, m); hc = ['<div class="calendar-container">']
-                    dn = ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pa'] if st.session_state.lang == "TR" else (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
-                    for d in dn: hc.append(f'<div class="calendar-header">{d}</div>')
-                    mt = 0
-                    for w in cm:
-                        for d in w:
-                            if d == 0: hc.append('<div class="day-cell empty-cell"></div>')
-                            else:
-                                v = dp.get(d, 0); mt += v; cc, pc, pt = "day-cell", "", "-"
-                                if d in dp:
-                                    if v > 0: cc += " day-win" if st.session_state.theme == "Dark" else " day-win-light"; pc = "win-text"; pt = f"+{v:.1f}"
-                                    elif v < 0: cc += " day-loss"; pc = "loss-text"; pt = f"{v:.1f}"
-                                hc.append(f'<div class="{cc}"><div class="day-number">{d}</div><div class="day-profit {pc}">{pt}</div></div>')
-                    hc.append('</div>'); st.markdown("".join(hc), unsafe_allow_html=True); st.markdown(f"<div style='text-align:center; margin-top:15px; font-size:1.2rem; font-weight:bold; color:{col['ac'] if mt>0 else '#ff4b4b'} !important'>{t('total_monthly')}: {mt:.2f}R</div>", unsafe_allow_html=True)
-        except: pass
-    else: st.info("No data yet.")
+    st.markdown("---"); st.subheader(t("roi_sim")); r1, r2, r3 = st.columns([1,1,2])
+    with r1: cap = st.number_input("Capital", min_value=100, value=1000)
+    with r2: risk = st.slider("Risk %", 0.5, 5.0, 2.0)
+    prof = cap * (risk / 100) * net_r; bal = cap + prof; perc = (prof / cap) * 100
+    with r3: st.markdown(f"""<div style="background:{col['card']}; padding:15px; border-radius:10px; border:1px solid {col['ac']}; text-align:center;"><span style="color:{col['grd']} !important">{t('proj_bal')}</span><br><span style="color:{col['ttl']} !important; font-size:2rem; font-weight:bold;">${bal:,.2f}</span><br><span style="color:{col['ac']} !important">(+${prof:,.2f} / +{perc:.1f}%)</span></div>""", unsafe_allow_html=True)
+    
+    st.markdown("---"); h, d = st.columns([4, 1])
+    with h: st.markdown(f"##### {t('trade_log')}")
+    with d: st.download_button(label=t("download"), data=df.to_csv(index=False).encode('utf-8'), file_name='log.csv', mime='text/csv')
+    def hwin(row):
+        win_color = col['ac'] if row['Sonuç'] == 'WIN' else '#ff4b4b'
+        return [f'color: {win_color}; font-weight:bold' if c_name == 'Sonuç' else f'color: {col["txt"]}' for c_name in row.index]
+    st.dataframe(df.style.apply(hwin, axis=1), use_container_width=True, hide_index=True)
 
 # ==========================================
-# TAB 2: AKADEMİ (DETAYLANDIRILMIŞ)
+# TAB 2: AKADEMİ (GELİŞMİŞ)
 # ==========================================
 with tab2:
     st.write(""); st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('acad_title')}</h2>", unsafe_allow_html=True)
@@ -402,7 +323,7 @@ with tab2:
     with tab_a4: st.subheader(t('acad_risk')); st.markdown("""### %1 - %2 KURALI\n* Her işlemde kasanın en fazla %2'sini riske at.\n* 1000$ kasa için Stop olduğunda kayıp max 20$ olmalı.\n### R:R ORANI\n* Minimum hedef 1:2 olmalı.""")
 
 # ==========================================
-# TAB 5: AI LAB (KONUŞAN ANALİZ)
+# TAB 5: AI LAB
 # ==========================================
 with tab5:
     st.write(""); st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('ai_title')}</h2>", unsafe_allow_html=True)
@@ -434,18 +355,8 @@ with tab5:
             elif score <= 40: decision = t('sell'); dec_col = "#cc0000"; trend_text = t('bear'); direction = "BEAR"
             else: decision = t('wait'); dec_col = "#aaaaaa"; trend_text = t('neutral'); direction = "NEUTRAL"
 
-            # AI REASONING
-            reasons = []
-            if rsi_val > 70: reasons.append(f"🔴 {t('reason_rsi_ob')}")
-            elif rsi_val < 30: reasons.append(f"🟢 {t('reason_rsi_os')}")
-            if current_price > sma_val: reasons.append(f"🟢 {t('reason_trend_bull')}")
-            else: reasons.append(f"🔴 {t('reason_trend_bear')}")
-            if macd_val > sig_val: reasons.append(f"🟢 {t('reason_macd_buy')}")
-            else: reasons.append(f"🔴 {t('reason_macd_sell')}")
-            explanation_html = "".join([f"<li style='margin-bottom:5px; color:{col['txt']}; font-size:0.9rem;'>{r}</li>" for r in reasons])
-
-            st.markdown(f"""<div class="ai-card" style="border-left-color: {dec_col} !important;"><div style="display:flex; justify-content:space-between;"><div><div class="ai-header">{user_symbol.upper()} / USD</div></div><div class="ai-header">${current_price:,.4f}</div></div><hr style="border-color:{col['bd']}; margin:15px 0;"><div class="ai-grid"><div class="ai-item"><div class="ai-label">{t('ai_trend')}</div><div class="ai-val" style="color:{dec_col} !important">{trend_text}</div></div><div class="ai-item"><div class="ai-label">{t('ai_rsi')}</div><div class="ai-val">{rsi_val:.2f}</div></div><div class="ai-item"><div class="ai-label">{t('ai_supp')}</div><div class="ai-val">${supp:,.4f}</div></div><div class="ai-item"><div class="ai-label">{t('ai_res')}</div><div class="ai-val">${res:,.4f}</div></div></div><div style="margin-top:20px; background:{col['sec']}; padding:15px; border-radius:8px; border:1px solid {col['bd']};"><div style="font-weight:bold; color:{col['ac']}; margin-bottom:10px;">{t('ai_reason')}</div><ul style="padding-left:20px; margin:0;">{explanation_html}</ul></div><div class="ai-label" style="margin-top:25px;">{t('ai_score')}: {score}/100</div><div style="background:#333; border-radius:10px; height:10px; width:100%; margin-top:5px;"><div style="background: linear-gradient(90deg, #ff4b4b, #ffff00, #00ffcc); width:{score}%; height:100%;"></div></div><div class="ai-decision" style="border: 2px solid {dec_col}; color: {dec_col} !important;">{t('ai_dec')}: {decision}</div></div>""", unsafe_allow_html=True)
-
+            st.markdown(f"""<div class="ai-card" style="border-left-color: {dec_col} !important;"><div style="display:flex; justify-content:space-between;"><div><div class="ai-header">{user_symbol.upper()} / USD</div></div><div class="ai-header">${current_price:,.4f}</div></div><hr style="border-color:{col['bd']}; margin:15px 0;"><div class="ai-grid"><div class="ai-item"><div class="ai-label">{t('ai_trend')}</div><div class="ai-val" style="color:{dec_col} !important">{trend_text}</div></div><div class="ai-item"><div class="ai-label">{t('ai_rsi')}</div><div class="ai-val">{rsi_val:.2f}</div></div><div class="ai-item"><div class="ai-label">{t('ai_supp')}</div><div class="ai-val">${supp:,.4f}</div></div><div class="ai-item"><div class="ai-label">{t('ai_res')}</div><div class="ai-val">${res:,.4f}</div></div></div><div class="ai-label" style="margin-top:25px;">{t('ai_score')}: {score}/100</div><div style="background:#333; border-radius:10px; height:10px; width:100%; margin-top:5px;"><div style="background: linear-gradient(90deg, #ff4b4b, #ffff00, #00ffcc); width:{score}%; height:100%;"></div></div><div class="ai-decision" style="border: 2px solid {dec_col}; color: {dec_col} !important;">{t('ai_dec')}: {decision}</div></div>""", unsafe_allow_html=True)
+            
             # CHART
             fig_ai = go.Figure()
             last_50 = live_df.tail(50).reset_index(drop=True)
@@ -455,7 +366,7 @@ with tab5:
         else: st.error(t("err_msg"))
 
 # ==========================================
-# TAB 6: PIYASA RADARI (YENİ)
+# TAB 6: PIYASA RADARI (YENİ - COKLU ANALİZ)
 # ==========================================
 with tab6:
     st.write(""); st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>CANLI PIYASA RADARI 📡</h2>", unsafe_allow_html=True)
