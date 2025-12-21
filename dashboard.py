@@ -10,10 +10,10 @@ import calendar
 import numpy as np
 import time
 import requests
-import ccxt  # Binance/Kripto veri motoru
+import ccxt 
 
 # ==========================================
-# 0. AYARLAR
+# 0. AYARLAR VE KÜTÜPHANE KONTROLÜ
 # ==========================================
 st.set_page_config(
     page_title="Crazytown Capital",
@@ -26,137 +26,72 @@ if 'lang' not in st.session_state: st.session_state.lang = "TR"
 if 'theme' not in st.session_state: st.session_state.theme = "Dark"
 
 # ==========================================
-# 1. ÇEVİRİ VE İÇERİK (AKADEMİ TAM METİN)
+# 1. ÇEVİRİ VE İÇERİK
 # ==========================================
 TRANSLATIONS = {
     "EN": {
         "title_sub": "ALGORITHMIC TRADING SYSTEMS", "perf": "PERFORMANCE", "acad": "ACADEMY", "memb": "MEMBERSHIP", "cont": "CONTACT", "ai_lab": "AI LAB",
         "total_trades": "TOTAL TRADES", "win_rate": "WIN RATE", "net_return": "NET RETURN", "profit_factor": "PROFIT FACTOR",
         "season_goal": "SEASON GOAL", "completed": "COMPLETED", "perf_cal": "🗓️ PERFORMANCE CALENDAR",
-        "select_month": "Select Month", "total_monthly": "TOTAL MONTHLY PNL",
-        "roi_sim": "🧮 ROI SIMULATOR", "initial_cap": "Initial Capital ($)", "risk_trade": "Risk Per Trade (%)", "proj_bal": "PROJECTED BALANCE",
-        "trade_log": "TRADE LOG", "download": "📥 DOWNLOAD CSV", "limited_offer": "🔥 LIMITED TIME OFFER: Get LIFETIME access!",
-        "plan_starter": "STARTER", "plan_pro": "PROFESSIONAL", "plan_life": "LIFETIME", "sel_plan": "SELECT PLAN", "most_pop": "MOST POPULAR",
-        "contact_sales": "CONTACT SALES", "settings": "⚙️ SETTINGS",
+        "select_month": "Select Month", "total_monthly": "TOTAL MONTHLY PNL", "market_intel": "📡 MARKET INTELLIGENCE",
+        "roi_sim": "🧮 ROI SIMULATOR", "roi_desc": "Calculate potential earnings.", "initial_cap": "Initial Capital ($)",
+        "risk_trade": "Risk Per Trade (%)", "proj_bal": "PROJECTED BALANCE", "trade_log": "TRADE LOG", "download": "📥 DOWNLOAD CSV",
+        "limited_offer": "🔥 LIMITED TIME OFFER: Get LIFETIME access!", "feedback": "💬 TRADER FEEDBACK",
+        "plan_starter": "STARTER", "plan_pro": "PROFESSIONAL", "plan_life": "LIFETIME", "sel_plan": "SELECT PLAN",
+        "most_pop": "MOST POPULAR", "contact_sales": "CONTACT SALES", "faq": "❓ FAQ", "settings": "⚙️ SETTINGS",
         "lang_sel": "Language", "theme_sel": "Theme", "theme_dark": "Dark (Neon)", "theme_light": "Light (Corporate)",
         "acad_title": "OA | TRADE SMC MASTERY", "acad_quote": "Not beating the market, but following it with discipline.",
-        
-        # AKADEMİ (FULL)
         "lesson_1_title": "📌 PART 1: TIME & CONTEXT",
-        "lesson_1_content": """
-        #### 1. TIME FILTER (CRITICAL)
-        We only trade during high-volume sessions.
-        * **LONDON:** `10:00 – 12:00` (UTC+3)
-        * **NEW YORK:** `15:30 – 18:30` (UTC+3)
-        
-        #### 2. DAILY CONTEXT (PDH/PDL)
-        The only condition: **LIQUIDITY SWEEP**.
-        * **PDH Raid:** Look for **SHORT**.
-        * **PDL Raid:** Look for **LONG**.
-        * *Wick sweep is enough.*
-        """,
+        "lesson_1_content": "#### 1. TIME FILTER\n* **LONDON:** `10:00 – 12:00` (UTC+3)\n* **NEW YORK:** `15:30 – 18:30` (UTC+3)",
         "lesson_2_title": "🛠️ PART 2: ENTRY SETUP",
-        "lesson_2_content": """
-        #### 1. FIBONACCI SETTINGS
-        Draw Fib on the impulse leg.
-        * **ENTRY:** `0.75` - `0.60` (Golden Pocket)
-        * **STOP:** `1.0`
-        * **TP-1:** `0.25`
-        * **TP-2:** `-0.18`
-        
-        #### 2. FVG CONFIRMATION
-        * Must tap into a **Fair Value Gap** inside the zone.
-        """,
+        "lesson_2_content": "#### 1. FIBONACCI\n* **ENTRY:** `0.75` - `0.60`\n* **STOP:** `1.0`",
         "lesson_3_title": "⚠️ PART 3: RULES",
-        "lesson_3_content": """
-        <div class="rule-box">
-        <h4>🚨 STRICT RULES</h4>
-        <ul>
-            <li><b>NO CHOCH:</b> Don't wait for LTF confirmation.</li>
-            <li><b>NO TRADING OUTSIDE HOURS:</b> Discipline is key.</li>
-            <li><b>MANAGEMENT:</b> Move SL to BE only after TP-1.</li>
-        </ul>
-        </div>
-        """,
-        
-        "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Real-time Live Market Analysis.",
-        "run_ai": "SCAN MARKET", "ai_analyzing": "Fetching Live Data...", 
-        "ai_input_label": "Enter Coin Symbol (e.g. TAO, BTC, ETH)",
-        "ai_trend": "Trend", "ai_rsi": "RSI", "ai_supp": "Support", "ai_res": "Resistance",
-        "ai_score": "Confidence Score", "ai_dec": "DECISION",
+        "lesson_3_content": "<div class='rule-box'><h4>🚨 STRICT RULES</h4><ul><li><b>NO CHOCH</b></li><li><b>NO TRADING OUTSIDE HOURS</b></li></ul></div>",
+        "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Real-time market scanning & AI Confidence Score.",
+        "run_ai": "SCAN MARKET", "ai_analyzing": "Scanning Order Flow...", 
+        "ai_input_label": "Enter Symbol (e.g. BTC, ETH, SOL, PEPE)",
+        "ai_trend": "General Trend", "ai_rsi": "RSI Indicator", "ai_supp": "Est. Support", "ai_res": "Est. Resistance",
+        "ai_score": "Crazytown Confidence Score", "ai_dec": "AI DECISION",
         "bull": "BULLISH 🟢", "bear": "BEARISH 🔴", "neutral": "NEUTRAL ⚪",
         "s_buy": "STRONG BUY 🚀", "buy": "BUY 🟢", "sell": "SELL 🔴", "s_sell": "STRONG SELL 🔻", "wait": "WAIT ✋",
-        "data_source": "Source", "err_msg": "❌ Coin not found! Please check the symbol (e.g. try TAO or BTC)."
+        "data_source": "Data Source", "err_msg": "Coin not found. Try adding USDT (e.g. PEPEUSDT)"
     },
     "TR": {
         "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ", "perf": "PERFORMANS", "acad": "AKADEMİ", "memb": "ÜYELİK", "cont": "İLETİŞİM", "ai_lab": "YAPAY ZEKA",
         "total_trades": "TOPLAM İŞLEM", "win_rate": "BAŞARI ORANI", "net_return": "NET GETİRİ", "profit_factor": "KÂR FAKTÖRÜ",
         "season_goal": "SEZON HEDEFİ", "completed": "TAMAMLANDI", "perf_cal": "🗓️ PERFORMANS TAKVİMİ",
-        "select_month": "Ay Seçiniz", "total_monthly": "AYLIK TOPLAM PNL",
-        "roi_sim": "🧮 ROI SİMÜLATÖRÜ", "initial_cap": "Başlangıç Sermayesi ($)", "risk_trade": "İşlem Başı Risk (%)", "proj_bal": "TAHMİNİ BAKİYE",
-        "trade_log": "İŞLEM GEÇMİŞİ", "download": "📥 CSV İNDİR", "limited_offer": "🔥 SINIRLI TEKLİF: Zam gelmeden ÖMÜR BOYU erişimi kap!",
-        "plan_starter": "BAŞLANGIÇ", "plan_pro": "PROFESYONEL", "plan_life": "ÖMÜR BOYU", "sel_plan": "PLAN SEÇ", "most_pop": "EN POPÜLER",
-        "contact_sales": "SATIŞA ULAŞ", "settings": "⚙️ AYARLAR",
+        "select_month": "Ay Seçiniz", "total_monthly": "AYLIK TOPLAM PNL", "market_intel": "📡 PİYASA İSTİHBARATI",
+        "roi_sim": "🧮 ROI SİMÜLATÖRÜ", "roi_desc": "Geçmiş performansa dayalı kazanç hesapla.", "initial_cap": "Başlangıç Sermayesi ($)",
+        "risk_trade": "İşlem Başı Risk (%)", "proj_bal": "TAHMİNİ BAKİYE", "trade_log": "İŞLEM GEÇMİŞİ", "download": "📥 CSV İNDİR",
+        "limited_offer": "🔥 SINIRLI TEKLİF: Zam gelmeden ÖMÜR BOYU erişimi kap!", "feedback": "💬 YATIRIMCI YORUMLARI",
+        "plan_starter": "BAŞLANGIÇ", "plan_pro": "PROFESYONEL", "plan_life": "ÖMÜR BOYU", "sel_plan": "PLAN SEÇ",
+        "most_pop": "EN POPÜLER", "contact_sales": "SATIŞA ULAŞ", "faq": "❓ SIK SORULANLAR", "settings": "⚙️ AYARLAR",
         "lang_sel": "Dil", "theme_sel": "Tema", "theme_dark": "Koyu Mod (Neon)", "theme_light": "Açık Mod (Kurumsal)",
         "acad_title": "OA | TRADE SMC USTALIK SINIFI", "acad_quote": "Piyasayı yenmek değil, disiplinle takip etmek.",
-        
-        # AKADEMİ (FULL)
         "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM",
-        "lesson_1_content": """
-        #### 1. ZAMAN FİLTRESİ (KRİTİK)
-        Sadece hacimli seanslarda işlem aranır. Diğer saatlerde ekran kapatılır.
-        * **LONDRA:** `10:00 – 12:00` (TSİ)
-        * **NEW YORK:** `15:30 – 18:30` (TSİ)
-        
-        #### 2. GÜNLÜK BAĞLAM (PDH/PDL)
-        İşlem aramak için tek şart **LİKİDİTE ALIMI (SWEEP)**'dır.
-        * **PDH (Önceki Gün Yükseği) İhlali:** Sadece **SHORT**.
-        * **PDL (Önceki Gün Düşüğü) İhlali:** Sadece **LONG**.
-        * *Not: Fitil atması (Wick) yeterlidir.*
-        """,
+        "lesson_1_content": "#### 1. ZAMAN FİLTRESİ\n* **LONDRA:** `10:00 – 12:00` (TSİ)\n* **NEW YORK:** `15:30 – 18:30` (TSİ)",
         "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ",
-        "lesson_2_content": """
-        #### 1. FIBONACCI AYARLARI
-        Likidite alımından sonra oluşan sert harekete (Impulse) Fibonacci çekilir.
-        * **GİRİŞ BÖLGESİ:** `0.75` - `0.60` (Golden Pocket)
-        * **STOP:** `1` (Hareket başlangıcı)
-        * **TP-1:** `0.25`
-        * **TP-2:** `-0.18`
-        
-        #### 2. FVG ONAYI
-        * Fiyat, `0.6-0.75` aralığındaki bir **FVG (Dengesizlik)** alanına temas etmelidir.
-        * Oradan reddedilme (rejection) beklenir.
-        """,
+        "lesson_2_content": "#### 1. FIBONACCI\n* **GİRİŞ:** `0.75` - `0.60`\n* **STOP:** `1`",
         "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR",
-        "lesson_3_content": """
-        <div class="rule-box">
-        <h4>🚨 DEĞİŞMEZ KURALLAR</h4>
-        <ul>
-            <li><b>CHOCH YOK:</b> Düşük zaman diliminde kırılım (Choch) beklenmez.</li>
-            <li><b>SAAT DIŞI İŞLEM YOK:</b> Disiplin her şeydir.</li>
-            <li><b>YÖNETİM:</b> Stop sadece TP-1 alındıktan sonra Girişe (BE) çekilir.</li>
-        </ul>
-        </div>
-        """,
-        
-        "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Gerçek Zamanlı Canlı Piyasa Analizi.",
-        "run_ai": "TARA VE ANALİZ ET", "ai_analyzing": "Canlı Veri Çekiliyor...", 
-        "ai_input_label": "Coin Sembolü Girin (Örn: TAO, BTC, ETH, PEPE)",
+        "lesson_3_content": "<div class='rule-box'><h4>🚨 DEĞİŞMEZ KURALLAR</h4><ul><li><b>CHOCH YOK</b></li><li><b>SAAT DIŞI İŞLEM YOK</b></li></ul></div>",
+        "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Gelişmiş Teknik Analiz & YZ Güven Skoru.",
+        "run_ai": "TARA VE ANALİZ ET", "ai_analyzing": "Piyasa Yapısı Taranıyor...", 
+        "ai_input_label": "Coin Sembolü (Örn: TAO, BTC, ETH, PEPE)",
         "ai_trend": "Genel Trend", "ai_rsi": "RSI Göstergesi", "ai_supp": "Tahmini Destek", "ai_res": "Tahmini Direnç",
-        "ai_score": "Crazytown Güven Skoru", "ai_dec": "KARAR",
+        "ai_score": "Crazytown Güven Skoru", "ai_dec": "YZ KARARI",
         "bull": "BOĞA (YÜKSELİŞ) 🟢", "bear": "AYI (DÜŞÜŞ) 🔴", "neutral": "NÖTR ⚪",
         "s_buy": "GÜÇLÜ AL 🚀", "buy": "AL 🟢", "sell": "SAT 🔴", "s_sell": "GÜÇLÜ SAT 🔻", "wait": "BEKLE ✋",
-        "data_source": "Veri Kaynağı", "err_msg": "❌ Coin bulunamadı! Sembolü kontrol et (Örn: TAO veya BTC yaz)."
+        "data_source": "Veri Kaynağı", "err_msg": "Coin bulunamadı. Sembolü kontrol et (Örn: BTC, ETH)."
     },
     "RU": {
         "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ", "ai_lab": "ИИ ЛАБОРАТОРИЯ",
         "total_trades": "ВСЕГО СДЕЛОК", "win_rate": "ВИНРЕЙТ", "net_return": "ЧИСТАЯ ПРИБЫЛЬ", "profit_factor": "ПРОФИТ-ФАКТОР",
         "season_goal": "ЦЕЛЬ СЕЗОНА", "completed": "ЗАВЕРШЕНО", "perf_cal": "🗓️ КАЛЕНДАРЬ",
-        "select_month": "Выберите месяц", "total_monthly": "ИТОГ МЕСЯЦА PNL",
-        "roi_sim": "🧮 ROI СИМУЛЯТОР", "initial_cap": "Капитал", "risk_trade": "Риск", "proj_bal": "ПРОГНОЗ",
-        "trade_log": "ЖУРНАЛ", "download": "📥 СКАЧАТЬ", "limited_offer": "🔥 ПРЕДЛОЖЕНИЕ: LIFETIME доступ!",
+        "select_month": "Выберите месяц", "total_monthly": "ИТОГ МЕСЯЦА PNL", "market_intel": "📡 РЫНОК",
+        "roi_sim": "🧮 ROI СИМУЛЯТОР", "roi_desc": "Рассчитайте прибыль.", "initial_cap": "Капитал", "risk_trade": "Риск", "proj_bal": "ПРОГНОЗ", "trade_log": "ЖУРНАЛ", "download": "📥 СКАЧАТЬ",
+        "limited_offer": "🔥 ПРЕДЛОЖЕНИЕ: LIFETIME доступ!", "feedback": "💬 ОТЗЫВЫ",
         "plan_starter": "СТАРТ", "plan_pro": "ПРОФИ", "plan_life": "LIFETIME", "sel_plan": "ВЫБРАТЬ",
-        "most_pop": "ПОПУЛЯРНЫЙ", "contact_sales": "СВЯЗАТЬСЯ", "settings": "⚙️ НАСТРОЙКИ",
+        "most_pop": "ПОПУЛЯРНЫЙ", "contact_sales": "СВЯЗАТЬСЯ", "faq": "❓ FAQ", "settings": "⚙️ НАСТРОЙКИ",
         "lang_sel": "Язык", "theme_sel": "Тема", "theme_dark": "Темная", "theme_light": "Светлая",
         "acad_title": "OA | TRADE SMC МАСТЕРСТВО", "acad_quote": "Дисциплина прежде всего.",
         "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "### 1. ФИЛЬТР ВРЕМЕНИ\n* **ЛОНДОН:** 10:00–12:00\n* **НЬЮ-ЙОРК:** 15:30–18:30",
@@ -164,9 +99,9 @@ TRANSLATIONS = {
         "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "<div class='rule-box'>НЕТ CHOCH.</div>",
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "ИИ анализ.",
         "run_ai": "АНАЛИЗ", "ai_analyzing": "Сканирование...", 
-        "ai_input_label": "Символ (TAO, BTC...)",
+        "ai_input_label": "Символ (BTC, ETH...)",
         "ai_trend": "Тренд", "ai_rsi": "RSI", "ai_supp": "Поддержка", "ai_res": "Сопротивление",
-        "ai_score": "Оценка", "ai_dec": "РЕШЕНИЕ",
+        "ai_score": "Оценка уверенности", "ai_dec": "РЕШЕНИЕ",
         "bull": "БЫЧИЙ 🟢", "bear": "МЕДВЕЖИЙ 🔴", "neutral": "НЕЙТРАЛЬНО ⚪",
         "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖ 🔻", "wait": "ЖДАТЬ ✋",
         "data_source": "Источник", "err_msg": "Монета не найдена."
@@ -186,7 +121,7 @@ with st.expander(t('settings'), expanded=False):
         if nt != st.session_state.theme: st.session_state.theme = nt; st.rerun()
 
 # ==========================================
-# 2. DİNAMİK RENK VE TASARIM (MOBİL UYUMLU)
+# 2. DİNAMİK RENK VE TASARIM
 # ==========================================
 if st.session_state.theme == "Dark":
     col = {
@@ -208,34 +143,18 @@ st.markdown(anim_html, unsafe_allow_html=True)
 st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;600;800&display=swap');
-        
         .stApp {{ background: transparent !important; }}
         header, footer, #MainMenu {{display: none !important;}}
         .block-container {{padding-top: 1.5rem; padding-bottom: 3rem;}}
 
         h1, h2, h3, h4, h5, h6, p, li, div, span, label {{ color: {col['txt']} !important; font-family: 'Inter', sans-serif; }}
 
-        /* --- MOBİL UYUMLU TAKVİM (CALENDAR) --- */
-        .calendar-container {{ 
-            display: grid; 
-            grid-template-columns: repeat(7, 1fr); 
-            gap: 4px; 
-            margin-top: 15px; 
-        }}
-        .day-cell {{ 
-            background-color: {col['sec']}; 
-            border: 1px solid {col['bd']}; 
-            border-radius: 4px; 
-            height: 80px; 
-            padding: 4px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between;
-        }}
+        /* MOBİL UYUMLU TAKVİM */
+        .calendar-container {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 15px; }}
+        .day-cell {{ background-color: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 4px; height: 80px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; }}
         .day-number {{ font-weight: bold; font-size: 0.9rem; opacity: 0.7; }}
         .day-profit {{ font-size: 0.9rem; font-weight: 800; align-self: center; }}
 
-        /* MOBİL İÇİN ÖZEL MEDYA SORGUSU */
         @media only screen and (max-width: 600px) {{
             .calendar-container {{ gap: 2px; }}
             .day-cell {{ height: 50px !important; padding: 2px !important; }}
@@ -249,29 +168,25 @@ st.markdown(f"""
             .ai-grid {{ grid-template-columns: 1fr !important; gap: 10px !important; }}
         }}
 
-        /* Genel Bileşenler */
         .neon-title {{ font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important; font-weight: 900; letter-spacing: 4px; margin: 0; {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""} animation: pulse 3s infinite alternate; }}
-        @keyframes pulse {{ 0% {{opacity: 1;}} 100% {{opacity: 0.9;}} }}
-        
         .metric-container {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
+        .metric-value {{ font-size: 2rem; font-weight: 700; color: {col['ttl']} !important; }}
+        .metric-label {{ font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px; }}
         
-        /* AI CARD */
         .ai-card {{ background-color: {col['ai_bg']}; border: 1px solid {col['bd']}; border-left-width: 6px; border-left-style: solid; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }}
         .ai-header {{ font-size: 1.6rem; font-weight: 800; color: {col['ttl']} !important; margin-bottom: 5px; }}
         .ai-sub {{ font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; }}
         .ai-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }}
         .ai-item {{ padding: 5px 0; }}
         .ai-label {{ font-size: 0.85rem; color: {col['grd']} !important; margin-bottom: 3px; }}
-        .ai-val {{ font-size: 1.1rem; font-weight: 800; color: {col['ttl']} !important; }}
+        .ai-val {{ font-size: 1.2rem; font-weight: 800; color: {col['ttl']} !important; }}
         .ai-decision {{ font-size: 1.8rem; font-weight: 900; text-align: left; margin-top: 15px; display: flex; align-items: center; gap: 10px; }}
 
-        /* PRO TOOLKIT */
         .pro-grid {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }}
         .pro-item {{ background: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 8px; padding: 10px; text-align: left; }}
         .pro-name {{ font-weight: 800; color: {col['ttl']} !important; font-size: 0.8rem; margin-bottom: 3px; }}
         .pro-status {{ font-weight: bold; font-size: 0.9rem; }}
 
-        /* Renkler */
         .day-win {{ background: rgba(0, 255, 204, 0.15); border-color: {col['ac']}; }}
         .day-win-light {{ background: rgba(13, 110, 253, 0.15); border-color: {col['ac']}; }}
         .day-loss {{ background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b; }}
@@ -304,11 +219,6 @@ df = load_data()
 
 # --- GELİŞMİŞ VERİ MOTORU (ASLA SAHTE VERİ YOK) ---
 def get_live_market_data(symbol_input, interval):
-    """
-    1. CoinGecko Search ile doğru ID'yi bulur (TAO -> bittensor).
-    2. Binance CCXT ile veriyi çeker (Hızlı ve Canlı).
-    3. Asla simülasyon yapmaz, veri yoksa hata döner.
-    """
     symbol_input = symbol_input.strip().upper()
     
     # 1. AKILLI SEMBOL EŞLEŞTİRME (COINGECKO SEARCH)
@@ -327,25 +237,21 @@ def get_live_market_data(symbol_input, interval):
             search_url = f"https://api.coingecko.com/api/v3/search?query={symbol_input}"
             search_resp = requests.get(search_url, timeout=2).json()
             if search_resp.get("coins"):
-                cg_id = search_resp["coins"][0]["id"] # En iyi eşleşmeyi al
+                cg_id = search_resp["coins"][0]["id"]
     except: pass
 
     # 2. VERİ ÇEKME (ÖNCELİK: CCXT BINANCE)
     try:
         exchange = ccxt.binance()
-        # Sembolü Binance formatına çevir
         target_symbol = f"{symbol_input}/USDT"
-        
-        # Zaman dilimi
         tf_map = {"1h": "1h", "4h": "4h", "1d": "1d"}
-        
         ohlcv = exchange.fetch_ohlcv(target_symbol, timeframe=tf_map.get(interval, '1h'), limit=100)
         if ohlcv:
             df = pd.DataFrame(ohlcv, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
             df['time'] = pd.to_datetime(df['time'], unit='ms')
             return df, "Binance API (Live)"
     except:
-        pass # Binance'de yoksa CoinGecko'yu dene
+        pass 
 
     # 3. VERİ ÇEKME (YEDEK: COINGECKO)
     if cg_id:
@@ -436,6 +342,21 @@ with tab5:
         run_analysis = st.button(t('run_ai'), key="ai_btn", use_container_width=True)
 
     if run_analysis:
+        # DEFAULT DEĞERLER (Safety First)
+        dec_col = "#aaaaaa"
+        trend_text = "NEUTRAL"
+        decision = "WAIT"
+        wave_status = "NEUTRAL"
+        wave_col = "#888"
+        core_status = "STABLE"
+        core_col = "#888"
+        beluga_status = "50.0"
+        macd_status = "NEUTRAL"
+        macd_col = "#888"
+        div_status = "NONE"
+        div_col = "#888"
+        score = 50
+
         with st.spinner(t('ai_analyzing')):
             live_df, source = get_live_market_data(user_symbol, tf)
             time.sleep(0.5) 
