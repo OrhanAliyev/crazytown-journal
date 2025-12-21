@@ -251,221 +251,124 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Session State
-if 'lang' not in st.session_state:
-    st.session_state.lang = "TR"
-if 'theme' not in st.session_state:
-    st.session_state.theme = "Dark"
+if 'lang' not in st.session_state: st.session_state.lang = "TR"
+if 'theme' not in st.session_state: st.session_state.theme = "Dark"
 
-def t(key):
-    return TRANSLATIONS[st.session_state.lang][key]
+def t(key): return TRANSLATIONS[st.session_state.lang][key]
 
 # --- AYARLAR MENÜSÜ ---
 with st.expander(t('settings'), expanded=False):
-    col_s1, col_s2 = st.columns(2)
-    with col_s1:
-        sel_lang = st.selectbox(t('lang_sel'), ["TR", "EN", "RU"], index=["TR", "EN", "RU"].index(st.session_state.lang))
-        if sel_lang != st.session_state.lang:
-            st.session_state.lang = sel_lang
-            st.rerun()
-    with col_s2:
-        theme_options = ["Dark", "Light"]
-        theme_labels = [t('theme_dark'), t('theme_light')]
-        current_index = 0 if st.session_state.theme == "Dark" else 1
-        sel_theme_label = st.selectbox(t('theme_sel'), theme_labels, index=current_index)
-        
-        new_theme = "Dark" if sel_theme_label == t('theme_dark') else "Light"
-        if new_theme != st.session_state.theme:
-            st.session_state.theme = new_theme
-            st.rerun()
+    c1, c2 = st.columns(2)
+    with c1:
+        sl = st.selectbox(t('lang_sel'), ["TR", "EN", "RU"], index=["TR", "EN", "RU"].index(st.session_state.lang))
+        if sl != st.session_state.lang: st.session_state.lang = sl; st.rerun()
+    with c2:
+        tl = [t('theme_dark'), t('theme_light')]
+        st_l = st.selectbox(t('theme_sel'), tl, index=0 if st.session_state.theme == "Dark" else 1)
+        nt = "Dark" if st_l == t('theme_dark') else "Light"
+        if nt != st.session_state.theme: st.session_state.theme = nt; st.rerun()
 
 # ==========================================
-# 2. DİNAMİK CSS VE RENK PALETLERİ
+# 2. DİNAMİK CSS VE YENİ ANİMASYON
 # ==========================================
 if st.session_state.theme == "Dark":
-    # --- KOYU MOD ---
-    bg_color = "#050505" # Daha derin siyah
-    text_color = "#e0e0e0"
-    card_bg = "rgba(20, 20, 25, 0.9)" # Hafif transparan
-    border_color = "#333"
-    accent_color = "#00ffcc" # Daha parlak neon
-    accent_hover = "#00ccaa"
-    secondary_bg = "#111"
-    grid_header_color = "#888"
-    title_color = "#ffffff"
-    cal_text_color = "#ffffff"
-    
-    # Animasyon: Koyu arka planda parlak neon çizgiler
-    anim_bg_image = f"""
-        linear-gradient(45deg, rgba(0, 255, 204, 0.03) 25%, transparent 25%, transparent 75%, rgba(0, 255, 204, 0.03) 75%, rgba(0, 255, 204, 0.03)),
-        linear-gradient(45deg, rgba(0, 255, 204, 0.03) 25%, transparent 25%, transparent 75%, rgba(0, 255, 204, 0.03) 75%, rgba(0, 255, 204, 0.03))
+    # KOYU MOD RENKLERİ
+    bg_c, tx_c = "#050505", "#e0e0e0"
+    cd_bg, bd_c = "rgba(20, 20, 25, 0.85)", "#333"
+    ac_c, ac_h = "#00ffcc", "#00ccaa" # Neon Turkuaz
+    sec_bg, gh_c = "#111", "#888"
+    ttl_c, cal_tx = "#ffffff", "#ffffff"
+    # YENİ KOYU MOD ANİMASYONU (Neon Küreler)
+    anim_css = f"""
+        .stApp::before {{
+            content: ''; position: fixed; top: 50%; left: 50%; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(0, 255, 204, 0.15), transparent 60%);
+            filter: blur(100px); animation: orbMove1 25s linear infinite alternate; z-index: -1; mix-blend-mode: screen;
+        }}
+        .stApp::after {{
+            content: ''; position: fixed; top: 40%; left: 40%; width: 40vw; height: 40vw;
+            background: radial-gradient(circle, rgba(153, 0, 255, 0.15), transparent 60%);
+            filter: blur(120px); animation: orbMove2 30s linear infinite alternate-reverse; z-index: -1; mix-blend-mode: screen;
+        }}
     """
 else:
-    # --- AÇIK MOD ---
-    bg_color = "#f4f7f6"
-    text_color = "#1f2833"
-    card_bg = "#ffffff"
-    border_color = "#d1d5db"
-    accent_color = "#0077b6" # Profesyonel Mavi
-    accent_hover = "#005f91"
-    secondary_bg = "#e5e7eb"
-    grid_header_color = "#4b5563"
-    title_color = "#000000"
-    cal_text_color = "#1f2833" # Takvim yazısı koyu
-    
-    # Animasyon: Açık arka planda hafif mavi çizgiler
-    anim_bg_image = f"""
-        linear-gradient(45deg, rgba(0, 119, 182, 0.05) 25%, transparent 25%, transparent 75%, rgba(0, 119, 182, 0.05) 75%, rgba(0, 119, 182, 0.05)),
-        linear-gradient(45deg, rgba(0, 119, 182, 0.05) 25%, transparent 25%, transparent 75%, rgba(0, 119, 182, 0.05) 75%, rgba(0, 119, 182, 0.05))
+    # AÇIK MOD RENKLERİ
+    bg_c, tx_c = "#f4f7f6", "#31333F"
+    cd_bg, bd_c = "rgba(255,255,255,0.9)", "#d1d5db"
+    ac_c, ac_h = "#0077b6", "#005f91" # Profesyonel Mavi
+    sec_bg, gh_c = "#e5e7eb", "#4b5563"
+    ttl_c, cal_tx = "#000000", "#1f2833"
+    # YENİ AÇIK MOD ANİMASYONU (Yumuşak Mavi Akış)
+    anim_css = f"""
+        .stApp::before {{
+            content: ''; position: fixed; top: 20%; left: 30%; width: 60vw; height: 60vw;
+            background: radial-gradient(circle, rgba(0, 119, 182, 0.08), transparent 70%);
+            filter: blur(80px); animation: orbMove1 40s ease-in-out infinite alternate; z-index: -1; mix-blend-mode: multiply;
+        }}
+        .stApp::after {{
+            content: ''; position: fixed; top: 60%; left: 60%; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(160, 174, 192, 0.1), transparent 70%);
+            filter: blur(100px); animation: orbMove2 45s ease-in-out infinite alternate-reverse; z-index: -1; mix-blend-mode: multiply;
+        }}
     """
 
-# --- CSS ENJEKSİYONU ---
 st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap');
-
-        /* RESET */
-        div[class^="viewerBadge_container"], .viewerBadge_container__1QSob {{display: none !important;}}
-        #MainMenu, header, footer, .stDeployButton, [data-testid="stToolbar"] {{display: none !important;}}
-        .stApp > header {{display: none !important;}}
+        div[class^="viewerBadge_container"], .viewerBadge_container__1QSob, #MainMenu, header, footer, .stDeployButton, [data-testid="stToolbar"], .stApp > header {{display: none !important;}}
         .block-container {{padding-top: 2rem !important; padding-bottom: 2rem !important;}}
-
-        /* ANA GÖVDE VE ARKA PLAN ANIMASYONU */
-        .stApp {{
-            background-color: {bg_color};
-            color: {text_color};
-            font-family: 'Inter', sans-serif;
-            background-image: {anim_bg_image};
-            background-position: 0 0, 30px 30px;
-            background-size: 60px 60px;
-            animation: slide 10s linear infinite;
-        }}
+        .stApp {{background-color: {bg_c}; color: {tx_c}; font-family: 'Inter', sans-serif; overflow-x: hidden;}}
         
-        @keyframes slide {{
-            0% {{background-position: 0 0, 30px 30px;}}
-            100% {{background-position: 60px 60px, 90px 90px;}}
-        }}
+        /* YENİ ANİMASYON KEYFRAMES */
+        @keyframes orbMove1 {{ 0% {{transform: translate(-20%, -20%) rotate(0deg);}} 100% {{transform: translate(20%, 20%) rotate(20deg);}} }}
+        @keyframes orbMove2 {{ 0% {{transform: translate(20%, 10%) rotate(0deg);}} 100% {{transform: translate(-20%, -10%) rotate(-15deg);}} }}
+        {anim_css}
 
         /* NEON BAŞLIK */
         .neon-title {{
-            font-family: 'Orbitron', sans-serif;
-            font-size: 3.5rem;
-            text-align: center;
-            color: {title_color};
-            text-transform: uppercase;
-            font-weight: 900;
-            margin-bottom: 0px;
-            letter-spacing: 4px;
-            /* Sadece Dark Modda Parlama Efekti */
-            {f"text-shadow: 0 0 10px {accent_color}, 0 0 20px {accent_color}, 0 0 40px {accent_color};" if st.session_state.theme == "Dark" else ""}
+            font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {ttl_c}; text-transform: uppercase; font-weight: 900; margin-bottom: 0px; letter-spacing: 4px;
+            {f"text-shadow: 0 0 10px {ac_c}, 0 0 20px {ac_c}, 0 0 40px {ac_c};" if st.session_state.theme == "Dark" else ""}
             animation: pulse 3s infinite alternate;
         }}
-        
-        @keyframes pulse {{
-            0% {{opacity: 1; transform: scale(1);}}
-            100% {{opacity: 0.95; transform: scale(0.99);}}
-        }}
+        @keyframes pulse {{ 0% {{opacity: 1; transform: scale(1);}} 100% {{opacity: 0.95; transform: scale(0.99);}} }}
 
-        /* TABS */
-        .stTabs [data-baseweb="tab-list"] {{gap: 20px; border-bottom: 1px solid {border_color}; padding-top: 10px;}}
-        .stTabs [data-baseweb="tab"] {{height: 50px; color: {grid_header_color}; font-weight: 600; border: none; background-color: transparent;}}
-        .stTabs [data-baseweb="tab"]:hover {{color: {accent_color};}}
-        .stTabs [aria-selected="true"] {{color: {accent_color} !important; border-bottom: 2px solid {accent_color} !important;}}
+        /* KARTLAR VE TABS */
+        .stTabs [data-baseweb="tab-list"] {{gap: 20px; border-bottom: 1px solid {bd_c}; padding-top: 10px;}}
+        .stTabs [data-baseweb="tab"] {{height: 50px; color: {gh_c}; font-weight: 600; border: none; background-color: transparent;}}
+        .stTabs [data-baseweb="tab"]:hover, .stTabs [aria-selected="true"] {{color: {ac_c} !important;}}
+        .stTabs [aria-selected="true"] {{border-bottom: 2px solid {ac_c} !important;}}
+        .metric-container {{background-color: {cd_bg}; border: 1px solid {bd_c}; border-radius: 8px; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s ease; backdrop-filter: blur(10px);}}
+        .metric-container:hover {{transform: translateY(-5px); border-color: {ac_c};}}
+        .metric-value {{font-size: 2rem; font-weight: 700; color: {ttl_c}; margin-bottom: 5px;}}
+        .metric-label {{font-size: 0.8rem; color: {gh_c}; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;}}
+        .pricing-card {{background-color: {cd_bg}; border: 1px solid {bd_c}; border-radius: 12px; padding: 40px 20px; text-align: center; height: 100%; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.05); backdrop-filter: blur(10px);}}
+        .pricing-card:hover {{border-color: {ac_c}; transform: translateY(-5px);}}
+        .plan-name {{color: {ac_c}; font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 15px;}}
+        .plan-price {{color: {ttl_c}; font-size: 2.5rem; font-weight: 700; margin-bottom: 30px;}}
 
-        /* METRİK KARTLARI */
-        .metric-container {{
-            background-color: {card_bg};
-            border: 1px solid {border_color};
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.2s ease;
-            backdrop-filter: blur(5px);
-        }}
-        .metric-container:hover {{transform: translateY(-5px); border-color: {accent_color};}}
-        .metric-value {{
-            font-size: 2rem;
-            font-weight: 700;
-            color: {title_color};
-            margin-bottom: 5px;
-        }}
-        .metric-label {{
-            font-size: 0.8rem;
-            color: {grid_header_color};
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 600;
-        }}
-
-        /* PRICING CARDS */
-        .pricing-card {{
-            background-color: {card_bg};
-            border: 1px solid {border_color};
-            border-radius: 12px;
-            padding: 40px 20px;
-            text-align: center;
-            height: 100%;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }}
-        .pricing-card:hover {{border-color: {accent_color}; transform: translateY(-5px);}}
-        .plan-name {{color: {accent_color}; font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 15px;}}
-        .plan-price {{color: {title_color}; font-size: 2.5rem; font-weight: 700; margin-bottom: 30px;}}
-        .feature-list {{color: {text_color}; margin-bottom: 20px; line-height: 1.6;}}
-
-        /* BUTTONS */
-        .custom-btn {{display: inline-block; padding: 12px 30px; color: {bg_color}; background-color: {accent_color}; border-radius: 4px; text-decoration: none; font-weight: 600; width: 100%; text-align: center; transition: 0.3s;}}
-        .custom-btn:hover {{background-color: {accent_hover}; color: #fff;}}
-        .custom-btn-outline {{background-color: transparent; border: 1px solid {accent_color}; color: {accent_color};}}
-        .custom-btn-outline:hover {{background-color: {accent_color}; color: {bg_color};}}
-
-        /* TAKVİM GRID CSS */
+        /* TAKVİM */
         .calendar-container {{display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px;}}
-        .calendar-header {{text-align: center; font-weight: bold; color: {grid_header_color}; padding-bottom: 10px; border-bottom: 1px solid {border_color};}}
-        .day-cell {{
-            background-color: {secondary_bg};
-            border: 1px solid {border_color};
-            border-radius: 8px;
-            height: 100px;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            gap: 5px;
-            transition: all 0.2s ease;
-        }}
-        .day-cell:hover {{border-color: {accent_color}; transform: scale(1.02); z-index: 2;}}
-        .day-number {{
-            font-size: 1rem;
-            color: {cal_text_color};
-            font-weight: bold;
-            opacity: 0.8;
-        }}
+        .calendar-header {{text-align: center; font-weight: bold; color: {gh_c}; padding-bottom: 10px; border-bottom: 1px solid {bd_c};}}
+        .day-cell {{background-color: {sec_bg}; border: 1px solid {bd_c}; border-radius: 8px; height: 100px; padding: 10px; display: flex; flex-direction: column; justify-content: flex-start; gap: 5px; transition: all 0.2s ease;}}
+        .day-cell:hover {{border-color: {ac_c}; transform: scale(1.02); z-index: 2;}}
+        .day-number {{font-size: 1rem; color: {cal_tx}; font-weight: bold; opacity: 0.8;}}
         .day-profit {{font-size: 1.1rem; font-weight: 800; align-self: center; margin-top: auto; margin-bottom: auto;}}
-        
-        .day-win {{background-color: rgba(0, 255, 204, 0.1); border-color: {accent_color};}}
-        .day-win-light {{background-color: rgba(0, 119, 182, 0.1); border-color: {accent_color};}}
-        
-        .day-loss {{background-color: rgba(255, 75, 75, 0.1); border-color: #ff4b4b;}}
-        
-        .win-text {{color: {accent_color};}}
-        .loss-text {{color: #ff4b4b;}}
-        .empty-cell {{background-color: transparent; border: none;}}
+        .day-win {{background-color: rgba(0, 255, 204, 0.15); border-color: {ac_c};}}
+        .day-win-light {{background-color: rgba(0, 119, 182, 0.15); border-color: {ac_c};}}
+        .day-loss {{background-color: rgba(255, 75, 75, 0.15); border-color: #ff4b4b;}}
+        .win-text {{color: {ac_c};}} .loss-text {{color: #ff4b4b;}} .empty-cell {{background-color: transparent; border: none;}}
 
-        /* DIĞERLERI */
-        .stDataFrame {{border: 1px solid {border_color};}}
-        .stProgress > div > div > div > div {{background-color: {accent_color};}}
-        .streamlit-expanderContent, .stMarkdown p, h1, h2, h3, h4, h5, h6 {{color: {text_color} !important;}}
-        .stNumberInput input, .stSelectbox div[data-baseweb="select"] > div {{background-color: {secondary_bg}; color: {text_color}; border-color: {border_color};}}
-        
-        /* TESTIMONIAL */
-        .testimonial-card {{background-color: {secondary_bg}; border-left: 3px solid {accent_color}; padding: 20px; margin-bottom: 20px;}}
-        .testimonial-text {{font-style: italic; color: {text_color};}}
-        .testimonial-author {{margin-top: 10px; color: {accent_color}; font-weight: bold;}}
-        
-        /* RULE BOX ACADEMY */
-        .rule-box {{background: rgba(0,0,0,0.2); padding: 15px; border-left: 4px solid {accent_color}; margin: 10px 0; color: {text_color};}}
+        /* DİĞER */
+        .custom-btn {{display: inline-block; padding: 12px 30px; color: {bg_c}; background-color: {ac_c}; border-radius: 4px; text-decoration: none; font-weight: 600; width: 100%; text-align: center; transition: 0.3s;}}
+        .custom-btn:hover {{background-color: {ac_h}; color: #fff;}}
+        .custom-btn-outline {{background-color: transparent; border: 1px solid {ac_c}; color: {ac_c};}}
+        .custom-btn-outline:hover {{background-color: {ac_c}; color: {bg_c};}}
+        .stDataFrame {{border: 1px solid {bd_c};}}
+        .stProgress > div > div > div > div {{background-color: {ac_c};}}
+        .streamlit-expanderContent, .stMarkdown p, h1, h2, h3, h4, h5, h6 {{color: {tx_c} !important;}}
+        .stNumberInput input, .stSelectbox div[data-baseweb="select"] > div {{background-color: {sec_bg}; color: {tx_c}; border-color: {bd_c};}}
+        .testimonial-card {{background-color: {sec_bg}; border-left: 3px solid {ac_c}; padding: 20px; margin-bottom: 20px;}}
+        .rule-box {{background: rgba(0,0,0,0.2); padding: 15px; border-left: 4px solid {ac_c}; margin: 10px 0; color: {tx_c};}}
     </style>
 """, unsafe_allow_html=True)
 
@@ -476,163 +379,90 @@ st.markdown(f"""
 def load_data():
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        if "gcp_service_account" in st.secrets:
-            creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp_service_account"], scope)
-        else:
-            creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-        client = gspread.authorize(creds)
-        sheet = client.open("Crazytown_Journal").sheet1
-        data = sheet.get_all_records()
+        if "gcp_service_account" in st.secrets: creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp_service_account"], scope)
+        else: creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+        client = gspread.authorize(creds); sheet = client.open("Crazytown_Journal").sheet1; data = sheet.get_all_records()
         if not data: return pd.DataFrame()
         df = pd.DataFrame(data)
-        if 'R_Kazanc' in df.columns:
-            df['R_Kazanc'] = df['R_Kazanc'].astype(str).str.replace(',', '.')
-            df['R_Kazanc'] = pd.to_numeric(df['R_Kazanc'], errors='coerce').fillna(0)
+        if 'R_Kazanc' in df.columns: df['R_Kazanc'] = df['R_Kazanc'].astype(str).str.replace(',', '.'); df['R_Kazanc'] = pd.to_numeric(df['R_Kazanc'], errors='coerce').fillna(0)
         return df
     except: return pd.DataFrame()
-
 df = load_data()
 
 # ==========================================
 # 4. BAŞLIK VE WIDGET
 # ==========================================
-widget_theme = "light" if st.session_state.theme == "Light" else "dark"
-components.html(f"""
-<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>{{"symbols": [{{"proName": "BINANCE:BTCUSDT", "title": "Bitcoin"}}, {{"proName": "BINANCE:ETHUSDT", "title": "Ethereum"}}, {{"proName": "BINANCE:SOLUSDT", "title": "Solana"}}, {{"description": "USDT.D", "proName": "CRYPTOCAP:USDT.D"}}], "showSymbolLogo": true, "colorTheme": "{widget_theme}", "isTransparent": true, "displayMode": "adaptive", "locale": "en"}}</script></div>
-""", height=50)
-
-st.write("")
-# YENİ NEON BAŞLIK
-st.markdown(f'<div class="neon-title">CRAZYTOWN CAPITAL</div>', unsafe_allow_html=True)
-st.markdown(f"<p style='text-align: center; color: {accent_color}; letter-spacing: 2px; font-size: 0.9rem; margin-top: -5px;'>{t('title_sub')}</p>", unsafe_allow_html=True)
-st.write("")
-
-# TABLAR
+wt = "light" if st.session_state.theme == "Light" else "dark"
+components.html(f"""<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>{{"symbols": [{{"proName": "BINANCE:BTCUSDT", "title": "Bitcoin"}}, {{"proName": "BINANCE:ETHUSDT", "title": "Ethereum"}}, {{"proName": "BINANCE:SOLUSDT", "title": "Solana"}}, {{"description": "USDT.D", "proName": "CRYPTOCAP:USDT.D"}}], "showSymbolLogo": true, "colorTheme": "{wt}", "isTransparent": true, "displayMode": "adaptive", "locale": "en"}}</script></div>""", height=50)
+st.write(""); st.markdown(f'<div class="neon-title">CRAZYTOWN CAPITAL</div>', unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: {ac_c}; letter-spacing: 2px; font-size: 0.9rem; margin-top: -5px;'>{t('title_sub')}</p>", unsafe_allow_html=True); st.write("")
 tab1, tab2, tab3, tab4 = st.tabs([t('perf'), t('acad'), t('memb'), t('cont')])
 
 # ==========================================
 # TAB 1: PERFORMANS
 # ==========================================
 with tab1:
-    if df.empty:
-        st.warning("Data not found.")
+    if df.empty: st.warning("Data not found.")
     else:
-        # KPI
-        total = len(df)
-        win = len(df[df['Sonuç'] == 'WIN'])
-        rate = (win / total * 100) if total > 0 else 0
-        net_r_total = df['R_Kazanc'].sum()
-        gross_profit = df[df['R_Kazanc'] > 0]['R_Kazanc'].sum()
-        gross_loss = abs(df[df['R_Kazanc'] < 0]['R_Kazanc'].sum())
-        pf = (gross_profit / gross_loss) if gross_loss > 0 else 0
-        net_color = accent_color if net_r_total > 0 else "#ff4b4b"
-
+        tot = len(df); win = len(df[df['Sonuç'] == 'WIN']); rate = (win / tot * 100) if tot > 0 else 0
+        net_r = df['R_Kazanc'].sum(); gp = df[df['R_Kazanc'] > 0]['R_Kazanc'].sum(); gl = abs(df[df['R_Kazanc'] < 0]['R_Kazanc'].sum()); pf = (gp / gl) if gl > 0 else 0
+        nc = ac_c if net_r > 0 else "#ff4b4b"
         c1, c2, c3, c4 = st.columns(4)
-        c1.markdown(f'<div class="metric-container"><div class="metric-value">{total}</div><div class="metric-label">{t("total_trades")}</div></div>', unsafe_allow_html=True)
+        c1.markdown(f'<div class="metric-container"><div class="metric-value">{tot}</div><div class="metric-label">{t("total_trades")}</div></div>', unsafe_allow_html=True)
         c2.markdown(f'<div class="metric-container"><div class="metric-value">{rate:.1f}%</div><div class="metric-label">{t("win_rate")}</div></div>', unsafe_allow_html=True)
-        c3.markdown(f'<div class="metric-container"><div class="metric-value" style="color:{net_color}">{net_r_total:.2f}R</div><div class="metric-label">{t("net_return")}</div></div>', unsafe_allow_html=True)
+        c3.markdown(f'<div class="metric-container"><div class="metric-value" style="color:{nc}">{net_r:.2f}R</div><div class="metric-label">{t("net_return")}</div></div>', unsafe_allow_html=True)
         c4.markdown(f'<div class="metric-container"><div class="metric-value">{pf:.2f}</div><div class="metric-label">{t("profit_factor")}</div></div>', unsafe_allow_html=True)
-
-        st.write(""); st.write("")
-        target_r = 100.0
-        current_progress = min(max(net_r_total / target_r, 0.0), 1.0)
-        st.markdown(f"""<div style="margin-bottom: 5px; color: {grid_header_color}; font-size: 0.8rem; display: flex; justify-content: space-between;"><span>{t("season_goal")} ({target_r}R)</span><span style="color: {accent_color};">{int(current_progress*100)}% {t("completed")}</span></div>""", unsafe_allow_html=True)
-        st.progress(current_progress)
-        st.write("")
-
-        # Plotly
-        ptemp = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"
-        bg_c = "rgba(0,0,0,0)"
-        
+        st.write(""); st.write(""); tr = 100.0; cp = min(max(net_r / tr, 0.0), 1.0)
+        st.markdown(f"""<div style="margin-bottom: 5px; color: {gh_c}; font-size: 0.8rem; display: flex; justify-content: space-between;"><span>{t("season_goal")} ({tr}R)</span><span style="color: {ac_c};">{int(cp*100)}% {t("completed")}</span></div>""", unsafe_allow_html=True)
+        st.progress(cp); st.write("")
+        pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"; bg = "rgba(0,0,0,0)"
         g1, g2 = st.columns([2, 1])
         with g1:
-            df['Cum'] = df['R_Kazanc'].cumsum()
-            fig = go.Figure()
-            fill_c = f"rgba(0, 255, 204, 0.2)" if st.session_state.theme == "Dark" else f"rgba(0, 119, 182, 0.2)"
-            fig.add_trace(go.Scatter(x=df['Tarih'], y=df['Cum'], mode='lines', fill='tozeroy', line=dict(color=accent_color, width=2), fillcolor=fill_c))
-            fig.update_layout(template=ptemp, paper_bgcolor=bg_c, plot_bgcolor=bg_c, margin=dict(l=0, r=0, t=10, b=0), height=300, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor=border_color))
+            df['Cum'] = df['R_Kazanc'].cumsum(); fig = go.Figure()
+            fc = f"rgba(0, 255, 204, 0.2)" if st.session_state.theme == "Dark" else f"rgba(0, 119, 182, 0.2)"
+            fig.add_trace(go.Scatter(x=df['Tarih'], y=df['Cum'], mode='lines', fill='tozeroy', line=dict(color=ac_c, width=2), fillcolor=fc))
+            fig.update_layout(template=pt, paper_bgcolor=bg, plot_bgcolor=bg, margin=dict(l=0, r=0, t=10, b=0), height=300, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor=bd_c))
             st.plotly_chart(fig, use_container_width=True)
         with g2:
-            fig_pie = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.7, color='Sonuç', color_discrete_map={'WIN':accent_color, 'LOSS':'#ff4b4b'})
-            fig_pie.update_layout(template=ptemp, paper_bgcolor=bg_c, showlegend=False, margin=dict(l=20, r=20, t=10, b=20), height=300, annotations=[dict(text=f"{rate:.0f}%", x=0.5, y=0.5, font_size=24, showarrow=False, font_color=title_color)])
-            st.plotly_chart(fig_pie, use_container_width=True)
-
-        # TAKVİM
-        st.markdown("---")
-        st.subheader(t("perf_cal"))
+            fp = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.7, color='Sonuç', color_discrete_map={'WIN':ac_c, 'LOSS':'#ff4b4b'})
+            fp.update_layout(template=pt, paper_bgcolor=bg, showlegend=False, margin=dict(l=20, r=20, t=10, b=20), height=300, annotations=[dict(text=f"{rate:.0f}%", x=0.5, y=0.5, font_size=24, showarrow=False, font_color=ttl_c)])
+            st.plotly_chart(fp, use_container_width=True)
+        st.markdown("---"); st.subheader(t("perf_cal"))
         try:
-            df['Tarih_Dt'] = pd.to_datetime(df['Tarih'], dayfirst=True, errors='coerce')
-            df.dropna(subset=['Tarih_Dt'], inplace=True)
+            df['Tarih_Dt'] = pd.to_datetime(df['Tarih'], dayfirst=True, errors='coerce'); df.dropna(subset=['Tarih_Dt'], inplace=True)
             if not df.empty:
-                df = df.sort_values('Tarih_Dt')
-                av_months = df['Tarih_Dt'].dt.strftime('%Y-%m').unique()
-                sel_mon = st.selectbox(t("select_month"), options=av_months, index=len(av_months)-1)
-                
-                sel_y, sel_m = map(int, sel_mon.split('-'))
-                m_data = df[df['Tarih_Dt'].dt.strftime('%Y-%m') == sel_mon].copy()
-                d_prof = m_data.groupby(m_data['Tarih_Dt'].dt.day)['R_Kazanc'].sum().to_dict()
-                cal_mat = calendar.monthcalendar(sel_y, sel_m)
-                
-                html_p = ['<div class="calendar-container">']
-                d_names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-                if st.session_state.lang == "TR": d_names = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
-                if st.session_state.lang == "RU": d_names = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-                
-                for dn in d_names: html_p.append(f'<div class="calendar-header">{dn}</div>')
-                
-                m_tot = 0
-                for week in cal_mat:
-                    for day in week:
-                        if day == 0:
-                            html_p.append('<div class="day-cell empty-cell"></div>')
+                df = df.sort_values('Tarih_Dt'); am = df['Tarih_Dt'].dt.strftime('%Y-%m').unique(); sm = st.selectbox(t("select_month"), options=am, index=len(am)-1)
+                sy, smi = map(int, sm.split('-')); md = df[df['Tarih_Dt'].dt.strftime('%Y-%m') == sm].copy(); dp = md.groupby(md['Tarih_Dt'].dt.day)['R_Kazanc'].sum().to_dict(); cm = calendar.monthcalendar(sy, smi)
+                hp = ['<div class="calendar-container">']; dn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                if st.session_state.lang == "TR": dn = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
+                if st.session_state.lang == "RU": dn = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+                for n in dn: hp.append(f'<div class="calendar-header">{n}</div>')
+                mt = 0
+                for w in cm:
+                    for d in w:
+                        if d == 0: hp.append('<div class="day-cell empty-cell"></div>')
                         else:
-                            p = d_prof.get(day, 0)
-                            m_tot += p
-                            cc = "day-cell"
-                            pt, pc = "0.00R", ""
-                            
-                            if day in d_prof:
-                                if p > 0:
-                                    cc += " day-win" if st.session_state.theme == "Dark" else " day-win-light"
-                                    pc = "win-text"
-                                    pt = f"+{p:.2f}R"
-                                elif p < 0:
-                                    cc += " day-loss"
-                                    pc = "loss-text"
-                                    pt = f"{p:.2f}R"
-                            
-                            html_p.append(f'<div class="{cc}"><div class="day-number">{day}</div><div class="day-profit {pc}">{pt}</div></div>')
-                
-                html_p.append('</div>')
-                st.markdown("".join(html_p), unsafe_allow_html=True)
-                tc = accent_color if m_tot > 0 else '#ff4b4b'
-                st.markdown(f"<div style='text-align:center; margin-top:15px; font-size:1.2rem; font-weight:bold; color:{tc}'>{t('total_monthly')}: {m_tot:.2f}R</div>", unsafe_allow_html=True)
+                            p = dp.get(d, 0); mt += p; cc = "day-cell"; pt, pc = "0.00R", ""
+                            if d in dp:
+                                if p > 0: cc += " day-win" if st.session_state.theme == "Dark" else " day-win-light"; pc = "win-text"; pt = f"+{p:.2f}R"
+                                elif p < 0: cc += " day-loss"; pc = "loss-text"; pt = f"{p:.2f}R"
+                            hp.append(f'<div class="{cc}"><div class="day-number">{d}</div><div class="day-profit {pc}">{pt}</div></div>')
+                hp.append('</div>'); st.markdown("".join(hp), unsafe_allow_html=True)
+                ct = ac_c if mt > 0 else '#ff4b4b'; st.markdown(f"<div style='text-align:center; margin-top:15px; font-size:1.2rem; font-weight:bold; color:{ct}'>{t('total_monthly')}: {mt:.2f}R</div>", unsafe_allow_html=True)
         except Exception as e: st.error(e)
-
-        st.markdown("---")
-        st.subheader(t("market_intel"))
-        m1, m2 = st.columns(2)
-        with m1: components.html(f"""<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>{{"interval": "4h", "width": "100%", "isTransparent": true, "height": "400", "symbol": "BINANCE:BTCUSDT", "showIntervalTabs": true, "displayMode": "single", "locale": "en", "colorTheme": "{widget_theme}"}}</script></div>""", height=400)
-        with m2: components.html(f"""<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>{{"colorTheme": "{widget_theme}", "isTransparent": true, "width": "100%", "height": "400", "locale": "en", "importanceFilter": "-1,0,1", "currencyFilter": "USD"}}</script></div>""", height=400)
-
-        st.markdown("---")
-        st.subheader(t("roi_sim"))
-        r1, r2, r3 = st.columns([1,1,2])
-        with r1: u_cap = st.number_input(t("initial_cap"), min_value=100, value=1000)
-        with r2: u_risk = st.slider(t("risk_trade"), 0.5, 5.0, 2.0)
-        p_prof = u_cap * (u_risk / 100) * net_r_total
-        f_bal = u_cap + p_prof
-        roi_p = (p_prof / u_cap) * 100
-        with r3: st.markdown(f"""<div style="background:{card_bg}; padding:15px; border-radius:8px; border:1px solid {accent_color}; text-align:center;"><span style="color:{grid_header_color};">{t("proj_bal")}</span><br><span style="color:{title_color}; font-size:2.2rem; font-weight:bold;">${f_bal:,.2f}</span><br><span style="color:{accent_color};">(+${p_prof:,.2f} / +%{roi_p:.1f})</span></div>""", unsafe_allow_html=True)
-
-        st.markdown("---")
-        ch, cd = st.columns([4, 1])
+        st.markdown("---"); st.subheader(t("market_intel")); m1, m2 = st.columns(2)
+        with m1: components.html(f"""<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>{{"interval": "4h", "width": "100%", "isTransparent": true, "height": "400", "symbol": "BINANCE:BTCUSDT", "showIntervalTabs": true, "displayMode": "single", "locale": "en", "colorTheme": "{wt}"}}</script></div>""", height=400)
+        with m2: components.html(f"""<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>{{"colorTheme": "{wt}", "isTransparent": true, "width": "100%", "height": "400", "locale": "en", "importanceFilter": "-1,0,1", "currencyFilter": "USD"}}</script></div>""", height=400)
+        st.markdown("---"); st.subheader(t("roi_sim")); r1, r2, r3 = st.columns([1,1,2])
+        with r1: uc = st.number_input(t("initial_cap"), min_value=100, value=1000)
+        with r2: ur = st.slider(t("risk_trade"), 0.5, 5.0, 2.0)
+        pp = uc * (ur / 100) * net_r; fb = uc + pp; rp = (pp / uc) * 100
+        with r3: st.markdown(f"""<div style="background:{cd_bg}; padding:15px; border-radius:8px; border:1px solid {ac_c}; text-align:center;"><span style="color:{gh_c};">{t("proj_bal")}</span><br><span style="color:{ttl_c}; font-size:2.2rem; font-weight:bold;">${fb:,.2f}</span><br><span style="color:{ac_c};">(+${pp:,.2f} / +%{rp:.1f})</span></div>""", unsafe_allow_html=True)
+        st.markdown("---"); ch, cd = st.columns([4, 1])
         with ch: st.markdown(f"##### {t('trade_log')}")
         with cd: st.download_button(label=t("download"), data=df.to_csv(index=False).encode('utf-8'), file_name='log.csv', mime='text/csv')
-        
         def sdf(row):
-            c = accent_color if row['Sonuç'] == 'WIN' else '#ff4b4b'
-            tc = text_color
+            c = ac_c if row['Sonuç'] == 'WIN' else '#ff4b4b'; tc = tx_c
             return [f'color: {c}; font-weight: 600' if col == 'Sonuç' else f'color: {tc}' for col in row.index]
         st.dataframe(df.style.apply(sdf, axis=1), use_container_width=True, hide_index=True)
 
@@ -640,44 +470,31 @@ with tab1:
 # TAB 2: AKADEMİ (DÜZELTİLDİ)
 # ==========================================
 with tab2:
-    st.write("")
-    st.markdown(f"<h2 style='text-align: center; color: {accent_color};'>{t('acad_title')}</h2>", unsafe_allow_html=True)
-    st.markdown(f"""<div style="text-align: center; font-style: italic; color: {grid_header_color}; margin-bottom: 20px;">"{t('acad_quote')}"</div>""", unsafe_allow_html=True)
-    
-    with st.expander(t('lesson_1_title'), expanded=True):
-        st.markdown(t('lesson_1_content'))
-    
-    with st.expander(t('lesson_2_title')):
-        st.markdown(t('lesson_2_content'))
-        
-    with st.expander(t('lesson_3_title')):
-        st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
+    st.write(""); st.markdown(f"<h2 style='text-align: center; color: {ac_c};'>{t('acad_title')}</h2>", unsafe_allow_html=True)
+    st.markdown(f"""<div style="text-align: center; font-style: italic; color: {gh_c}; margin-bottom: 20px;">"{t('acad_quote')}"</div>""", unsafe_allow_html=True)
+    with st.expander(t('lesson_1_title'), expanded=True): st.markdown(t('lesson_1_content'), unsafe_allow_html=True)
+    with st.expander(t('lesson_2_title')): st.markdown(t('lesson_2_content'), unsafe_allow_html=True)
+    with st.expander(t('lesson_3_title')): st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: MEMBERSHIP
+# TAB 3 & 4
 # ==========================================
 with tab3:
-    st.write(""); st.markdown(f"""<div class="promo-banner">{t('limited_offer')}</div>""", unsafe_allow_html=True)
-    st.subheader(t('feedback'))
+    st.write(""); st.markdown(f"""<div class="promo-banner">{t('limited_offer')}</div>""", unsafe_allow_html=True); st.subheader(t('feedback'))
     s1, s2, s3 = st.columns(3)
     with s1: st.markdown(f"""<div class="testimonial-card"><div class="testimonial-text">"Risk management is top tier."</div><div class="testimonial-author">@Crypto***</div></div>""", unsafe_allow_html=True)
     with s2: st.markdown(f"""<div class="testimonial-card"><div class="testimonial-text">"Transparency sold me."</div><div class="testimonial-author">@Alex***</div></div>""", unsafe_allow_html=True)
     with s3: st.markdown(f"""<div class="testimonial-card"><div class="testimonial-text">"FVG setups are insane."</div><div class="testimonial-author">@Mehmet***</div></div>""", unsafe_allow_html=True)
-    
     c1, c2, c3 = st.columns(3)
-    with c1: st.markdown(f"""<div class="pricing-card"><div class="plan-name">{t('plan_starter')}</div><div class="plan-price">$30<span style="font-size:1rem;color:{grid_header_color}">/mo</span></div><a href="https://t.me/Orhan1909" class="custom-btn custom-btn-outline">{t('sel_plan')}</a></div>""", unsafe_allow_html=True)
-    with c2: st.markdown(f"""<div class="pricing-card" style="border-color:{accent_color}"><div class="plan-name">{t('plan_pro')}</div><div class="plan-price">$75<span style="font-size:1rem;color:{grid_header_color}">/qtr</span></div><a href="https://t.me/Orhan1909" class="custom-btn">{t('most_pop')}</a></div>""", unsafe_allow_html=True)
-    with c3: st.markdown(f"""<div class="pricing-card"><div class="plan-name">{t('plan_life')}</div><div class="plan-price">$250<span style="font-size:1rem;color:{grid_header_color}">/once</span></div><a href="https://t.me/Orhan1909" class="custom-btn custom-btn-outline">{t('contact_sales')}</a></div>""", unsafe_allow_html=True)
+    with c1: st.markdown(f"""<div class="pricing-card"><div class="plan-name">{t('plan_starter')}</div><div class="plan-price">$30<span style="font-size:1rem;color:{gh_c}">/mo</span></div><a href="https://t.me/Orhan1909" class="custom-btn custom-btn-outline">{t('sel_plan')}</a></div>""", unsafe_allow_html=True)
+    with c2: st.markdown(f"""<div class="pricing-card" style="border-color:{ac_c}"><div class="plan-name">{t('plan_pro')}</div><div class="plan-price">$75<span style="font-size:1rem;color:{gh_c}">/qtr</span></div><a href="https://t.me/Orhan1909" class="custom-btn">{t('most_pop')}</a></div>""", unsafe_allow_html=True)
+    with c3: st.markdown(f"""<div class="pricing-card"><div class="plan-name">{t('plan_life')}</div><div class="plan-price">$250<span style="font-size:1rem;color:{gh_c}">/once</span></div><a href="https://t.me/Orhan1909" class="custom-btn custom-btn-outline">{t('contact_sales')}</a></div>""", unsafe_allow_html=True)
 
-# ==========================================
-# TAB 4: CONTACT
-# ==========================================
 with tab4:
     st.write(""); c1, c2 = st.columns(2)
     with c1: st.markdown("""### 📨 Telegram\n<a href="https://t.me/Orhan1909" class="custom-btn">OPEN TELEGRAM</a>""", unsafe_allow_html=True)
-    with c2: st.markdown("""### 📧 Email\n**orhanaliyev02@gmail.com**""")
+    with c2: st.markdown(f"""### 📧 Email\n**orhanaliyev02@gmail.com**""")
     st.divider(); st.subheader(t('faq'))
     with st.expander("Access?"): st.write("Contact via Telegram.")
 
-st.markdown("---")
-st.markdown(f"<p style='text-align: center; color: {accent_hover}; font-size: 0.8rem;'>© 2025 Crazytown Capital. All rights reserved.</p>", unsafe_allow_html=True)
+st.markdown("---"); st.markdown(f"<p style='text-align: center; color: {ac_h}; font-size: 0.8rem;'>© 2025 Crazytown Capital. All rights reserved.</p>", unsafe_allow_html=True)
