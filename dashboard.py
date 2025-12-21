@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
-import plotly.express as px  # <-- BU EKSİKTİ, EKLENDİ! ARTIK HATA VERMEZ.
+import plotly.express as px
 import plotly.graph_objects as go
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -10,6 +10,7 @@ import calendar
 import numpy as np
 import time
 import requests
+import ccxt # YEDEK OLARAK DURACAK
 
 # ==========================================
 # 0. AYARLAR VE KÜTÜPHANE KONTROLÜ
@@ -48,19 +49,19 @@ TRANSLATIONS = {
         "lang_sel": "Language", "theme_sel": "Theme", "theme_dark": "Dark (Neon)", "theme_light": "Light (Corporate)",
         "acad_title": "OA | TRADE SMC MASTERY", "acad_quote": "Not beating the market, but following it with discipline.",
         "lesson_1_title": "📌 PART 1: TIME & CONTEXT",
-        "lesson_1_content": "#### 1. TIME FILTER (CRITICAL)\nWe only trade during high-volume sessions.\n* **LONDON:** `10:00 – 12:00` (UTC+3)\n* **NEW YORK:** `15:30 – 18:30` (UTC+3)\n#### 2. DAILY CONTEXT (PDH/PDL)\nOnly condition: **LIQUIDITY SWEEP**.\n* **PDH Raid:** Look for **SHORT**.\n* **PDL Raid:** Look for **LONG**.",
+        "lesson_1_content": "#### 1. TIME FILTER\n* **LONDON:** `10:00 – 12:00` (UTC+3)\n* **NEW YORK:** `15:30 – 18:30` (UTC+3)",
         "lesson_2_title": "🛠️ PART 2: ENTRY SETUP",
-        "lesson_2_content": "#### 1. FIBONACCI SETTINGS\n* **ENTRY:** `0.75` - `0.60`\n* **STOP:** `1.0`\n* **TP-1:** `0.25`\n* **TP-2:** `-0.18`\n#### 2. FVG CONFIRMATION\n* Must tap into a **Fair Value Gap**.",
+        "lesson_2_content": "#### 1. FIBONACCI\n* **ENTRY:** `0.75` - `0.60`\n* **STOP:** `1.0`",
         "lesson_3_title": "⚠️ PART 3: RULES",
-        "lesson_3_content": "<div class='rule-box'><h4>🚨 STRICT RULES</h4><ul><li><b>NO CHOCH:</b> Don't wait for LTF confirmation.</li><li><b>NO TRADING OUTSIDE HOURS:</b> Discipline is key.</li></ul></div>",
+        "lesson_3_content": "<div class='rule-box'><h4>🚨 STRICT RULES</h4><ul><li><b>NO CHOCH</b></li><li><b>NO TRADING OUTSIDE HOURS</b></li></ul></div>",
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Advanced Technical Analysis & AI Confidence Score.",
-        "run_ai": "SCAN & ANALYZE", "ai_analyzing": "Scanning Market Structure...", 
-        "ai_input_label": "Enter Coin Symbol (e.g. BTC, ETH, PEPE, SUI)",
+        "run_ai": "SCAN & ANALYZE", "ai_analyzing": "Fetching CoinGecko Data...", 
+        "ai_input_label": "Enter Coin Symbol (e.g. BTC, ETH, SOL, PEPE)",
         "ai_trend": "General Trend", "ai_rsi": "RSI Indicator", "ai_supp": "Est. Support", "ai_res": "Est. Resistance",
         "ai_score": "Crazytown Confidence Score", "ai_dec": "DECISION",
         "bull": "BULLISH 🟢", "bear": "BEARISH 🔴", "neutral": "NEUTRAL ⚪",
         "s_buy": "STRONG BUY 🚀", "buy": "BUY 🟢", "sell": "SELL 🔴", "s_sell": "STRONG SELL 🔻", "wait": "WAIT ✋",
-        "data_source": "Data Source"
+        "data_source": "Data Source", "err_msg": "Coin Not Found or API Rate Limit."
     },
     "TR": {
         "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ", "perf": "PERFORMANS", "acad": "AKADEMİ", "memb": "ÜYELİK", "cont": "İLETİŞİM", "ai_lab": "YAPAY ZEKA",
@@ -75,43 +76,42 @@ TRANSLATIONS = {
         "lang_sel": "Dil", "theme_sel": "Tema", "theme_dark": "Koyu Mod (Neon)", "theme_light": "Açık Mod (Kurumsal)",
         "acad_title": "OA | TRADE SMC USTALIK SINIFI", "acad_quote": "Piyasayı yenmek değil, disiplinle takip etmek.",
         "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM",
-        "lesson_1_content": "#### 1. ZAMAN FİLTRESİ (KRİTİK)\nSadece hacimli seanslarda işlem aranır.\n* **LONDRA:** `10:00 – 12:00` (TSİ)\n* **NEW YORK:** `15:30 – 18:30` (TSİ)\n#### 2. GÜNLÜK BAĞLAM (PDH/PDL)\nİşlem aramak için tek şart **LİKİDİTE ALIMI (SWEEP)**.\n* **PDH İhlali:** Sadece **SHORT**.\n* **PDL İhlali:** Sadece **LONG**.",
+        "lesson_1_content": "#### 1. ZAMAN FİLTRESİ\n* **LONDRA:** `10:00 – 12:00` (TSİ)\n* **NEW YORK:** `15:30 – 18:30` (TSİ)",
         "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ",
-        "lesson_2_content": "#### 1. FIBONACCI AYARLARI\nLikidite alımından sonra oluşan sert harekete (Impulse) Fibonacci çekilir.\n* **GİRİŞ:** `0.75` - `0.60` (Golden Pocket)\n* **STOP:** `1`\n* **TP-1:** `0.25`\n* **TP-2:** `-0.18`\n#### 2. FVG ONAYI\n* Fiyat, `0.6-0.75` aralığındaki bir **FVG** alanına temas etmelidir.",
+        "lesson_2_content": "#### 1. FIBONACCI\n* **GİRİŞ:** `0.75` - `0.60`\n* **STOP:** `1`",
         "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR",
-        "lesson_3_content": "<div class='rule-box'><h4>🚨 DEĞİŞMEZ KURALLAR</h4><ul><li><b>CHOCH YOK:</b> LTF kırılımı bekleme.</li><li><b>SAAT DIŞI İŞLEM YOK:</b> Disiplin her şeydir.</li></ul></div>",
+        "lesson_3_content": "<div class='rule-box'><h4>🚨 DEĞİŞMEZ KURALLAR</h4><ul><li><b>CHOCH YOK</b></li><li><b>SAAT DIŞI İŞLEM YOK</b></li></ul></div>",
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Gelişmiş Teknik Analiz & YZ Güven Skoru.",
-        "run_ai": "TARA VE ANALİZ ET", "ai_analyzing": "Piyasa Yapısı Taranıyor...", 
-        "ai_input_label": "Coin Sembolü Girin (Örn: BTC, ETH, PEPE, SUI)",
+        "run_ai": "TARA VE ANALİZ ET", "ai_analyzing": "CoinGecko Verisi Çekiliyor...", 
+        "ai_input_label": "Coin Sembolü (Örn: BTC, ETH, SOL, PEPE)",
         "ai_trend": "Genel Trend", "ai_rsi": "RSI Göstergesi", "ai_supp": "Tahmini Destek", "ai_res": "Tahmini Direnç",
-        "ai_score": "Crazytown Güven Skoru", "ai_dec": "KARAR",
+        "ai_score": "Crazytown Güven Skoru", "ai_dec": "YZ KARARI",
         "bull": "BOĞA (YÜKSELİŞ) 🟢", "bear": "AYI (DÜŞÜŞ) 🔴", "neutral": "NÖTR ⚪",
         "s_buy": "GÜÇLÜ AL 🚀", "buy": "AL 🟢", "sell": "SAT 🔴", "s_sell": "GÜÇLÜ SAT 🔻", "wait": "BEKLE ✋",
-        "data_source": "Veri Kaynağı"
+        "data_source": "Veri Kaynağı", "err_msg": "Coin bulunamadı veya API limiti doldu."
     },
     "RU": {
         "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ", "ai_lab": "ИИ ЛАБОРАТОРИЯ",
         "total_trades": "ВСЕГО СДЕЛОК", "win_rate": "ВИНРЕЙТ", "net_return": "ЧИСТАЯ ПРИБЫЛЬ", "profit_factor": "ПРОФИТ-ФАКТОР",
-        "season_goal": "ЦЕЛЬ СЕЗОНА", "completed": "ЗАВЕРШЕНО", "perf_cal": "🗓️ КАЛЕНДАРЬ ДОХОДНОСТИ",
-        "select_month": "Выберите месяц", "total_monthly": "ИТОГ МЕСЯЦА PNL", "market_intel": "📡 РЫНОЧНЫЙ ИНТЕЛЛЕКТ",
-        "roi_sim": "🧮 ROI СИМУЛЯТОР", "roi_desc": "Рассчитайте прибыль.", "initial_cap": "Капитал ($)",
-        "risk_trade": "Риск (%)", "proj_bal": "ПРОГНОЗ", "trade_log": "ЖУРНАЛ СДЕЛОК", "download": "📥 СКАЧАТЬ CSV",
-        "limited_offer": "🔥 ОГРАНИЧЕННОЕ ПРЕДЛОЖЕНИЕ: Получите ПОЖИЗНЕННЫЙ доступ!", "feedback": "💬 ОТЗЫВЫ",
+        "season_goal": "ЦЕЛЬ СЕЗОНА", "completed": "ЗАВЕРШЕНО", "perf_cal": "🗓️ КАЛЕНДАРЬ",
+        "select_month": "Выберите месяц", "total_monthly": "ИТОГ МЕСЯЦА PNL", "market_intel": "📡 РЫНОК",
+        "roi_sim": "🧮 ROI СИМУЛЯТОР", "roi_desc": "Рассчитайте прибыль.", "initial_cap": "Капитал", "risk_trade": "Риск", "proj_bal": "ПРОГНОЗ", "trade_log": "ЖУРНАЛ", "download": "📥 СКАЧАТЬ",
+        "limited_offer": "🔥 ПРЕДЛОЖЕНИЕ: LIFETIME доступ!", "feedback": "💬 ОТЗЫВЫ",
         "plan_starter": "СТАРТ", "plan_pro": "ПРОФИ", "plan_life": "LIFETIME", "sel_plan": "ВЫБРАТЬ",
         "most_pop": "ПОПУЛЯРНЫЙ", "contact_sales": "СВЯЗАТЬСЯ", "faq": "❓ FAQ", "settings": "⚙️ НАСТРОЙКИ",
         "lang_sel": "Язык", "theme_sel": "Тема", "theme_dark": "Темная", "theme_light": "Светлая",
         "acad_title": "OA | TRADE SMC МАСТЕРСТВО", "acad_quote": "Дисциплина прежде всего.",
         "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "### 1. ФИЛЬТР ВРЕМЕНИ\n* **ЛОНДОН:** 10:00–12:00\n* **НЬЮ-ЙОРК:** 15:30–18:30",
-        "lesson_2_title": "🛠️ ЧАСТЬ 2: ВХОД", "lesson_2_content": "### 1. ФИБОНАЧЧИ\n* **Вход:** 0.60-0.75\n### 2. FVG\n* Подтверждение через FVG.",
-        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "<div class='rule-box'>НЕТ CHOCH. ДИСЦИПЛИНА.</div>",
-        "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "ИИ анализ в реальном времени.",
+        "lesson_2_title": "🛠️ ЧАСТЬ 2: ВХОД", "lesson_2_content": "### 1. ФИБОНАЧЧИ\n* **Вход:** 0.60-0.75",
+        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "<div class='rule-box'>НЕТ CHOCH.</div>",
+        "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "ИИ анализ.",
         "run_ai": "АНАЛИЗ", "ai_analyzing": "Сканирование...", 
-        "ai_input_label": "Введите символ (BTC, ETH...)",
+        "ai_input_label": "Символ (BTC, ETH...)",
         "ai_trend": "Тренд", "ai_rsi": "RSI", "ai_supp": "Поддержка", "ai_res": "Сопротивление",
         "ai_score": "Оценка уверенности", "ai_dec": "РЕШЕНИЕ",
         "bull": "БЫЧИЙ 🟢", "bear": "МЕДВЕЖИЙ 🔴", "neutral": "НЕЙТРАЛЬНО ⚪",
         "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖ 🔻", "wait": "ЖДАТЬ ✋",
-        "data_source": "Источник"
+        "data_source": "Источник", "err_msg": "Монета не найдена."
     }
 }
 
@@ -128,131 +128,68 @@ with st.expander(t('settings'), expanded=False):
         if nt != st.session_state.theme: st.session_state.theme = nt; st.rerun()
 
 # ==========================================
-# 2. DİNAMİK RENK VE TASARIM (RESOLV TARZI)
+# 2. DİNAMİK RENK VE TASARIM
 # ==========================================
 if st.session_state.theme == "Dark":
-    # KOYU MOD (NEON)
     col = {
-        "bg": "#050505",
-        "txt": "#e0e0e0",
-        "card": "rgba(20, 20, 25, 0.9)", 
-        "bd": "#333",
-        "ac": "#00ffcc", # Neon Turkuaz
-        "ac_h": "#00cca3",
-        "sec": "#111",
-        "ttl": "#ffffff",
-        "grd": "#aaaaaa",
-        "ai_bg": "#0e0e0e"
+        "bg": "#050505", "txt": "#e0e0e0", "card": "rgba(20, 20, 25, 0.9)", 
+        "bd": "#333", "ac": "#00ffcc", "ac_h": "#00cca3", "sec": "#111", 
+        "ttl": "#ffffff", "grd": "#aaaaaa", "ai_bg": "#0e0e0e"
     }
-    # Koyu Mod Animasyonu
-    anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;}} .orb1 {{top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);}} .orb2 {{bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);animation-duration:25s;animation-direction:alternate-reverse;}} .orb3 {{top:40%;left:40%;width:30vw;height:30vw;background:radial-gradient(circle,#ff007f 0%,transparent 70%);animation-duration:18s;}} @keyframes moveOrb {{0%{{transform:translate(0,0) scale(1);}}100%{{transform:translate(50px,50px) scale(1.1);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>"""
+    anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;}} .orb1 {{top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);}} .orb2 {{bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);animation-duration:25s;animation-direction:alternate-reverse;}} @keyframes moveOrb {{0%{{transform:translate(0,0) scale(1);}}100%{{transform:translate(50px,50px) scale(1.1);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>"""
 else:
-    # AÇIK MOD (KURUMSAL)
     col = {
-        "bg": "#f8f9fa",
-        "txt": "#212529", 
-        "card": "rgba(255, 255, 255, 0.95)",
-        "bd": "#dee2e6",
-        "ac": "#0d6efd", 
-        "ac_h": "#0b5ed7",
-        "sec": "#ffffff",
-        "ttl": "#000000", 
-        "grd": "#6c757d",
-        "ai_bg": "#ffffff"
+        "bg": "#f8f9fa", "txt": "#212529", "card": "rgba(255, 255, 255, 0.95)", 
+        "bd": "#dee2e6", "ac": "#0d6efd", "ac_h": "#0b5ed7", "sec": "#ffffff", 
+        "ttl": "#000000", "grd": "#6c757d", "ai_bg": "#ffffff"
     }
     anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.2;animation:moveOrb 25s infinite alternate;}} .orb1 {{top:-10%;left:-10%;width:60vw;height:60vw;background:radial-gradient(circle,#0d6efd 0%,transparent 60%);}} .orb2 {{bottom:-10%;right:-10%;width:60vw;height:60vw;background:radial-gradient(circle,#6610f2 0%,transparent 60%);animation-duration:30s;}} @keyframes moveOrb {{0%{{transform:translate(0,0);}}100%{{transform:translate(30px,30px);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>"""
 
 st.markdown(anim_html, unsafe_allow_html=True)
 
-# CSS ENJEKSİYONU (DÜZELTİLMİŞ)
 st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;600;800&display=swap');
-        
         .stApp {{ background: transparent !important; }}
         header, footer, #MainMenu {{display: none !important;}}
         .block-container {{padding-top: 2rem;}}
-
-        /* GENEL FONT VE RENK */
-        h1, h2, h3, h4, h5, h6, p, li, div, span, label {{ 
-            color: {col['txt']} !important; 
-            font-family: 'Inter', sans-serif;
-        }}
-
-        /* YAPAY ZEKA ANALİZ KARTI (RESOLV STYLE) - ÖNEMLİ KISIM */
-        .ai-card {{
-            background-color: {col['ai_bg']};
-            border: 1px solid {col['bd']};
-            border-left-width: 6px; 
-            border-left-style: solid; /* Rengi Python'da dinamik veriyoruz */
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }}
-        .ai-header {{
-            font-size: 1.6rem; font-weight: 800; color: {col['ttl']} !important; margin-bottom: 5px;
-        }}
-        .ai-sub {{ font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; }}
-        
-        .ai-grid {{ 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; 
-        }}
-        .ai-item {{ 
-            padding: 5px 0; 
-        }}
-        .ai-label {{ font-size: 0.85rem; color: {col['grd']} !important; margin-bottom: 3px; }}
-        .ai-val {{ font-size: 1.2rem; font-weight: 800; color: {col['ttl']} !important; }}
-        
-        .ai-decision {{
-            font-size: 1.8rem; font-weight: 900; text-align: left; margin-top: 15px;
-            display: flex; align-items: center; gap: 10px;
-        }}
-
-        /* DIĞER BİLEŞENLER */
-        .neon-title {{
-            font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important;
-            font-weight: 900; letter-spacing: 4px; margin: 0;
-            {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""}
-            animation: pulse 3s infinite alternate;
-        }}
-        @keyframes pulse {{ 0% {{opacity: 1;}} 100% {{opacity: 0.9;}} }}
-
-        .metric-container {{
-            background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px;
-            text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-        }}
+        h1, h2, h3, h4, h5, h6, p, li, div, span, label {{ color: {col['txt']} !important; font-family: 'Inter', sans-serif; }}
+        .neon-title {{ font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important; font-weight: 900; letter-spacing: 4px; margin: 0; {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""} animation: pulse 3s infinite alternate; }}
+        .metric-container {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; }}
         .metric-container:hover {{ transform: translateY(-5px); border-color: {col['ac']}; }}
         .metric-value {{ font-size: 2rem; font-weight: 700; color: {col['ttl']} !important; }}
         .metric-label {{ font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px; }}
+        
+        /* AI CARD STYLING */
+        .ai-card {{ background-color: {col['ai_bg']}; border: 1px solid {col['bd']}; border-left-width: 6px; border-left-style: solid; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }}
+        .ai-header {{ font-size: 1.6rem; font-weight: 800; color: {col['ttl']} !important; margin-bottom: 5px; }}
+        .ai-sub {{ font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; }}
+        .ai-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }}
+        .ai-item {{ padding: 5px 0; }}
+        .ai-label {{ font-size: 0.85rem; color: {col['grd']} !important; margin-bottom: 3px; }}
+        .ai-val {{ font-size: 1.2rem; font-weight: 800; color: {col['ttl']} !important; }}
+        .ai-decision {{ font-size: 1.8rem; font-weight: 900; text-align: left; margin-top: 15px; display: flex; align-items: center; gap: 10px; }}
 
         .custom-btn {{ background-color: {col['ac']}; color: {col['bg']} !important; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center; }}
         .custom-btn-outline {{ border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent; }}
-        
         .stDataFrame {{ border: 1px solid {col['bd']}; }}
         .stTextInput input, .stSelectbox div[data-baseweb="select"] > div {{ background-color: {col['sec']}; color: {col['txt']}; border-color: {col['bd']}; }}
-        
         .calendar-container {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px; }}
         .calendar-header {{ text-align: center; color: {col['grd']} !important; font-weight: bold; padding-bottom: 5px; border-bottom: 1px solid {col['bd']}; }}
         .day-cell {{ background-color: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 6px; height: 90px; padding: 8px; display: flex; flex-direction: column; transition: 0.2s; }}
         .day-cell:hover {{ border-color: {col['ac']}; transform: scale(1.03); z-index: 5; }}
         .day-number {{ font-weight: bold; color: {col['txt']} !important; opacity: 0.7; }}
         .day-profit {{ font-size: 1.1rem; font-weight: 800; margin-top: auto; align-self: center; }}
-        
         .day-win {{ background: rgba(0, 255, 204, 0.15); border-color: {col['ac']}; }}
         .day-win-light {{ background: rgba(13, 110, 253, 0.15); border-color: {col['ac']}; }}
         .day-loss {{ background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b; }}
         .win-text {{ color: {col['ac']} !important; }} .loss-text {{ color: #ff4b4b !important; }} .empty-cell {{ background: transparent; border: none; }}
-        
         .stTabs [data-baseweb="tab"] {{ color: {col['grd']} !important; }}
         .stTabs [data-baseweb="tab"]:hover {{ color: {col['ac']} !important; }}
         .stTabs [aria-selected="true"] {{ color: {col['ac']} !important; border-bottom-color: {col['ac']} !important; }}
-        
         .pricing-card {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 12px; padding: 30px; text-align: center; backdrop-filter: blur(10px); }}
         .plan-price {{ color: {col['ttl']} !important; font-size: 2.5rem; font-weight: bold; }}
         .plan-name {{ color: {col['ac']} !important; font-weight: bold; letter-spacing: 2px; }}
-        
         .rule-box {{ background: rgba(0,0,0,0.05); border-left: 4px solid {col['ac']}; padding: 15px; margin: 10px 0; color: {col['txt']} !important; }}
     </style>
 """, unsafe_allow_html=True)
@@ -274,54 +211,58 @@ def load_data():
     except: return pd.DataFrame()
 df = load_data()
 
-# --- HİBRİT VERİ MOTORU ---
-def get_market_data_robust(symbol, interval):
+# --- VERİ MOTORU (ÖNCELİK: COINGECKO, YEDEK: BINANCE) ---
+def get_crypto_data(symbol, timeframe):
+    """
+    1. CoinGecko (En Doğru Fiyat)
+    2. Binance (CCXT) (Yedek)
+    """
     symbol = symbol.upper().strip()
     
-    # 1. COINGECKO
+    # 1. COINGECKO API (ÖNCELİKLİ)
     try:
+        # Yaygın coinlerin ID haritası
         cg_map = {
             "BTC": "bitcoin", "ETH": "ethereum", "SOL": "solana", "AVAX": "avalanche-2",
             "DOGE": "dogecoin", "XRP": "ripple", "BNB": "binancecoin", "ADA": "cardano",
-            "PEPE": "pepe", "SHIB": "shiba-inu", "SUI": "sui"
+            "PEPE": "pepe", "SHIB": "shiba-inu", "SUI": "sui", "DOT": "polkadot"
         }
         cg_id = cg_map.get(symbol, symbol.lower())
-        days = "1" if interval == "15m" else ("30" if interval == "1d" else "7")
-        url_cg = f"https://api.coingecko.com/api/v3/coins/{cg_id}/ohlc?vs_currency=usd&days={days}"
-        resp_cg = requests.get(url_cg, timeout=3)
-        if resp_cg.status_code == 200:
-            data = resp_cg.json()
-            df_cg = pd.DataFrame(data, columns=['time', 'open', 'high', 'low', 'close'])
-            df_cg['time'] = pd.to_datetime(df_cg['time'], unit='ms')
-            return df_cg, "CoinGecko API"
-    except: pass
+        
+        # Gün ayarı (15m yoksa 1 gün, 1h yoksa 30 gün)
+        days = "1" if timeframe == "15m" else ("30" if timeframe == "1d" else "7")
+        
+        url = f"https://api.coingecko.com/api/v3/coins/{cg_id}/ohlc?vs_currency=usd&days={days}"
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        resp = requests.get(url, headers=headers, timeout=3)
+        
+        if resp.status_code == 200:
+            data = resp.json()
+            if data:
+                df = pd.DataFrame(data, columns=['time', 'open', 'high', 'low', 'close'])
+                df['time'] = pd.to_datetime(df['time'], unit='ms')
+                return df, "CoinGecko API (Best)"
+    except:
+        pass # CoinGecko başarısızsa devam et
 
-    # 2. BINANCE
+    # 2. BINANCE (CCXT - YEDEK)
     try:
-        if not symbol.endswith("USDT"): symbol_bin = symbol + "USDT"
-        else: symbol_bin = symbol
-        url_bin = f"https://api.binance.com/api/v3/klines?symbol={symbol_bin}&interval={interval}&limit=100"
-        resp_bin = requests.get(url_bin, timeout=3)
-        if resp_bin.status_code == 200:
-            data = resp_bin.json()
-            df_bin = pd.DataFrame(data, columns=['time', 'open', 'high', 'low', 'close', 'volume', 'a','b','c','d','e','f'])
-            df_bin['time'] = pd.to_datetime(df_bin['time'], unit='ms')
-            df_bin['close'] = df_bin['close'].astype(float)
-            df_bin['high'] = df_bin['high'].astype(float)
-            df_bin['low'] = df_bin['low'].astype(float)
-            df_bin['open'] = df_bin['open'].astype(float)
-            return df_bin, "Binance API"
-    except: pass
+        exchange = ccxt.binance()
+        if "/" not in symbol: symbol_ccxt = f"{symbol}/USDT"
+        else: symbol_ccxt = symbol
+            
+        tf_map = {"1h": "1h", "4h": "4h", "1d": "1d"}
+        ohlcv = exchange.fetch_ohlcv(symbol_ccxt, timeframe=tf_map.get(timeframe, '1h'), limit=100)
+        
+        if ohlcv:
+            df = pd.DataFrame(ohlcv, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
+            df['time'] = pd.to_datetime(df['time'], unit='ms')
+            return df, "Binance API (Fallback)"
+            
+    except Exception as e:
+        pass
 
-    # 3. SİMÜLASYON
-    dates = pd.date_range(end=datetime.now(), periods=100, freq=interval.replace('m', 'min'))
-    base = 100 
-    change = np.random.normal(0, 0.02, 100) + 1
-    prices = base * np.cumprod(change)
-    highs = prices * 1.01
-    lows = prices * 0.99
-    opens = prices * 0.995
-    return pd.DataFrame({'time': dates, 'close': prices, 'high': highs, 'low': lows, 'open': opens}), "Simulation (Data Offline)"
+    return pd.DataFrame(), "Data Error"
 
 wt = "light" if st.session_state.theme == "Light" else "dark"
 components.html(f"""<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>{{"symbols": [{{"proName": "BINANCE:BTCUSDT", "title": "Bitcoin"}}, {{"proName": "BINANCE:ETHUSDT", "title": "Ethereum"}}, {{"proName": "BINANCE:SOLUSDT", "title": "Solana"}}], "showSymbolLogo": true, "colorTheme": "{wt}", "isTransparent": true, "displayMode": "adaptive", "locale": "en"}}</script></div>""", height=50)
@@ -405,7 +346,7 @@ with tab2:
     with st.expander(t('lesson_2_title')): st.markdown(t('lesson_2_content'))
     with st.expander(t('lesson_3_title')): st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
 
-# TAB 5: AI LAB (DÜZELTİLMİŞ HTML FORMATI - SOLA YASLI)
+# TAB 5: AI LAB (PRO VERSION)
 with tab5:
     st.write("")
     st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('ai_title')}</h2>", unsafe_allow_html=True)
@@ -420,10 +361,11 @@ with tab5:
 
     if run_analysis:
         with st.spinner(t('ai_analyzing')):
-            live_df, source = get_market_data_robust(user_symbol, tf)
+            live_df, source = get_crypto_data(user_symbol, tf)
             time.sleep(0.5) 
         
-        if not live_df.empty and len(live_df) > 20:
+        if not live_df.empty:
+            # --- ANALİZ MOTORU ---
             current_price = float(live_df['close'].iloc[-1])
             open_price = float(live_df['open'].iloc[-1])
             change_24h = ((current_price - open_price) / open_price) * 100
@@ -438,8 +380,8 @@ with tab5:
             live_df['RSI'] = 100 - (100 / (1 + rs))
             rsi_val = float(live_df['RSI'].iloc[-1]) if not pd.isna(live_df['RSI'].iloc[-1]) else 50.0
             
-            supp = live_df['low'].tail(20).min()
-            res = live_df['high'].tail(20).max()
+            supp = live_df['low'].tail(50).min()
+            res = live_df['high'].tail(50).max()
             
             score = 50
             if current_price > sma_val: score += 20
@@ -461,7 +403,7 @@ with tab5:
 <div style="display:flex; justify-content:space-between; align-items:center;">
 <div>
 <div class="ai-header">{user_symbol.upper()} / USD</div>
-<div class="ai-sub" style="color:{dec_col} !important;">{change_24h:+.2f}% (24h)</div>
+<div class="ai-sub" style="color:{dec_col} !important;">{change_24h:+.2f}%</div>
 </div>
 <div style="text-align:right;">
 <div class="ai-header">${current_price:,.4f}</div>
@@ -525,7 +467,7 @@ with tab5:
             st.plotly_chart(fig_ai, use_container_width=True)
 
         else:
-            st.error("Market data unavailable. Try again later.")
+            st.error(t("err_msg"))
 
 # TAB 3 & 4
 with tab3:
