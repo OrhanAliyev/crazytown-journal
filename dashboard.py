@@ -49,6 +49,11 @@ st.markdown("""
         .testimonial-card {background-color: #15161a; border-left: 3px solid #66fcf1; padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 20px;}
         .testimonial-text {font-style: italic; color: #e0e0e0; font-size: 0.95rem;}
         .testimonial-author {margin-top: 10px; color: #66fcf1; font-weight: bold; font-size: 0.85rem;}
+        
+        /* ACADEMY STYLE */
+        .lesson-card {border: 1px solid #2d3845; padding: 20px; border-radius: 8px; margin-bottom: 15px; background: #15161a;}
+        .highlight-text {color: #66fcf1; font-weight: bold;}
+        .rule-box {background: rgba(102, 252, 241, 0.05); padding: 15px; border-left: 4px solid #66fcf1; margin: 10px 0;}
 
         .promo-banner {
             background: linear-gradient(90deg, #1f2833 0%, #0b0c10 100%);
@@ -115,7 +120,8 @@ st.markdown("<h1 style='text-align: center; font-size: 3rem; color: #FFFFFF;'>CR
 st.markdown("<p style='text-align: center; color: #66fcf1; margin-top: -15px; letter-spacing: 2px; font-size: 0.9rem;'>ALGORITHMIC TRADING SYSTEMS</p>", unsafe_allow_html=True)
 st.write("")
 
-tab1, tab2, tab3 = st.tabs(["PERFORMANCE", "MEMBERSHIP", "CONTACT"])
+# TABLARI GÜNCELLEDİK: ACADEMY EKLENDİ
+tab1, tab2, tab3, tab4 = st.tabs(["PERFORMANCE", "ACADEMY", "MEMBERSHIP", "CONTACT"])
 
 # ==========================================
 # TAB 1: PERFORMANCE (DASHBOARD)
@@ -269,9 +275,67 @@ with tab1:
         st.dataframe(df.style.apply(style_df, axis=1), use_container_width=True, hide_index=True)
 
 # ==========================================
-# TAB 2: MEMBERSHIP
+# TAB 2: ACADEMY (OA | TRADE SMC)
 # ==========================================
 with tab2:
+    st.write("")
+    st.markdown("<h2 style='text-align: center; color: #66fcf1;'>OA | TRADE SMC MASTERY</h2>", unsafe_allow_html=True)
+    st.markdown("""<div style="text-align: center; font-style: italic; color: #888; margin-bottom: 20px;">"Piyasayı yenmek değil, piyasanın yaptığı şeyi disiplinle takip etmek."</div>""", unsafe_allow_html=True)
+
+    with st.expander("📌 BÖLÜM 1: ZAMAN VE BAĞLAM (TEMEL KURALLAR)", expanded=True):
+        st.markdown("""
+        ### 1. ZAMAN FİLTRESİ (Time Filter)
+        Sadece bu saatlerde ekran başında olunur. Diğer saatlerde grafik analiz edilmez.
+        * **LONDON SESSION:** `10:00 – 12:00` (TSİ)
+        * **NEW YORK SESSION:** `15:30 – 18:30` (TSİ)
+        
+        ### 2. GÜNLÜK BAĞLAM (Daily Context)
+        İşlem aramak için tek bir şart vardır: **LİKİDİTE ALIMI.**
+        * **PDH (Previous Day High):** Önceki günün en yükseği ihlal edilirse → Sadece **SHORT** aranır.
+        * **PDL (Previous Day Low):** Önceki günün en düşüğü ihlal edilirse → Sadece **LONG** aranır.
+        
+        > **Not:** Kapanış (Close) şart değildir, fitil (Wick) atması yeterlidir.
+        """)
+
+    with st.expander("🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ (SETUP)"):
+        st.markdown("""
+        ### 1. FIBONACCI AYARLARI
+        Bağlam oluştuğunda (Örn: PDH ihlali), oluşan sert harekete (Impulse) Fibonacci çekilir.
+        * **ENTRY BÖLGESİ:** `0.75` ile `0.60` arası
+        * **STOP:** `1` (Impulse başlangıcı)
+        * **TP-1:** `0.25`
+        * **TP-2:** `-0.18`
+        
+        ### 2. FVG (Fair Value Gap) REJECTION
+        Her `0.6-0.75` bölgesine gelen fiyata girilmez.
+        * O bölgede bir **FVG (Dengesizlik)** olmalı.
+        * Fiyat FVG'ye dokunup **red yemeli** (küçük mumlar, fitiller).
+        """)
+
+    with st.expander("⚠️ BÖLÜM 3: UYGULAMA VE YASAKLAR (ÖNEMLİ)"):
+        st.markdown("""
+        <div class="rule-box">
+        <h4>🚨 ASLA YAPILMAYACAKLAR</h4>
+        <ul>
+            <li><b>CHOCH (Karakter Değişimi) ARANMAZ!</b> Bizi oyundan erken atar veya geç sokar.</li>
+            <li>Zaman filtresi dışında işlem alınmaz.</li>
+            <li>PDH/PDL ihlali olmadan Fibonacci çekilmez.</li>
+        </ul>
+        </div>
+
+        ### POZİSYON YÖNETİMİ
+        1.  Emri `0.75 - 0.60` arasına at.
+        2.  Stop `1` seviyesine koy.
+        3.  Fiyat `TP-1 (0.25)` geldiğinde **Stop'u Girişe (BE) Çek.**
+        4.  `TP-2 (-0.18)` gelene kadar dokunma.
+        """, unsafe_allow_html=True)
+        
+    st.info("Bu sistem bir tahmin aracı değil, bir davranış modelidir. 30 gün boyunca kuralları esnetmeden uygulayın.")
+
+# ==========================================
+# TAB 3: MEMBERSHIP
+# ==========================================
+with tab3:
     st.write("")
     st.markdown("""<div class="promo-banner">🔥 LIMITED TIME OFFER: Get the LIFETIME access before prices increase on Monday!</div>""", unsafe_allow_html=True)
     
@@ -292,9 +356,9 @@ with tab2:
         st.markdown("""<div class="pricing-card"><div class="plan-name">LIFETIME</div><div class="plan-price">$250<span style="font-size:1rem;color:#888">/once</span></div><div class="feature-list">✓ <b>Lifetime Access</b><br>✓ Future Updates Included<br>✓ Bot Setup Assistance<br>✓ Private Group</div><a href="https://t.me/Orhan1909" target="_blank" class="custom-btn custom-btn-outline">CONTACT SALES</a></div>""", unsafe_allow_html=True)
 
 # ==========================================
-# TAB 3: CONTACT & FAQ
+# TAB 4: CONTACT & FAQ
 # ==========================================
-with tab3:
+with tab4:
     st.write(""); st.write("")
     c1, c2 = st.columns(2)
     with c1: st.markdown("""### 📨 Telegram Support\nFor instant assistance:\n<a href="https://t.me/Orhan1909" class="custom-btn">OPEN TELEGRAM</a>""", unsafe_allow_html=True)
