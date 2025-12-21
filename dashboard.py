@@ -126,7 +126,7 @@ st.markdown(f"""
         
         /* STREAMLIT ARKAPLANINI ŞEFFAF YAP (Bu olmazsa animasyon görünmez) */
         .stApp {{ background: transparent !important; }}
-        header, footer, #MainMenu {{display: none !important;}}
+        header, footer, #MainMenu, .stDeployButton {{display: none !important;}}
         .block-container {{padding-top: 2rem;}}
 
         /* YAZI VE RENKLER */
@@ -258,7 +258,7 @@ with tab1:
         st.markdown("---"); st.subheader(t("roi_sim")); r1, r2, r3 = st.columns([1,1,2])
         with r1: cap = st.number_input(t("initial_cap"), min_value=100, value=1000)
         with r2: risk = st.slider(t("risk_trade"), 0.5, 5.0, 2.0)
-        prof = cap * (risk / 100) * net_return; bal = cap + prof; perc = (prof / cap) * 100
+        prof = cap * (risk / 100) * net_r; bal = cap + prof; perc = (prof / cap) * 100
         with r3: st.markdown(f"""<div style="background:{col['card']}; padding:15px; border-radius:10px; border:1px solid {col['ac']}; text-align:center;"><span style="color:{col['grd']} !important">{t('proj_bal')}</span><br><span style="color:{col['ttl']} !important; font-size:2rem; font-weight:bold;">${bal:,.2f}</span><br><span style="color:{col['ac']} !important">(+${prof:,.2f} / +{perc:.1f}%)</span></div>""", unsafe_allow_html=True)
         
         st.markdown("---"); h, d = st.columns([4, 1])
