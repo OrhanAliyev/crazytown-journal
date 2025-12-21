@@ -142,9 +142,8 @@ if st.session_state.theme == "Dark":
         "sec": "#111",
         "ttl": "#ffffff",
         "grd": "#aaaaaa",
-        "ai_bg": "#0e0e0e" # Resolv tarzı koyu arka plan
+        "ai_bg": "#0e0e0e"
     }
-    # Koyu Mod Animasyonu
     anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;}} .orb1 {{top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);}} .orb2 {{bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);animation-duration:25s;animation-direction:alternate-reverse;}} .orb3 {{top:40%;left:40%;width:30vw;height:30vw;background:radial-gradient(circle,#ff007f 0%,transparent 70%);animation-duration:18s;}} @keyframes moveOrb {{0%{{transform:translate(0,0) scale(1);}}100%{{transform:translate(50px,50px) scale(1.1);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>"""
 else:
     # AÇIK MOD (KURUMSAL)
@@ -182,7 +181,6 @@ st.markdown(f"""
         .ai-card {{
             background-color: {col['ai_bg']};
             border: 1px solid {col['bd']};
-            /* Dinamik kenar rengi python içinde verilecek */
             border-left-width: 6px; 
             border-left-style: solid;
             border-radius: 8px;
@@ -190,70 +188,41 @@ st.markdown(f"""
             margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }}
-        .ai-header {{
-            font-size: 1.6rem; font-weight: 800; color: {col['ttl']} !important; margin-bottom: 5px;
-        }}
+        .ai-header {{ font-size: 1.6rem; font-weight: 800; color: {col['ttl']} !important; margin-bottom: 5px; }}
         .ai-sub {{ font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; }}
-        
-        .ai-grid {{ 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; 
-        }}
-        .ai-item {{ 
-            /* Grid içi şeffaf, sadece yazı */
-            padding: 5px 0; 
-        }}
+        .ai-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }}
+        .ai-item {{ padding: 5px 0; }}
         .ai-label {{ font-size: 0.85rem; color: {col['grd']} !important; margin-bottom: 3px; }}
         .ai-val {{ font-size: 1.2rem; font-weight: 800; color: {col['ttl']} !important; }}
-        
-        .ai-decision {{
-            font-size: 1.8rem; font-weight: 900; text-align: left; margin-top: 15px;
-            display: flex; align-items: center; gap: 10px;
-        }}
+        .ai-decision {{ font-size: 1.8rem; font-weight: 900; text-align: left; margin-top: 15px; display: flex; align-items: center; gap: 10px; }}
 
         /* DIĞER BİLEŞENLER */
-        .neon-title {{
-            font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important;
-            font-weight: 900; letter-spacing: 4px; margin: 0;
-            {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""}
-            animation: pulse 3s infinite alternate;
-        }}
+        .neon-title {{ font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important; font-weight: 900; letter-spacing: 4px; margin: 0; {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""} animation: pulse 3s infinite alternate; }}
         @keyframes pulse {{ 0% {{opacity: 1;}} 100% {{opacity: 0.9;}} }}
-
-        .metric-container {{
-            background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px;
-            text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-        }}
+        .metric-container {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px; text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; }}
         .metric-container:hover {{ transform: translateY(-5px); border-color: {col['ac']}; }}
         .metric-value {{ font-size: 2rem; font-weight: 700; color: {col['ttl']} !important; }}
         .metric-label {{ font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px; }}
-
         .custom-btn {{ background-color: {col['ac']}; color: {col['bg']} !important; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center; }}
         .custom-btn-outline {{ border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent; }}
-        
         .stDataFrame {{ border: 1px solid {col['bd']}; }}
         .stTextInput input, .stSelectbox div[data-baseweb="select"] > div {{ background-color: {col['sec']}; color: {col['txt']}; border-color: {col['bd']}; }}
-        
         .calendar-container {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px; }}
         .calendar-header {{ text-align: center; color: {col['grd']} !important; font-weight: bold; padding-bottom: 5px; border-bottom: 1px solid {col['bd']}; }}
         .day-cell {{ background-color: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 6px; height: 90px; padding: 8px; display: flex; flex-direction: column; transition: 0.2s; }}
         .day-cell:hover {{ border-color: {col['ac']}; transform: scale(1.03); z-index: 5; }}
         .day-number {{ font-weight: bold; color: {col['txt']} !important; opacity: 0.7; }}
         .day-profit {{ font-size: 1.1rem; font-weight: 800; margin-top: auto; align-self: center; }}
-        
         .day-win {{ background: rgba(0, 255, 204, 0.15); border-color: {col['ac']}; }}
         .day-win-light {{ background: rgba(13, 110, 253, 0.15); border-color: {col['ac']}; }}
         .day-loss {{ background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b; }}
         .win-text {{ color: {col['ac']} !important; }} .loss-text {{ color: #ff4b4b !important; }} .empty-cell {{ background: transparent; border: none; }}
-        
         .stTabs [data-baseweb="tab"] {{ color: {col['grd']} !important; }}
         .stTabs [data-baseweb="tab"]:hover {{ color: {col['ac']} !important; }}
         .stTabs [aria-selected="true"] {{ color: {col['ac']} !important; border-bottom-color: {col['ac']} !important; }}
-        
         .pricing-card {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 12px; padding: 30px; text-align: center; backdrop-filter: blur(10px); }}
         .plan-price {{ color: {col['ttl']} !important; font-size: 2.5rem; font-weight: bold; }}
         .plan-name {{ color: {col['ac']} !important; font-weight: bold; letter-spacing: 2px; }}
-        
         .rule-box {{ background: rgba(0,0,0,0.05); border-left: 4px solid {col['ac']}; padding: 15px; margin: 10px 0; color: {col['txt']} !important; }}
     </style>
 """, unsafe_allow_html=True)
@@ -275,9 +244,8 @@ def load_data():
     except: return pd.DataFrame()
 df = load_data()
 
-# --- HİBRİT VERİ MOTORU (Coingecko -> Binance -> Simulation) ---
+# --- HİBRİT VERİ MOTORU ---
 def get_market_data_robust(symbol, interval):
-    # Kullanıcı "BTC" girebilir, biz "BTC-USD" yaparız
     symbol = symbol.upper().strip()
     
     # 1. COINGECKO
@@ -288,7 +256,6 @@ def get_market_data_robust(symbol, interval):
             "PEPE": "pepe", "SHIB": "shiba-inu", "SUI": "sui"
         }
         cg_id = cg_map.get(symbol, symbol.lower())
-        
         days = "1" if interval == "15m" else ("30" if interval == "1d" else "7")
         url_cg = f"https://api.coingecko.com/api/v3/coins/{cg_id}/ohlc?vs_currency=usd&days={days}"
         resp_cg = requests.get(url_cg, timeout=3)
@@ -303,7 +270,6 @@ def get_market_data_robust(symbol, interval):
     try:
         if not symbol.endswith("USDT"): symbol_bin = symbol + "USDT"
         else: symbol_bin = symbol
-            
         url_bin = f"https://api.binance.com/api/v3/klines?symbol={symbol_bin}&interval={interval}&limit=100"
         resp_bin = requests.get(url_bin, timeout=3)
         if resp_bin.status_code == 200:
@@ -335,7 +301,6 @@ st.markdown('<div class="neon-title">CRAZYTOWN CAPITAL</div>', unsafe_allow_html
 st.markdown(f"<p style='text-align: center; color: {col['ac']}; letter-spacing: 2px; font-size: 0.9rem; margin-top: -5px; font-weight:bold;'>{t('title_sub')}</p>", unsafe_allow_html=True)
 st.write("")
 
-# TABLARI GENİŞLET
 tab1, tab2, tab5, tab3, tab4 = st.tabs([t('perf'), t('acad'), t('ai_lab'), t('memb'), t('cont')])
 
 # TAB 1: PERFORMANS
@@ -410,13 +375,12 @@ with tab2:
     with st.expander(t('lesson_2_title')): st.markdown(t('lesson_2_content'))
     with st.expander(t('lesson_3_title')): st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
 
-# TAB 5: AI LAB (YENİLENMİŞ ARAMA MOTORLU & RESOLV STYLE)
+# TAB 5: AI LAB (HATA DÜZELTİLDİ - RENGİ STRING OLARAK VERİYORUZ)
 with tab5:
     st.write("")
     st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('ai_title')}</h2>", unsafe_allow_html=True)
     st.markdown(f"""<div style="text-align: center; font-style: italic; color: {col['grd']} !important; margin-bottom: 20px;">{t('ai_desc')}</div>""", unsafe_allow_html=True)
     
-    # ARAMA BÖLÜMÜ
     ai_c1, ai_c2, ai_c3 = st.columns([2, 1, 1])
     with ai_c1: user_symbol = st.text_input(t('ai_input_label'), value="BTC")
     with ai_c2: tf = st.selectbox(t('ai_tf'), ["1h", "4h", "1d"])
@@ -459,19 +423,17 @@ with tab5:
             if rsi_val > 50: score += 10
             else: score -= 10
             
-            # Momentum
             if change_24h > 0: score += 10
-            
             score = max(0, min(100, score))
             
             # KARAR
-            if score >= 80: decision = t('s_buy'); dec_col = "#00ff00"; trend_text = t('bull')
-            elif score >= 60: decision = t('buy'); dec_col = "#00cc00"; trend_text = t('bull')
-            elif score <= 20: decision = t('s_sell'); dec_col = "#ff0000"; trend_text = t('bear')
-            elif score <= 40: decision = t('sell'); dec_col = "#cc0000"; trend_text = t('bear')
-            else: decision = t('wait'); dec_col = "#aaaaaa"; trend_text = t('neutral')
+            if score >= 80: decision = t('s_buy'); dec_col = "#00ff00"; trend_text = t('bull'); direction = "BULL"
+            elif score >= 60: decision = t('buy'); dec_col = "#00cc00"; trend_text = t('bull'); direction = "BULL"
+            elif score <= 20: decision = t('s_sell'); dec_col = "#ff0000"; trend_text = t('bear'); direction = "BEAR"
+            elif score <= 40: decision = t('sell'); dec_col = "#cc0000"; trend_text = t('bear'); direction = "BEAR"
+            else: decision = t('wait'); dec_col = "#aaaaaa"; trend_text = t('neutral'); direction = "NEUTRAL"
             
-            # --- GÖRSEL KART (RESOLV STYLE - CSS ENTEGRE) ---
+            # --- GÖRSEL KART (RESOLV STYLE) ---
             st.markdown(f"""
             <div class="ai-card" style="border-left-color: {dec_col} !important;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -531,15 +493,16 @@ with tab5:
             
             steps = 15
             future_x = np.arange(last_idx, last_idx + steps)
-            slope = volatility * 0.1 if "BULL" in trend_text else (-volatility * 0.1 if "BEAR" in trend_text else 0)
+            slope = volatility * 0.1 if direction == "BULL" else (-volatility * 0.1 if direction == "BEAR" else 0)
             base_forecast = [current_price + (i * slope) for i in range(steps)]
             upper_bound = [p + (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
             lower_bound = [p - (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
             
-            # Renk formatı düzeltmesi
-            f_col = f"rgba(0, 255, 204, 0.15)" if "BULL" in trend_text else f"rgba(255, 75, 75, 0.15)"
+            # RENK DÜZELTMESİ (ValueError Çözümü)
+            # Tuple yerine doğrudan string kullanıyoruz
+            fill_color = "rgba(0, 255, 204, 0.15)" if direction == "BULL" else "rgba(255, 75, 75, 0.15)"
             
-            fig_ai.add_trace(go.Scatter(x=np.concatenate([future_x, future_x[::-1]]), y=np.concatenate([upper_bound, lower_bound[::-1]]), fill='toself', fillcolor=f_col, line=dict(color='rgba(0,0,0,0)'), showlegend=False))
+            fig_ai.add_trace(go.Scatter(x=np.concatenate([future_x, future_x[::-1]]), y=np.concatenate([upper_bound, lower_bound[::-1]]), fill='toself', fillcolor=fill_color, line=dict(color='rgba(0,0,0,0)'), showlegend=False))
             fig_ai.add_trace(go.Scatter(x=future_x, y=base_forecast, mode='lines', name='AI Projection', line=dict(color=dec_col, width=2, dash='dot')))
             
             pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"
