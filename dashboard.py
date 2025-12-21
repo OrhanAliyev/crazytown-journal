@@ -142,8 +142,9 @@ if st.session_state.theme == "Dark":
         "sec": "#111",
         "ttl": "#ffffff",
         "grd": "#aaaaaa",
-        "ai_bg": "#0e0e0e"
+        "ai_bg": "#121212" # Resolv benzeri çok koyu gri
     }
+    # Koyu Mod Animasyonu
     anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;}} .orb1 {{top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);}} .orb2 {{bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);animation-duration:25s;animation-direction:alternate-reverse;}} .orb3 {{top:40%;left:40%;width:30vw;height:30vw;background:radial-gradient(circle,#ff007f 0%,transparent 70%);animation-duration:18s;}} @keyframes moveOrb {{0%{{transform:translate(0,0) scale(1);}}100%{{transform:translate(50px,50px) scale(1.1);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>"""
 else:
     # AÇIK MOD (KURUMSAL)
@@ -163,6 +164,7 @@ else:
 
 st.markdown(anim_html, unsafe_allow_html=True)
 
+# CSS ENJEKSİYONU (DÜZELTİLMİŞ)
 st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;600;800&display=swap');
@@ -177,52 +179,80 @@ st.markdown(f"""
             font-family: 'Inter', sans-serif;
         }}
 
-        /* YAPAY ZEKA ANALİZ KARTI (RESOLV STYLE) */
+        /* YAPAY ZEKA ANALİZ KARTI (RESOLV STYLE) - ÖNEMLİ KISIM */
         .ai-card {{
             background-color: {col['ai_bg']};
             border: 1px solid {col['bd']};
             border-left-width: 6px; 
-            border-left-style: solid;
+            border-left-style: solid; /* Rengi Python'da dinamik veriyoruz */
             border-radius: 8px;
             padding: 25px;
             margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }}
-        .ai-header {{ font-size: 1.6rem; font-weight: 800; color: {col['ttl']} !important; margin-bottom: 5px; }}
+        .ai-header {{
+            font-size: 1.6rem; font-weight: 800; color: {col['ttl']} !important; margin-bottom: 5px;
+        }}
         .ai-sub {{ font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; }}
-        .ai-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }}
-        .ai-item {{ padding: 5px 0; }}
+        
+        .ai-grid {{ 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; 
+        }}
+        .ai-item {{ 
+            padding: 5px 0; 
+        }}
         .ai-label {{ font-size: 0.85rem; color: {col['grd']} !important; margin-bottom: 3px; }}
         .ai-val {{ font-size: 1.2rem; font-weight: 800; color: {col['ttl']} !important; }}
-        .ai-decision {{ font-size: 1.8rem; font-weight: 900; text-align: left; margin-top: 15px; display: flex; align-items: center; gap: 10px; }}
+        
+        .ai-decision {{
+            font-size: 1.8rem; font-weight: 900; text-align: left; margin-top: 15px;
+            display: flex; align-items: center; gap: 10px;
+        }}
 
         /* DIĞER BİLEŞENLER */
-        .neon-title {{ font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important; font-weight: 900; letter-spacing: 4px; margin: 0; {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""} animation: pulse 3s infinite alternate; }}
+        .neon-title {{
+            font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important;
+            font-weight: 900; letter-spacing: 4px; margin: 0;
+            {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""}
+            animation: pulse 3s infinite alternate;
+        }}
         @keyframes pulse {{ 0% {{opacity: 1;}} 100% {{opacity: 0.9;}} }}
-        .metric-container {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px; text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; }}
+
+        .metric-container {{
+            background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px;
+            text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }}
         .metric-container:hover {{ transform: translateY(-5px); border-color: {col['ac']}; }}
         .metric-value {{ font-size: 2rem; font-weight: 700; color: {col['ttl']} !important; }}
         .metric-label {{ font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px; }}
+
         .custom-btn {{ background-color: {col['ac']}; color: {col['bg']} !important; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center; }}
         .custom-btn-outline {{ border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent; }}
+        
         .stDataFrame {{ border: 1px solid {col['bd']}; }}
         .stTextInput input, .stSelectbox div[data-baseweb="select"] > div {{ background-color: {col['sec']}; color: {col['txt']}; border-color: {col['bd']}; }}
+        
         .calendar-container {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px; }}
         .calendar-header {{ text-align: center; color: {col['grd']} !important; font-weight: bold; padding-bottom: 5px; border-bottom: 1px solid {col['bd']}; }}
         .day-cell {{ background-color: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 6px; height: 90px; padding: 8px; display: flex; flex-direction: column; transition: 0.2s; }}
         .day-cell:hover {{ border-color: {col['ac']}; transform: scale(1.03); z-index: 5; }}
         .day-number {{ font-weight: bold; color: {col['txt']} !important; opacity: 0.7; }}
         .day-profit {{ font-size: 1.1rem; font-weight: 800; margin-top: auto; align-self: center; }}
+        
         .day-win {{ background: rgba(0, 255, 204, 0.15); border-color: {col['ac']}; }}
         .day-win-light {{ background: rgba(13, 110, 253, 0.15); border-color: {col['ac']}; }}
         .day-loss {{ background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b; }}
         .win-text {{ color: {col['ac']} !important; }} .loss-text {{ color: #ff4b4b !important; }} .empty-cell {{ background: transparent; border: none; }}
+        
         .stTabs [data-baseweb="tab"] {{ color: {col['grd']} !important; }}
         .stTabs [data-baseweb="tab"]:hover {{ color: {col['ac']} !important; }}
         .stTabs [aria-selected="true"] {{ color: {col['ac']} !important; border-bottom-color: {col['ac']} !important; }}
+        
         .pricing-card {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 12px; padding: 30px; text-align: center; backdrop-filter: blur(10px); }}
         .plan-price {{ color: {col['ttl']} !important; font-size: 2.5rem; font-weight: bold; }}
         .plan-name {{ color: {col['ac']} !important; font-weight: bold; letter-spacing: 2px; }}
+        
         .rule-box {{ background: rgba(0,0,0,0.05); border-left: 4px solid {col['ac']}; padding: 15px; margin: 10px 0; color: {col['txt']} !important; }}
     </style>
 """, unsafe_allow_html=True)
@@ -375,7 +405,7 @@ with tab2:
     with st.expander(t('lesson_2_title')): st.markdown(t('lesson_2_content'))
     with st.expander(t('lesson_3_title')): st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
 
-# TAB 5: AI LAB (HATA DÜZELTİLDİ - RENGİ STRING OLARAK VERİYORUZ)
+# TAB 5: AI LAB (PRO VERSION)
 with tab5:
     st.write("")
     st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('ai_title')}</h2>", unsafe_allow_html=True)
@@ -399,11 +429,9 @@ with tab5:
             open_price = float(live_df['open'].iloc[-1])
             change_24h = ((current_price - open_price) / open_price) * 100
             
-            # SMA & Trend
             live_df['SMA'] = live_df['close'].rolling(window=20).mean()
             sma_val = float(live_df['SMA'].iloc[-1]) if not pd.isna(live_df['SMA'].iloc[-1]) else current_price
             
-            # RSI
             delta = live_df['close'].diff()
             gain = (delta.where(delta > 0, 0)).rolling(window=14).mean().fillna(0)
             loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean().fillna(0)
@@ -411,30 +439,25 @@ with tab5:
             live_df['RSI'] = 100 - (100 / (1 + rs))
             rsi_val = float(live_df['RSI'].iloc[-1]) if not pd.isna(live_df['RSI'].iloc[-1]) else 50.0
             
-            # Support/Resistance (Basit)
             supp = live_df['low'].tail(20).min()
             res = live_df['high'].tail(20).max()
             
-            # SKORLAMA
             score = 50
             if current_price > sma_val: score += 20
             else: score -= 20
-            
             if rsi_val > 50: score += 10
             else: score -= 10
-            
             if change_24h > 0: score += 10
             score = max(0, min(100, score))
             
-            # KARAR
             if score >= 80: decision = t('s_buy'); dec_col = "#00ff00"; trend_text = t('bull'); direction = "BULL"
             elif score >= 60: decision = t('buy'); dec_col = "#00cc00"; trend_text = t('bull'); direction = "BULL"
             elif score <= 20: decision = t('s_sell'); dec_col = "#ff0000"; trend_text = t('bear'); direction = "BEAR"
             elif score <= 40: decision = t('sell'); dec_col = "#cc0000"; trend_text = t('bear'); direction = "BEAR"
             else: decision = t('wait'); dec_col = "#aaaaaa"; trend_text = t('neutral'); direction = "NEUTRAL"
             
-            # --- GÖRSEL KART (RESOLV STYLE) ---
-            st.markdown(f"""
+            # --- DÜZELTİLMİŞ HTML KODU (ST.MARKDOWN İLE) ---
+            html_card = f"""
             <div class="ai-card" style="border-left-color: {dec_col} !important;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
@@ -476,7 +499,8 @@ with tab5:
                     {t('ai_dec')}: {decision}
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """
+            st.markdown(html_card, unsafe_allow_html=True)
             
             st.caption(f"{t('data_source')}: {source}")
 
@@ -486,23 +510,21 @@ with tab5:
             last_50 = live_df.tail(50).reset_index(drop=True)
             fig_ai.add_trace(go.Scatter(x=last_50.index, y=last_50['close'], mode='lines', name='Price', line=dict(color=col['txt'], width=2)))
             
-            # Prediction Cone
             last_idx = last_50.index[-1]
             volatility = last_50['close'].std() * 0.5
             if np.isnan(volatility): volatility = current_price * 0.01
             
             steps = 15
             future_x = np.arange(last_idx, last_idx + steps)
-            slope = volatility * 0.1 if direction == "BULL" else (-volatility * 0.1 if direction == "BEAR" else 0)
+            slope = volatility * 0.1 if "BULL" in trend_text else (-volatility * 0.1 if "BEAR" in trend_text else 0)
             base_forecast = [current_price + (i * slope) for i in range(steps)]
             upper_bound = [p + (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
             lower_bound = [p - (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
             
-            # RENK DÜZELTMESİ (ValueError Çözümü)
-            # Tuple yerine doğrudan string kullanıyoruz
-            fill_color = "rgba(0, 255, 204, 0.15)" if direction == "BULL" else "rgba(255, 75, 75, 0.15)"
+            # Renk formatı düzeltmesi
+            f_col = "rgba(0, 255, 204, 0.15)" if "BULL" in trend_text else "rgba(255, 75, 75, 0.15)"
             
-            fig_ai.add_trace(go.Scatter(x=np.concatenate([future_x, future_x[::-1]]), y=np.concatenate([upper_bound, lower_bound[::-1]]), fill='toself', fillcolor=fill_color, line=dict(color='rgba(0,0,0,0)'), showlegend=False))
+            fig_ai.add_trace(go.Scatter(x=np.concatenate([future_x, future_x[::-1]]), y=np.concatenate([upper_bound, lower_bound[::-1]]), fill='toself', fillcolor=f_col, line=dict(color='rgba(0,0,0,0)'), showlegend=False))
             fig_ai.add_trace(go.Scatter(x=future_x, y=base_forecast, mode='lines', name='AI Projection', line=dict(color=dec_col, width=2, dash='dot')))
             
             pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"
