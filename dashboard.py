@@ -21,6 +21,7 @@ st.set_page_config(
 if 'lang' not in st.session_state: st.session_state.lang = "TR"
 if 'theme' not in st.session_state: st.session_state.theme = "Dark"
 
+# ÇEVİRİ VE İÇERİK YÖNETİMİ
 TRANSLATIONS = {
     "EN": {
         "title_sub": "ALGORITHMIC TRADING SYSTEMS", "perf": "PERFORMANCE", "acad": "ACADEMY", "memb": "MEMBERSHIP", "cont": "CONTACT",
@@ -32,11 +33,45 @@ TRANSLATIONS = {
         "limited_offer": "🔥 LIMITED TIME OFFER: Get LIFETIME access!", "feedback": "💬 TRADER FEEDBACK",
         "plan_starter": "STARTER", "plan_pro": "PROFESSIONAL", "plan_life": "LIFETIME", "sel_plan": "SELECT PLAN",
         "most_pop": "MOST POPULAR", "contact_sales": "CONTACT SALES", "faq": "❓ FAQ", "settings": "⚙️ SETTINGS",
-        "lang_sel": "Language", "theme_sel": "Theme", "theme_dark": "Dark (Neon)", "theme_light": "Light (Clean)",
+        "lang_sel": "Language", "theme_sel": "Theme", "theme_dark": "Dark (Neon)", "theme_light": "Light (Corporate)",
         "acad_title": "OA | TRADE SMC MASTERY", "acad_quote": "Not beating the market, but following it with discipline.",
-        "lesson_1_title": "📌 PART 1: TIME & CONTEXT", "lesson_1_content": "### 1. TIME FILTER\n* **LONDON:** 10:00–12:00\n* **NY:** 15:30–18:30\n### 2. CONTEXT\n* **PDH/PDL Sweep** is mandatory.",
-        "lesson_2_title": "🛠️ PART 2: ENTRY SETUP", "lesson_2_content": "### FIBONACCI\n* **Entry:** 0.60-0.75\n* **Stop:** 1.0\n* **TP:** 0.25 / -0.18",
-        "lesson_3_title": "⚠️ PART 3: RULES", "lesson_3_content": "NO CHOCH. NO TRADING OUTSIDE HOURS."
+        "lesson_1_title": "📌 PART 1: TIME & CONTEXT",
+        "lesson_1_content": """
+        #### 1. TIME FILTER (CRITICAL)
+        We only trade during high-volume sessions. Charts are closed otherwise.
+        * **LONDON:** `10:00 – 12:00` (UTC+3)
+        * **NEW YORK:** `15:30 – 18:30` (UTC+3)
+        
+        #### 2. DAILY CONTEXT (PDH/PDL)
+        The only condition to look for a trade is **LIQUIDITY SWEEP**.
+        * **PDH (Previous Day High) Raid:** Look for **SHORT**.
+        * **PDL (Previous Day Low) Raid:** Look for **LONG**.
+        * *Note: A wick sweep is enough, candle close is not required.*
+        """,
+        "lesson_2_title": "🛠️ PART 2: ENTRY SETUP (FIB & FVG)",
+        "lesson_2_content": """
+        #### 1. FIBONACCI RETRACEMENT
+        Draw Fib on the impulse leg created after the liquidity sweep.
+        * **ENTRY ZONE:** `0.75` - `0.60` (Golden Pocket)
+        * **STOP LOSS:** `1` (Start of the impulse)
+        * **TP-1:** `0.25` (Take partial)
+        * **TP-2:** `-0.18` (Final TP)
+        
+        #### 2. FVG REJECTION
+        * Price must tap into a **Fair Value Gap (FVG)** inside the Golden Zone.
+        * Wait for a rejection wick or reaction.
+        """,
+        "lesson_3_title": "⚠️ PART 3: RULES & EXECUTION",
+        "lesson_3_content": """
+        <div class="rule-box">
+        <h4>🚨 CORE RULES</h4>
+        <ul>
+            <li><b>NO CHOCH:</b> We do not wait for Change of Character on LTF. It's often too late.</li>
+            <li><b>NO TRADING OUTSIDE HOURS:</b> Discipline is key.</li>
+            <li><b>MANAGEMENT:</b> Move SL to Breakeven (BE) only after TP-1 is hit.</li>
+        </ul>
+        </div>
+        """
     },
     "TR": {
         "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ", "perf": "PERFORMANS", "acad": "AKADEMİ", "memb": "ÜYELİK", "cont": "İLETİŞİM",
@@ -48,27 +83,90 @@ TRANSLATIONS = {
         "limited_offer": "🔥 SINIRLI TEKLİF: Zam gelmeden ÖMÜR BOYU erişimi kap!", "feedback": "💬 YATIRIMCI YORUMLARI",
         "plan_starter": "BAŞLANGIÇ", "plan_pro": "PROFESYONEL", "plan_life": "ÖMÜR BOYU", "sel_plan": "PLAN SEÇ",
         "most_pop": "EN POPÜLER", "contact_sales": "SATIŞA ULAŞ", "faq": "❓ SIK SORULANLAR", "settings": "⚙️ AYARLAR",
-        "lang_sel": "Dil", "theme_sel": "Tema", "theme_dark": "Koyu Mod (Neon)", "theme_light": "Açık Mod (Temiz)",
+        "lang_sel": "Dil", "theme_sel": "Tema", "theme_dark": "Koyu Mod (Neon)", "theme_light": "Açık Mod (Kurumsal)",
         "acad_title": "OA | TRADE SMC USTALIK SINIFI", "acad_quote": "Piyasayı yenmek değil, disiplinle takip etmek.",
-        "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM", "lesson_1_content": "### 1. ZAMAN FİLTRESİ\n* **LONDRA:** 10:00–12:00\n* **NY:** 15:30–18:30\n### 2. BAĞLAM\n* **PDH/PDL İhlali** şarttır.",
-        "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ", "lesson_2_content": "### FIBONACCI\n* **Giriş:** 0.60-0.75\n* **Stop:** 1.0\n* **TP:** 0.25 / -0.18",
-        "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR", "lesson_3_content": "CHOCH YOK. SAAT DIŞI İŞLEM YOK."
+        "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM",
+        "lesson_1_content": """
+        #### 1. ZAMAN FİLTRESİ (KRİTİK)
+        Sadece hacimli seanslarda işlem aranır. Diğer saatlerde ekran kapatılır.
+        * **LONDRA:** `10:00 – 12:00` (TSİ)
+        * **NEW YORK:** `15:30 – 18:30` (TSİ)
+        
+        #### 2. GÜNLÜK BAĞLAM (PDH/PDL)
+        İşlem aramak için tek şart **LİKİDİTE ALIMI (SWEEP)**'dır.
+        * **PDH (Önceki Gün Yükseği) İhlali:** Sadece **SHORT** ara.
+        * **PDL (Önceki Gün Düşüğü) İhlali:** Sadece **LONG** ara.
+        * *Not: Fitil atması (Wick) yeterlidir, mum kapanışı şart değildir.*
+        """,
+        "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ (FIB & FVG)",
+        "lesson_2_content": """
+        #### 1. FIBONACCI AYARLARI
+        Likidite alımından sonra oluşan sert harekete (Impulse) Fibonacci çekilir.
+        * **GİRİŞ BÖLGESİ:** `0.75` - `0.60` (Golden Pocket)
+        * **STOP:** `1` (Hareket başlangıcı)
+        * **TP-1:** `0.25` (Kısmi kâr al)
+        * **TP-2:** `-0.18` (Final kâr)
+        
+        #### 2. FVG ONAYI
+        * Fiyat, `0.6-0.75` aralığındaki bir **FVG (Dengesizlik)** alanına temas etmelidir.
+        * Oradan reddedilme (rejection) beklenir.
+        """,
+        "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR VE YÖNETİM",
+        "lesson_3_content": """
+        <div class="rule-box">
+        <h4>🚨 DEĞİŞMEZ KURALLAR</h4>
+        <ul>
+            <li><b>CHOCH YOK:</b> Düşük zaman diliminde kırılım (Choch) beklenmez. Sizi geç sokar veya yanıltır.</li>
+            <li><b>SAAT DIŞI İŞLEM YOK:</b> Disiplin her şeydir.</li>
+            <li><b>YÖNETİM:</b> Stop sadece TP-1 alındıktan sonra Girişe (BE) çekilir.</li>
+        </ul>
+        </div>
+        """
     },
     "RU": {
         "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ",
         "total_trades": "ВСЕГО СДЕЛОК", "win_rate": "ВИНРЕЙТ", "net_return": "ЧИСТАЯ ПРИБЫЛЬ", "profit_factor": "ПРОФИТ-ФАКТОР",
-        "season_goal": "ЦЕЛЬ СЕЗОНА", "completed": "ЗАВЕРШЕНО", "perf_cal": "🗓️ КАЛЕНДАРЬ",
-        "select_month": "Выберите месяц", "total_monthly": "ИТОГ МЕСЯЦА PNL", "market_intel": "📡 РЫНОК",
-        "roi_sim": "🧮 ROI СИМУЛЯТОР", "roi_desc": "Рассчитайте прибыль.", "initial_cap": "Капитал ($)",
-        "risk_trade": "Риск (%)", "proj_bal": "ПРОГНОЗ", "trade_log": "ЖУРНАЛ", "download": "📥 СКАЧАТЬ CSV",
-        "limited_offer": "🔥 ПРЕДЛОЖЕНИЕ: LIFETIME доступ!", "feedback": "💬 ОТЗЫВЫ",
+        "season_goal": "ЦЕЛЬ СЕЗОНА", "completed": "ЗАВЕРШЕНО", "perf_cal": "🗓️ КАЛЕНДАРЬ ДОХОДНОСТИ",
+        "select_month": "Выберите месяц", "total_monthly": "ИТОГ МЕСЯЦА PNL", "market_intel": "📡 РЫНОЧНЫЙ ИНТЕЛЛЕКТ",
+        "roi_sim": "🧮 ROI СИМУЛЯТОР", "roi_desc": "Рассчитайте потенциальную прибыль на основе истории.", "initial_cap": "Начальный капитал ($)",
+        "risk_trade": "Риск на сделку (%)", "proj_bal": "ПРОГНОЗ БАЛАНСА", "trade_log": "ЖУРНАЛ СДЕЛОК", "download": "📥 СКАЧАТЬ CSV",
+        "limited_offer": "🔥 ОГРАНИЧЕННОЕ ПРЕДЛОЖЕНИЕ: Получите ПОЖИЗНЕННЫЙ доступ!", "feedback": "💬 ОТЗЫВЫ ТРЕЙДЕРОВ",
         "plan_starter": "СТАРТ", "plan_pro": "ПРОФИ", "plan_life": "LIFETIME", "sel_plan": "ВЫБРАТЬ",
         "most_pop": "ПОПУЛЯРНЫЙ", "contact_sales": "СВЯЗАТЬСЯ", "faq": "❓ FAQ", "settings": "⚙️ НАСТРОЙКИ",
-        "lang_sel": "Язык", "theme_sel": "Тема", "theme_dark": "Темная", "theme_light": "Светлая",
-        "acad_title": "OA | TRADE SMC МАСТЕРСТВО", "acad_quote": "Дисциплина прежде всего.",
-        "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "### 1. ВРЕМЯ\n* **ЛОНДОН:** 10:00–12:00\n* **НЬЮ-ЙОРК:** 15:30–18:30",
-        "lesson_2_title": "🛠️ ЧАСТЬ 2: ВХОД", "lesson_2_content": "### FIBONACCI\n* **Вход:** 0.60-0.75",
-        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "НЕТ CHOCH."
+        "lang_sel": "Язык", "theme_sel": "Тема", "theme_dark": "Темная тема", "theme_light": "Светлая тема",
+        "acad_title": "OA | TRADE SMC МАСТЕРСТВО", "acad_quote": "Не побеждать рынок, а дисциплинированно следовать за ним.",
+        "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ И КОНТЕКСТ",
+        "lesson_1_content": """
+        #### 1. ФИЛЬТР ВРЕМЕНИ
+        Мы торгуем только во время высокой волатильности.
+        * **ЛОНДОН:** `10:00 – 12:00` (UTC+3)
+        * **НЬЮ-ЙОРК:** `15:30 – 18:30` (UTC+3)
+        
+        #### 2. ДНЕВНОЙ КОНТЕКСТ (PDH/PDL)
+        Единственное условие для поиска сделки - **СНЯТИЕ ЛИКВИДНОСТИ**.
+        * **Снятие PDH (Max вчера):** Ищем **SHORT**.
+        * **Снятие PDL (Min вчера):** Ищем **LONG**.
+        """,
+        "lesson_2_title": "🛠️ ЧАСТЬ 2: СТРАТЕГИЯ ВХОДА",
+        "lesson_2_content": """
+        #### 1. ФИБОНАЧЧИ
+        Тянем сетку на импульс после снятия ликвидности.
+        * **ВХОД:** `0.75` - `0.60`
+        * **СТОП:** `1`
+        * **TP-1:** `0.25`
+        * **TP-2:** `-0.18`
+        """,
+        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА И УПРАВЛЕНИЕ",
+        "lesson_3_content": """
+        <div class="rule-box">
+        <h4>🚨 ПРАВИЛА</h4>
+        <ul>
+            <li><b>НЕТ CHOCH:</b> Не ждем смены характера движения на младших таймфреймах.</li>
+            <li><b>НЕТ СДЕЛОК ВНЕ СЕССИЙ:</b> Дисциплина прежде всего.</li>
+            <li><b>УПРАВЛЕНИЕ:</b> SL в безубыток только после TP-1.</li>
+        </ul>
+        </div>
+        """
     }
 }
 
@@ -85,17 +183,27 @@ with st.expander(t('settings'), expanded=False):
         if nt != st.session_state.theme: st.session_state.theme = nt; st.rerun()
 
 # ==========================================
-# 1. DİNAMİK RENK VE HAREKETLİ ARKA PLAN
+# 1. DİNAMİK RENK PALETİ VE CSS
 # ==========================================
 if st.session_state.theme == "Dark":
-    # --- KOYU MOD (NEON) ---
-    col = {"bg": "#050505", "txt": "#e0e0e0", "card": "rgba(20,20,25,0.7)", "bd": "#333", "ac": "#00ffcc", "ac_h": "#00cca3", "sec": "#111", "ttl": "#fff", "grd": "#888"}
-    # Hareketli Küreler (Koyu)
+    # KOYU MOD (NEON)
+    col = {
+        "bg": "#050505",
+        "txt": "#e0e0e0",
+        "card": "rgba(20, 20, 25, 0.7)", 
+        "bd": "#333",
+        "ac": "#00ffcc", # Neon Turkuaz
+        "ac_h": "#00cca3",
+        "sec": "#111",
+        "ttl": "#ffffff",
+        "grd": "#aaaaaa"
+    }
+    # Koyu Mod Animasyonu (Parlak Küreler)
     anim_html = f"""
     <style>
         .orb-container {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; background: {col['bg']}; }}
-        .orb {{ position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.6; animation: moveOrb 15s infinite alternate; }}
-        .orb1 {{ top: 10%; left: 10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #00ffcc 0%, transparent 70%); animation-duration: 20s; }}
+        .orb {{ position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.6; animation: moveOrb 20s infinite alternate; }}
+        .orb1 {{ top: 10%; left: 10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #00ffcc 0%, transparent 70%); }}
         .orb2 {{ bottom: 10%; right: 10%; width: 40vw; height: 40vw; background: radial-gradient(circle, #9900ff 0%, transparent 70%); animation-duration: 25s; animation-direction: alternate-reverse; }}
         .orb3 {{ top: 40%; left: 40%; width: 30vw; height: 30vw; background: radial-gradient(circle, #ff007f 0%, transparent 70%); animation-duration: 18s; }}
         @keyframes moveOrb {{ 0% {{ transform: translate(0, 0) scale(1); }} 100% {{ transform: translate(50px, 50px) scale(1.1); }} }}
@@ -103,35 +211,48 @@ if st.session_state.theme == "Dark":
     <div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
     """
 else:
-    # --- AÇIK MOD (CLEAN) ---
-    col = {"bg": "#f4f7f6", "txt": "#1f2833", "card": "rgba(255,255,255,0.85)", "bd": "#d1d5db", "ac": "#0077b6", "ac_h": "#005f91", "sec": "#e5e7eb", "ttl": "#000", "grd": "#4b5563"}
-    # Hareketli Bulutlar (Açık)
+    # AÇIK MOD (DÜZELTİLMİŞ - KURUMSAL)
+    col = {
+        "bg": "#f8f9fa",
+        "txt": "#212529", # Koyu Gri (Siyaha yakın)
+        "card": "rgba(255, 255, 255, 0.95)", # Yüksek opaklık (Animasyon yazıyı bozmasın)
+        "bd": "#dee2e6",
+        "ac": "#0d6efd", # Kurumsal Mavi
+        "ac_h": "#0b5ed7",
+        "sec": "#ffffff",
+        "ttl": "#000000", # Simsiyah Başlık
+        "grd": "#6c757d"
+    }
+    # Açık Mod Animasyonu (Çok Hafif, Göz Yormayan)
     anim_html = f"""
     <style>
         .orb-container {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; background: {col['bg']}; }}
-        .orb {{ position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.4; animation: moveOrb 20s infinite alternate; }}
-        .orb1 {{ top: -10%; left: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #0077b6 0%, transparent 60%); }}
-        .orb2 {{ bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #a0c4ff 0%, transparent 60%); animation-duration: 30s; }}
-        @keyframes moveOrb {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(40px, 40px); }} }}
+        .orb {{ position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.2; animation: moveOrb 25s infinite alternate; }}
+        .orb1 {{ top: -10%; left: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #0d6efd 0%, transparent 60%); }}
+        .orb2 {{ bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #6610f2 0%, transparent 60%); animation-duration: 30s; }}
+        @keyframes moveOrb {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(30px, 30px); }} }}
     </style>
     <div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>
     """
 
-# CSS ENJEKSİYONU (Z-INDEX AYARI İLE GARANTİ HAREKET)
+# CSS ENJEKSİYONU
 st.markdown(anim_html, unsafe_allow_html=True)
 
 st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;600&display=swap');
         
-        /* STREAMLIT ARKAPLANINI ŞEFFAF YAP (Bu olmazsa animasyon görünmez) */
+        /* STREAMLIT TEMİZLİK */
         .stApp {{ background: transparent !important; }}
         header, footer, #MainMenu {{display: none !important;}}
         .block-container {{padding-top: 2rem;}}
 
-        /* YAZI VE RENKLER */
-        html, body, p, h1, h2, h3, li {{ font-family: 'Inter', sans-serif; color: {col['txt']} !important; }}
-        
+        /* YAZI RENGİ ZORLAMA (Light mode hatası için) */
+        h1, h2, h3, h4, h5, h6, p, li, div, span, label {{ 
+            color: {col['txt']} !important; 
+            font-family: 'Inter', sans-serif;
+        }}
+
         /* NEON BAŞLIK */
         .neon-title {{
             font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important;
@@ -144,7 +265,7 @@ st.markdown(f"""
         /* KARTLAR */
         .metric-container {{
             background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px;
-            text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             transition: transform 0.2s;
         }}
         .metric-container:hover {{ transform: translateY(-5px); border-color: {col['ac']}; }}
@@ -166,15 +287,25 @@ st.markdown(f"""
         .day-cell:hover {{ border-color: {col['ac']}; transform: scale(1.03); z-index: 5; }}
         .day-number {{ font-weight: bold; color: {col['txt']} !important; opacity: 0.7; }}
         .day-profit {{ font-size: 1.1rem; font-weight: 800; margin-top: auto; align-self: center; }}
+        
+        /* Renklendirmeler */
         .day-win {{ background: rgba(0, 255, 204, 0.15); border-color: {col['ac']}; }}
-        .day-win-light {{ background: rgba(0, 119, 182, 0.15); border-color: {col['ac']}; }}
+        .day-win-light {{ background: rgba(13, 110, 253, 0.15); border-color: {col['ac']}; }}
         .day-loss {{ background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b; }}
         .win-text {{ color: {col['ac']} !important; }} .loss-text {{ color: #ff4b4b !important; }} .empty-cell {{ background: transparent; border: none; }}
+        
+        /* TABS */
+        .stTabs [data-baseweb="tab"] {{ color: {col['grd']} !important; }}
+        .stTabs [data-baseweb="tab"]:hover {{ color: {col['ac']} !important; }}
+        .stTabs [aria-selected="true"] {{ color: {col['ac']} !important; border-bottom-color: {col['ac']} !important; }}
         
         /* Pricing */
         .pricing-card {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 12px; padding: 30px; text-align: center; backdrop-filter: blur(10px); }}
         .plan-price {{ color: {col['ttl']} !important; font-size: 2.5rem; font-weight: bold; }}
         .plan-name {{ color: {col['ac']} !important; font-weight: bold; letter-spacing: 2px; }}
+        
+        /* Academy Rule Box */
+        .rule-box {{ background: rgba(0,0,0,0.05); border-left: 4px solid {col['ac']}; padding: 15px; margin: 10px 0; color: {col['txt']} !important; }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -205,7 +336,7 @@ st.write("")
 
 tab1, tab2, tab3, tab4 = st.tabs([t('perf'), t('acad'), t('memb'), t('cont')])
 
-# TAB 1
+# TAB 1: PERFORMANS
 with tab1:
     if df.empty: st.warning("Data not found.")
     else:
@@ -218,14 +349,14 @@ with tab1:
         c3.markdown(f'<div class="metric-container"><div class="metric-value" style="color:{nc} !important">{net_r:.2f}R</div><div class="metric-label">{t("net_return")}</div></div>', unsafe_allow_html=True)
         c4.markdown(f'<div class="metric-container"><div class="metric-value">{pf:.2f}</div><div class="metric-label">{t("profit_factor")}</div></div>', unsafe_allow_html=True)
         st.write(""); st.write(""); prog = min(max(net_r / 100.0, 0.0), 1.0)
-        st.markdown(f"""<div style="display:flex; justify-content:space-between; font-size:0.8rem; color:{col['grd']}; margin-bottom:5px;"><span>{t('season_goal')} (100R)</span><span style="color:{col['ac']}">{int(prog*100)}% {t('completed')}</span></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div style="display:flex; justify-content:space-between; font-size:0.8rem; color:{col['grd']} !important; margin-bottom:5px;"><span>{t('season_goal')} (100R)</span><span style="color:{col['ac']} !important">{int(prog*100)}% {t('completed')}</span></div>""", unsafe_allow_html=True)
         st.progress(prog); st.write("")
         
         pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"; bg = "rgba(0,0,0,0)"
         g1, g2 = st.columns([2, 1])
         with g1:
             df['Cum'] = df['R_Kazanc'].cumsum(); fig = go.Figure()
-            fc = f"rgba(0, 255, 204, 0.2)" if st.session_state.theme == "Dark" else f"rgba(0, 119, 182, 0.2)"
+            fc = f"rgba(0, 255, 204, 0.2)" if st.session_state.theme == "Dark" else f"rgba(13, 110, 253, 0.2)"
             fig.add_trace(go.Scatter(x=df['Tarih'], y=df['Cum'], mode='lines', fill='tozeroy', line=dict(color=col['ac'], width=2), fillcolor=fc))
             fig.update_layout(template=pt, paper_bgcolor=bg, plot_bgcolor=bg, margin=dict(l=0, r=0, t=10, b=0), height=300, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor=col['bd']))
             st.plotly_chart(fig, use_container_width=True)
@@ -269,7 +400,7 @@ with tab1:
             return [f'color: {win_color}; font-weight:bold' if c_name == 'Sonuç' else f'color: {col["txt"]}' for c_name in row.index]
         st.dataframe(df.style.apply(hwin, axis=1), use_container_width=True, hide_index=True)
 
-# TAB 2
+# TAB 2: AKADEMİ (PDF FORMATINDA)
 with tab2:
     st.write(""); st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('acad_title')}</h2>", unsafe_allow_html=True)
     st.markdown(f"""<div style="text-align: center; font-style: italic; color: {col['grd']} !important; margin-bottom: 20px;">"{t('acad_quote')}"</div>""", unsafe_allow_html=True)
