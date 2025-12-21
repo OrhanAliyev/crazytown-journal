@@ -55,11 +55,12 @@ TRANSLATIONS = {
         "lesson_3_content": "<div class='rule-box'><h4>🚨 STRICT RULES</h4><ul><li><b>NO CHOCH:</b> Don't wait for LTF confirmation.</li><li><b>NO TRADING OUTSIDE HOURS:</b> Discipline is key.</li></ul></div>",
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Advanced Technical Analysis & AI Confidence Score.",
         "run_ai": "SCAN & ANALYZE", "ai_analyzing": "Scanning Market Structure...", 
-        "ai_input_label": "Enter Coin Symbol (e.g. BTC, ETH, DOGE, PEPE)",
+        "ai_input_label": "Enter Coin Symbol (e.g. BTC, ETH, PEPE, SUI)",
         "ai_trend": "General Trend", "ai_rsi": "RSI Indicator", "ai_supp": "Est. Support", "ai_res": "Est. Resistance",
         "ai_score": "Crazytown Confidence Score", "ai_dec": "DECISION",
         "bull": "BULLISH 🟢", "bear": "BEARISH 🔴", "neutral": "NEUTRAL ⚪",
-        "s_buy": "STRONG BUY 🚀", "buy": "BUY 🟢", "sell": "SELL 🔴", "s_sell": "STRONG SELL 🔻", "wait": "WAIT ✋"
+        "s_buy": "STRONG BUY 🚀", "buy": "BUY 🟢", "sell": "SELL 🔴", "s_sell": "STRONG SELL 🔻", "wait": "WAIT ✋",
+        "data_source": "Data Source"
     },
     "TR": {
         "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ", "perf": "PERFORMANS", "acad": "AKADEMİ", "memb": "ÜYELİK", "cont": "İLETİŞİM", "ai_lab": "YAPAY ZEKA",
@@ -85,7 +86,8 @@ TRANSLATIONS = {
         "ai_trend": "Genel Trend", "ai_rsi": "RSI Göstergesi", "ai_supp": "Tahmini Destek", "ai_res": "Tahmini Direnç",
         "ai_score": "Crazytown Güven Skoru", "ai_dec": "KARAR",
         "bull": "BOĞA (YÜKSELİŞ) 🟢", "bear": "AYI (DÜŞÜŞ) 🔴", "neutral": "NÖTR ⚪",
-        "s_buy": "GÜÇLÜ AL 🚀", "buy": "AL 🟢", "sell": "SAT 🔴", "s_sell": "GÜÇLÜ SAT 🔻", "wait": "BEKLE ✋"
+        "s_buy": "GÜÇLÜ AL 🚀", "buy": "AL 🟢", "sell": "SAT 🔴", "s_sell": "GÜÇLÜ SAT 🔻", "wait": "BEKLE ✋",
+        "data_source": "Veri Kaynağı"
     },
     "RU": {
         "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ", "ai_lab": "ИИ ЛАБОРАТОРИЯ",
@@ -108,7 +110,8 @@ TRANSLATIONS = {
         "ai_trend": "Тренд", "ai_rsi": "RSI", "ai_supp": "Поддержка", "ai_res": "Сопротивление",
         "ai_score": "Оценка уверенности", "ai_dec": "РЕШЕНИЕ",
         "bull": "БЫЧИЙ 🟢", "bear": "МЕДВЕЖИЙ 🔴", "neutral": "НЕЙТРАЛЬНО ⚪",
-        "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖА 🔻", "wait": "ЖДАТЬ ✋"
+        "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖА 🔻", "wait": "ЖДАТЬ ✋",
+        "data_source": "Источник"
     }
 }
 
@@ -125,32 +128,24 @@ with st.expander(t('settings'), expanded=False):
         if nt != st.session_state.theme: st.session_state.theme = nt; st.rerun()
 
 # ==========================================
-# 2. DİNAMİK RENK PALETİ VE CSS
+# 2. DİNAMİK RENK VE TASARIM (RESOLV TARZI)
 # ==========================================
 if st.session_state.theme == "Dark":
     # KOYU MOD (NEON)
     col = {
         "bg": "#050505",
         "txt": "#e0e0e0",
-        "card": "rgba(20, 20, 25, 0.9)",  # Daha opak kartlar
+        "card": "rgba(20, 20, 25, 0.9)", 
         "bd": "#333",
         "ac": "#00ffcc", # Neon Turkuaz
         "ac_h": "#00cca3",
         "sec": "#111",
         "ttl": "#ffffff",
-        "grd": "#aaaaaa"
+        "grd": "#aaaaaa",
+        "ai_bg": "#0e0e0e" # Resolv kartı için koyu arka plan
     }
     # Koyu Mod Animasyonu
-    anim_html = f"""
-    <style>
-        .orb-container {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; background: {col['bg']}; }}
-        .orb {{ position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.6; animation: moveOrb 20s infinite alternate; }}
-        .orb1 {{ top: 10%; left: 10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #00ffcc 0%, transparent 70%); }}
-        .orb2 {{ bottom: 10%; right: 10%; width: 40vw; height: 40vw; background: radial-gradient(circle, #9900ff 0%, transparent 70%); animation-duration: 25s; animation-direction: alternate-reverse; }}
-        @keyframes moveOrb {{ 0% {{ transform: translate(0, 0) scale(1); }} 100% {{ transform: translate(50px, 50px) scale(1.1); }} }}
-    </style>
-    <div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>
-    """
+    anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;}} .orb1 {{top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);}} .orb2 {{bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);animation-duration:25s;animation-direction:alternate-reverse;}} .orb3 {{top:40%;left:40%;width:30vw;height:30vw;background:radial-gradient(circle,#ff007f 0%,transparent 70%);animation-duration:18s;}} @keyframes moveOrb {{0%{{transform:translate(0,0) scale(1);}}100%{{transform:translate(50px,50px) scale(1.1);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>"""
 else:
     # AÇIK MOD (KURUMSAL)
     col = {
@@ -162,19 +157,10 @@ else:
         "ac_h": "#0b5ed7",
         "sec": "#ffffff",
         "ttl": "#000000", 
-        "grd": "#6c757d"
+        "grd": "#6c757d",
+        "ai_bg": "#ffffff"
     }
-    # Açık Mod Animasyonu
-    anim_html = f"""
-    <style>
-        .orb-container {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1; background: {col['bg']}; }}
-        .orb {{ position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.2; animation: moveOrb 25s infinite alternate; }}
-        .orb1 {{ top: -10%; left: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #0d6efd 0%, transparent 60%); }}
-        .orb2 {{ bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #6610f2 0%, transparent 60%); animation-duration: 30s; }}
-        @keyframes moveOrb {{ 0% {{ transform: translate(0, 0); }} 100% {{ transform: translate(30px, 30px); }} }}
-    </style>
-    <div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>
-    """
+    anim_html = f"""<style>.orb-container {{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;z-index:-1;background:{col['bg']};}} .orb {{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.2;animation:moveOrb 25s infinite alternate;}} .orb1 {{top:-10%;left:-10%;width:60vw;height:60vw;background:radial-gradient(circle,#0d6efd 0%,transparent 60%);}} .orb2 {{bottom:-10%;right:-10%;width:60vw;height:60vw;background:radial-gradient(circle,#6610f2 0%,transparent 60%);animation-duration:30s;}} @keyframes moveOrb {{0%{{transform:translate(0,0);}}100%{{transform:translate(30px,30px);}}}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>"""
 
 st.markdown(anim_html, unsafe_allow_html=True)
 
@@ -186,12 +172,45 @@ st.markdown(f"""
         header, footer, #MainMenu {{display: none !important;}}
         .block-container {{padding-top: 2rem;}}
 
-        /* YAZI RENGİ ZORLAMA */
+        /* GENEL FONT VE RENK */
         h1, h2, h3, h4, h5, h6, p, li, div, span, label {{ 
             color: {col['txt']} !important; 
             font-family: 'Inter', sans-serif;
         }}
 
+        /* YAPAY ZEKA ANALİZ KARTI (RESOLV STYLE) */
+        .ai-card {{
+            background-color: {col['ai_bg']};
+            border: 1px solid {col['bd']};
+            /* Dinamik kenar rengi python içinde verilecek, burada default */
+            border-left-width: 6px; 
+            border-left-style: solid;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }}
+        .ai-header {{
+            font-size: 1.6rem; font-weight: 800; color: {col['ttl']} !important; margin-bottom: 5px;
+        }}
+        .ai-sub {{ font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; }}
+        
+        .ai-grid {{ 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; 
+        }}
+        .ai-item {{ 
+            /* Grid içi şeffaf, sadece yazı */
+            padding: 5px 0; 
+        }}
+        .ai-label {{ font-size: 0.85rem; color: {col['grd']} !important; margin-bottom: 3px; }}
+        .ai-val {{ font-size: 1.2rem; font-weight: 800; color: {col['ttl']} !important; }}
+        
+        .ai-decision {{
+            font-size: 1.8rem; font-weight: 900; text-align: left; margin-top: 15px;
+            display: flex; align-items: center; gap: 10px;
+        }}
+
+        /* DIĞER BİLEŞENLER */
         .neon-title {{
             font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important;
             font-weight: 900; letter-spacing: 4px; margin: 0;
@@ -200,7 +219,6 @@ st.markdown(f"""
         }}
         @keyframes pulse {{ 0% {{opacity: 1;}} 100% {{opacity: 0.9;}} }}
 
-        /* GENEL KART */
         .metric-container {{
             background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px;
             text-align: center; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -209,30 +227,6 @@ st.markdown(f"""
         .metric-container:hover {{ transform: translateY(-5px); border-color: {col['ac']}; }}
         .metric-value {{ font-size: 2rem; font-weight: 700; color: {col['ttl']} !important; }}
         .metric-label {{ font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px; }}
-
-        /* YAPAY ZEKA ANALİZ KARTI (ÖZEL TASARIM) */
-        .ai-card {{
-            background-color: {col['sec']};
-            border: 1px solid {col['bd']};
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-        }}
-        .ai-header {{
-            font-size: 1.5rem; font-weight: 800; color: {col['ttl']} !important; margin-bottom: 5px;
-        }}
-        .ai-sub {{ font-size: 0.9rem; color: {col['grd']} !important; margin-bottom: 15px; }}
-        
-        .ai-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }}
-        .ai-item {{ background: {col['bg']}; padding: 10px; border-radius: 8px; border: 1px solid {col['bd']}; }}
-        .ai-label {{ font-size: 0.8rem; color: {col['grd']} !important; }}
-        .ai-val {{ font-size: 1.1rem; font-weight: bold; color: {col['txt']} !important; }}
-        
-        .ai-decision {{
-            font-size: 2rem; font-weight: 900; text-align: center; margin-top: 10px;
-            padding: 10px; border-radius: 8px;
-        }}
 
         .custom-btn {{ background-color: {col['ac']}; color: {col['bg']} !important; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center; }}
         .custom-btn-outline {{ border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent; }}
@@ -281,21 +275,19 @@ def load_data():
     except: return pd.DataFrame()
 df = load_data()
 
-# --- HİBRİT VERİ MOTORU (Coingecko -> Binance -> Simulation) ---
+# --- HİBRİT VERİ MOTORU ---
 def get_market_data_robust(symbol, interval):
     # Kullanıcı "BTC" girebilir, biz "BTC-USD" yaparız
     symbol = symbol.upper().strip()
     
     # 1. COINGECKO
     try:
-        # Basit bir arama/eşleştirme (Örn: BTC -> bitcoin)
-        # Gerçek uygulamada tüm liste gerekir ama burada popülerleri ekledik
         cg_map = {
             "BTC": "bitcoin", "ETH": "ethereum", "SOL": "solana", "AVAX": "avalanche-2",
             "DOGE": "dogecoin", "XRP": "ripple", "BNB": "binancecoin", "ADA": "cardano",
             "PEPE": "pepe", "SHIB": "shiba-inu", "SUI": "sui"
         }
-        cg_id = cg_map.get(symbol, symbol.lower()) # Bulamazsa küçük harf dener
+        cg_id = cg_map.get(symbol, symbol.lower())
         
         days = "1" if interval == "15m" else ("30" if interval == "1d" else "7")
         url_cg = f"https://api.coingecko.com/api/v3/coins/{cg_id}/ohlc?vs_currency=usd&days={days}"
@@ -309,7 +301,6 @@ def get_market_data_robust(symbol, interval):
 
     # 2. BINANCE
     try:
-        # Binance genelde USDT ile biter
         if not symbol.endswith("USDT"): symbol_bin = symbol + "USDT"
         else: symbol_bin = symbol
             
@@ -322,18 +313,19 @@ def get_market_data_robust(symbol, interval):
             df_bin['close'] = df_bin['close'].astype(float)
             df_bin['high'] = df_bin['high'].astype(float)
             df_bin['low'] = df_bin['low'].astype(float)
+            df_bin['open'] = df_bin['open'].astype(float)
             return df_bin, "Binance API"
     except: pass
 
-    # 3. SİMÜLASYON (Yedek)
+    # 3. SİMÜLASYON
     dates = pd.date_range(end=datetime.now(), periods=100, freq=interval.replace('m', 'min'))
     base = 100 
     change = np.random.normal(0, 0.02, 100) + 1
     prices = base * np.cumprod(change)
-    # High/Low simülasyonu
     highs = prices * 1.01
     lows = prices * 0.99
-    return pd.DataFrame({'time': dates, 'close': prices, 'high': highs, 'low': lows}), "Simulation (Data Offline)"
+    opens = prices * 0.995
+    return pd.DataFrame({'time': dates, 'close': prices, 'high': highs, 'low': lows, 'open': opens}), "Simulation (Data Offline)"
 
 wt = "light" if st.session_state.theme == "Light" else "dark"
 components.html(f"""<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>{{"symbols": [{{"proName": "BINANCE:BTCUSDT", "title": "Bitcoin"}}, {{"proName": "BINANCE:ETHUSDT", "title": "Ethereum"}}, {{"proName": "BINANCE:SOLUSDT", "title": "Solana"}}], "showSymbolLogo": true, "colorTheme": "{wt}", "isTransparent": true, "displayMode": "adaptive", "locale": "en"}}</script></div>""", height=50)
@@ -418,7 +410,7 @@ with tab2:
     with st.expander(t('lesson_2_title')): st.markdown(t('lesson_2_content'))
     with st.expander(t('lesson_3_title')): st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
 
-# TAB 5: AI LAB (YENİLENMİŞ ARAMA MOTORLU)
+# TAB 5: AI LAB (YENİLENMİŞ ARAMA MOTORLU & RESOLV STYLE)
 with tab5:
     st.write("")
     st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('ai_title')}</h2>", unsafe_allow_html=True)
@@ -463,13 +455,9 @@ with tab5:
             score = 50
             if current_price > sma_val: score += 20
             else: score -= 20
-            
             if rsi_val > 50: score += 10
             else: score -= 10
-            
-            # Momentum
             if change_24h > 0: score += 10
-            
             score = max(0, min(100, score))
             
             # KARAR
@@ -479,13 +467,13 @@ with tab5:
             elif score <= 40: decision = t('sell'); dec_col = "#cc0000"; trend_text = t('bear')
             else: decision = t('wait'); dec_col = "#aaaaaa"; trend_text = t('neutral')
             
-            # --- GÖRSEL KART (HTML) ---
+            # --- GÖRSEL KART (RESOLV STYLE - CSS ENTEGRE) ---
             st.markdown(f"""
-            <div class="ai-card">
+            <div class="ai-card" style="border-left-color: {dec_col} !important;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <div class="ai-header">{user_symbol.upper()} / USD</div>
-                        <div class="ai-sub" style="color:{dec_col} !important; font-weight:bold;">{change_24h:+.2f}% (24h)</div>
+                        <div class="ai-sub" style="color:{dec_col} !important;">{change_24h:+.2f}% (24h)</div>
                     </div>
                     <div style="text-align:right;">
                         <div class="ai-header">${current_price:,.4f}</div>
@@ -524,8 +512,35 @@ with tab5:
             </div>
             """, unsafe_allow_html=True)
             
-            # Veri Kaynağı Bilgisi
             st.caption(f"{t('data_source')}: {source}")
+
+            # GRAFİK
+            st.write("")
+            fig_ai = go.Figure()
+            last_50 = live_df.tail(50).reset_index(drop=True)
+            fig_ai.add_trace(go.Scatter(x=last_50.index, y=last_50['close'], mode='lines', name='Price', line=dict(color=col['txt'], width=2)))
+            
+            # Prediction Cone
+            last_idx = last_50.index[-1]
+            volatility = last_50['close'].std() * 0.5
+            if np.isnan(volatility): volatility = current_price * 0.01
+            
+            steps = 15
+            future_x = np.arange(last_idx, last_idx + steps)
+            slope = volatility * 0.1 if "BULL" in trend_text else (-volatility * 0.1 if "BEAR" in trend_text else 0)
+            base_forecast = [current_price + (i * slope) for i in range(steps)]
+            upper_bound = [p + (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
+            lower_bound = [p - (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
+            
+            # Renk formatı düzeltmesi
+            f_col = f"rgba(0, 255, 204, 0.15)" if "BULL" in trend_text else f"rgba(255, 75, 75, 0.15)"
+            
+            fig_ai.add_trace(go.Scatter(x=np.concatenate([future_x, future_x[::-1]]), y=np.concatenate([upper_bound, lower_bound[::-1]]), fill='toself', fillcolor=f_col, line=dict(color='rgba(0,0,0,0)'), showlegend=False))
+            fig_ai.add_trace(go.Scatter(x=future_x, y=base_forecast, mode='lines', name='AI Projection', line=dict(color=dec_col, width=2, dash='dot')))
+            
+            pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"
+            fig_ai.update_layout(template=pt, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=400, margin=dict(l=0,r=0,t=20,b=0), xaxis=dict(showgrid=False), yaxis=dict(gridcolor=col['bd']))
+            st.plotly_chart(fig_ai, use_container_width=True)
 
         else:
             st.error("Market data unavailable. Try again later.")
