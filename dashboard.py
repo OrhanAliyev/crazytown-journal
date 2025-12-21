@@ -63,6 +63,11 @@ st.markdown("""
 
         .stDataFrame {border: 1px solid #2d3845;}
         [data-testid="stSidebar"] {display: none;}
+        
+        /* Progress Bar Rengi */
+        .stProgress > div > div > div > div {
+            background-color: #66fcf1;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -117,14 +122,18 @@ tab1, tab2, tab3 = st.tabs(["PERFORMANCE", "MEMBERSHIP", "CONTACT"])
 # ==========================================
 with tab1:
     if df.empty:
-        st.warning("System initializing...")
+        st.warning("System initializing... Data not found or sheet is empty.")
     else:
         # KPI & GRAFİKLER
         total = len(df)
         win = len(df[df['Sonuç'] == 'WIN'])
         rate = (win / total * 100) if total > 0 else 0
         net_r_total = df['R_Kazanc'].sum()
-        pf = (df[df['R_Kazanc'] > 0]['R_Kazanc'].sum() / abs(df[df['R_Kazanc'] < 0]['R_Kazanc'].sum())) if abs(df[df['R_Kazanc'] < 0]['R_Kazanc'].sum()) > 0 else 0
+        
+        # Profit Factor Hesaplama
+        gross_profit = df[df['R_Kazanc'] > 0]['R_Kazanc'].sum()
+        gross_loss = abs(df[df['R_Kazanc'] < 0]['R_Kazanc'].sum())
+        pf = (gross_profit / gross_loss) if gross_loss > 0 else 0
 
         col1, col2, col3, col4 = st.columns(4)
         col1.markdown(f'<div class="metric-container"><div class="metric-value">{total}</div><div class="metric-label">TOTAL TRADES</div></div>', unsafe_allow_html=True)
@@ -132,8 +141,21 @@ with tab1:
         col3.markdown(f'<div class="metric-container"><div class="metric-value" style="color:{"#66fcf1" if net_r_total>0 else "#ff4b4b"}">{net_r_total:.2f}R</div><div class="metric-label">NET RETURN</div></div>', unsafe_allow_html=True)
         col4.markdown(f'<div class="metric-container"><div class="metric-value">{pf:.2f}</div><div class="metric-label">PROFIT FACTOR</div></div>', unsafe_allow_html=True)
 
+        # --- YENİ ÖZELLİK: HEDEF TAKİPÇİSİ ---
         st.write(""); st.write("")
+        target_r = 100.0  # HEDEF BURADAN DEĞİŞTİRİLEBİLİR
+        current_progress = min(max(net_r_total / target_r, 0.0), 1.0)
+        
+        st.markdown(f"""
+        <div style="margin-bottom: 5px; color: #8892b0; font-size: 0.8rem; display: flex; justify-content: space-between;">
+            <span>SEASON GOAL ({target_r}R)</span>
+            <span style="color: #66fcf1;">{int(current_progress*100)}% COMPLETED</span>
+        </div>
+        """, unsafe_allow_html=True)
+        st.progress(current_progress)
+        st.write("")
 
+        # ANA GRAFİKLER
         g1, g2 = st.columns([2, 1])
         with g1:
             df['Cum'] = df['R_Kazanc'].cumsum()
@@ -145,6 +167,47 @@ with tab1:
             fig_pie = px.pie(df, names='Sonuç', values=[1]*len(df), hole=0.7, color='Sonuç', color_discrete_map={'WIN':'#66fcf1', 'LOSS':'#ff4b4b'})
             fig_pie.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', showlegend=False, margin=dict(l=20, r=20, t=10, b=20), height=300, annotations=[dict(text=f"{rate:.0f}%", x=0.5, y=0.5, font_size=24, showarrow=False, font_color="white")])
             st.plotly_chart(fig_pie, use_container_width=True)
+
+        # --- YENİ ÖZELLİK: AYLIK PERFORMANS ANALİZİ ---
+        st.markdown("---")
+        st.subheader("🗓️ MONTHLY BREAKDOWN")
+        
+        try:
+            # Tarih dönüşümü (Hata yönetimi ile)
+            df['Tarih_Dt'] = pd.to_datetime(df['Tarih'], dayfirst=True, errors='coerce')
+            df['Ay_Yil'] = df['Tarih_Dt'].dt.strftime('%Y-%m')
+            
+            # Gruplama
+            monthly_grouped = df.groupby('Ay_Yil')['R_Kazanc'].sum().reset_index()
+            
+            if not monthly_grouped.empty:
+                colors = ['#66fcf1' if val > 0 else '#ff4b4b' for val in monthly_grouped['R_Kazanc']]
+                
+                fig_monthly = go.Figure(data=[
+                    go.Bar(
+                        x=monthly_grouped['Ay_Yil'], 
+                        y=monthly_grouped['R_Kazanc'],
+                        marker_color=colors,
+                        text=monthly_grouped['R_Kazanc'].apply(lambda x: f"{x:.2f}R"),
+                        textposition='auto'
+                    )
+                ])
+                
+                fig_monthly.update_layout(
+                    template="plotly_dark",
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    margin=dict(l=0, r=0, t=30, b=0),
+                    height=350,
+                    title_text="Net R Return by Month",
+                    yaxis=dict(gridcolor='#1f2833')
+                )
+                st.plotly_chart(fig_monthly, use_container_width=True)
+            else:
+                st.info("Aylık grafik için yeterli tarih verisi okunamadı.")
+        except Exception as e:
+            st.error(f"Grafik oluşturulurken hata: {e}")
+
 
         # --- MARKET INTELLIGENCE ---
         st.markdown("---")
@@ -161,7 +224,7 @@ with tab1:
             <div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>{"colorTheme": "dark", "isTransparent": true, "width": "100%", "height": "400", "locale": "en", "importanceFilter": "-1,0,1", "currencyFilter": "USD"}</script></div>
             """, height=400)
 
-        # --- ROI CALCULATOR (GERİ GELDİ) ---
+        # --- ROI CALCULATOR ---
         st.markdown("---")
         st.subheader("🧮 ROI SIMULATOR")
         st.markdown("Calculate potential earnings based on historical performance.")
@@ -185,8 +248,21 @@ with tab1:
             """, unsafe_allow_html=True)
         st.markdown("---")
         
-        # TABLO
-        st.markdown("##### TRADE LOG")
+        # --- TABLO VE İNDİRME BUTONU ---
+        col_table_head, col_download = st.columns([4, 1])
+        with col_table_head:
+            st.markdown("##### TRADE LOG")
+        with col_download:
+            # CSV İNDİRME
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 DOWNLOAD CSV",
+                data=csv,
+                file_name=f'crazytown_log_{datetime.now().strftime("%Y%m%d")}.csv',
+                mime='text/csv',
+                key='download-csv'
+            )
+
         def style_df(row):
             color = '#66fcf1' if row['Sonuç'] == 'WIN' else '#ff4b4b'
             return [f'color: {color}; font-weight: 600' if col == 'Sonuç' else 'color: #c5c6c7' for col in row.index]
@@ -199,7 +275,7 @@ with tab2:
     st.write("")
     st.markdown("""<div class="promo-banner">🔥 LIMITED TIME OFFER: Get the LIFETIME access before prices increase on Monday!</div>""", unsafe_allow_html=True)
     
-    # SOCIAL PROOF (GERİ GELDİ)
+    # SOCIAL PROOF
     st.subheader("💬 TRADER FEEDBACK")
     sp1, sp2, sp3 = st.columns(3)
     with sp1: st.markdown("""<div class="testimonial-card"><div class="testimonial-text">"I've tried many signal groups, but the risk management here is top tier."</div><div class="testimonial-author">@Crypto*** (VIP Member)</div></div>""", unsafe_allow_html=True)
@@ -224,7 +300,6 @@ with tab3:
     with c1: st.markdown("""### 📨 Telegram Support\nFor instant assistance:\n<a href="https://t.me/Orhan1909" class="custom-btn">OPEN TELEGRAM</a>""", unsafe_allow_html=True)
     with c2: st.markdown("""### 📧 Email\nFor business partnerships:\n**orhanaliyev02@gmail.com**""")
     
-    # FAQ (GERİ GELDİ)
     st.write(""); st.divider()
     st.subheader("❓ FAQ")
     with st.expander("How do I get access?"): st.write("Contact us on Telegram after USDT (TRC20) payment.")
