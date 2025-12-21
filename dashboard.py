@@ -324,32 +324,32 @@ with tab2:
 
     with st.expander("📌 BÖLÜM 1: ZAMAN VE BAĞLAM (TEMEL KURALLAR)", expanded=True):
         st.markdown("""
-        ### [cite_start]1. ZAMAN FİLTRESİ (Time Filter) [cite: 7, 16]
+        ### 1. ZAMAN FİLTRESİ (Time Filter) [cite: 16]
         Sadece bu saatlerde ekran başında olunur. [cite_start]Diğer saatlerde grafik analiz edilmez. [cite: 16]
         * [cite_start]**LONDON SESSION:** `10:00 – 12:00` (TSİ) [cite: 16, 166]
         * [cite_start]**NEW YORK SESSION:** `15:30 – 18:30` (TSİ) [cite: 16, 167]
         
-        ### [cite_start]2. GÜNLÜK BAĞLAM (Daily Context) [cite: 21, 131]
-        [cite_start]İşlem aramak için tek bir şart vardır: **LİKİDİTE ALIMI.** [cite: 131]
-        * [cite_start]**PDH (Previous Day High):** Önceki günün en yükseği ihlal edilirse → Sadece **SHORT** aranır. [cite: 155]
-        * [cite_start]**PDL (Previous Day Low):** Önceki günün en düşüğü ihlal edilirse → Sadece **LONG** aranır. [cite: 156]
+        ### [cite_start]2. GÜNLÜK BAĞLAM (Daily Context) [cite: 21]
+        [cite_start]İşlem aramak için tek bir şart vardır: **LİKİDİTE ALIMI.** [cite: 21, 131, 132]
+        * [cite_start]**PDH (Previous Day High):** Önceki günün en yükseği ihlal edilirse → Sadece **SHORT** aranır. [cite: 23, 114, 155]
+        * [cite_start]**PDL (Previous Day Low):** Önceki günün en düşüğü ihlal edilirse → Sadece **LONG** aranır. [cite: 23, 115, 156]
         
         > [cite_start]**Not:** Kapanış (Close) şart değildir, fitil (Wick) atması yeterlidir. [cite: 21, 144]
         """)
 
     with st.expander("🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ (SETUP)"):
         st.markdown("""
-        ### [cite_start]1. FIBONACCI AYARLARI [cite: 195, 219]
-        [cite_start]Bağlam oluştuğunda (Örn: PDH ihlali), oluşan sert harekete (Impulse) Fibonacci çekilir. [cite: 202, 208]
-        * [cite_start]**ENTRY BÖLGESİ:** `0.75` ile `0.60` arası [cite: 219, 55]
-        * [cite_start]**STOP:** `1` (Impulse başlangıcı) [cite: 220, 66]
-        * [cite_start]**TP-1:** `0.25` [cite: 222, 74]
-        * [cite_start]**TP-2:** `-0.18` [cite: 224, 77]
+        ### [cite_start]1. FIBONACCI AYARLARI [cite: 55]
+        [cite_start]Bağlam oluştuğunda (Örn: PDH ihlali), oluşan sert harekete (Impulse) Fibonacci çekilir. [cite: 55, 197, 199]
+        * [cite_start]**ENTRY BÖLGESİ:** `0.75` ile `0.60` arası [cite: 55, 219]
+        * [cite_start]**STOP:** `1` (Impulse başlangıcı) [cite: 78, 220]
+        * [cite_start]**TP-1:** `0.25` [cite: 78, 222]
+        * [cite_start]**TP-2:** `-0.18` [cite: 78, 224]
         
-        ### [cite_start]2. FVG (Fair Value Gap) REJECTION [cite: 228, 232]
-        Her `0.6-0.75` bölgesine gelen fiyata girilmez.
-        * [cite_start]O bölgede bir **FVG (Dengesizlik)** olmalı. [cite: 242, 233]
-        * [cite_start]Fiyat FVG'ye dokunup **red yemeli** (küçük mumlar, fitiller). [cite: 245, 246]
+        ### [cite_start]2. FVG (Fair Value Gap) REJECTION [cite: 55, 228]
+        [cite_start]Her `0.6-0.75` bölgesine gelen fiyata girilmez. [cite: 242]
+        * [cite_start]O bölgede bir **FVG (Dengesizlik)** olmalı. [cite: 55, 241, 242]
+        * [cite_start]Fiyat FVG'ye dokunup **red yemeli** (küçük mumlar, fitiller). [cite: 55, 246]
         """)
 
     with st.expander("⚠️ BÖLÜM 3: UYGULAMA VE YASAKLAR (ÖNEMLİ)"):
@@ -357,20 +357,20 @@ with tab2:
         <div class="rule-box">
         <h4>🚨 ASLA YAPILMAYACAKLAR</h4>
         <ul>
-            [cite_start]<li><b>CHOCH (Karakter Değişimi) ARANMAZ!</b> Bizi oyundan erken atar veya geç sokar. [cite: 42, 257]</li>
-            [cite_start]<li>Zaman filtresi dışında işlem alınmaz. [cite: 361]</li>
-            [cite_start]<li>PDH/PDL ihlali olmadan Fibonacci çekilmez. [cite: 201]</li>
+            [cite_start]<li><b>CHOCH (Karakter Değişimi) ARANMAZ!</b> Bizi oyundan erken atar veya geç sokar. [cite: 42, 255, 257, 284]</li>
+            [cite_start]<li>Zaman filtresi dışında işlem alınmaz. [cite: 16, 161]</li>
+            [cite_start]<li>PDH/PDL ihlali olmadan Fibonacci çekilmez. [cite: 4, 131, 200, 201]</li>
         </ul>
         </div>
 
-        ### [cite_start]POZİSYON YÖNETİMİ [cite: 320]
+        ### [cite_start]POZİSYON YÖNETİMİ [cite: 327]
         1.  [cite_start]Emri `0.75 - 0.60` arasına at. [cite: 219]
         2.  [cite_start]Stop `1` seviyesine koy. [cite: 220]
-        3.  [cite_start]Fiyat `TP-1 (0.25)` geldiğinde **Stop'u Girişe (BE) Çek.** [cite: 339, 226]
-        4.  [cite_start]`TP-2 (-0.18)` gelene kadar dokunma. [cite: 227]
+        3.  [cite_start]Fiyat `TP-1 (0.25)` geldiğinde **Stop'u Girişe (BE) Çek.** [cite: 78, 226, 339]
+        4.  [cite_start]`TP-2 (-0.18)` gelene kadar dokunma. [cite: 330, 344]
         """, unsafe_allow_html=True)
         
-    [cite_start]st.info("Bu sistem bir tahmin aracı değil, bir davranış modelidir. 30 gün boyunca kuralları esnetmeden uygulayın. [cite: 358, 467]")
+    st.info("Bu sistem bir tahmin aracı değil, bir davranış modelidir. 30 gün boyunca kuralları esnetmeden uygulayın.")
 
 # ==========================================
 # TAB 3: MEMBERSHIP
