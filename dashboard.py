@@ -1,6 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objects as go
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -9,7 +10,7 @@ import calendar
 import numpy as np
 import time
 import requests
-import ccxt  # Binance bağlantısı için
+import ccxt  # Binance/Kripto veri motoru
 
 # ==========================================
 # 0. AYARLAR
@@ -25,7 +26,7 @@ if 'lang' not in st.session_state: st.session_state.lang = "TR"
 if 'theme' not in st.session_state: st.session_state.theme = "Dark"
 
 # ==========================================
-# 1. ÇEVİRİ VE İÇERİK
+# 1. ÇEVİRİ VE İÇERİK (AKADEMİ TAM METİN)
 # ==========================================
 TRANSLATIONS = {
     "EN": {
@@ -39,9 +40,45 @@ TRANSLATIONS = {
         "contact_sales": "CONTACT SALES", "settings": "⚙️ SETTINGS",
         "lang_sel": "Language", "theme_sel": "Theme", "theme_dark": "Dark (Neon)", "theme_light": "Light (Corporate)",
         "acad_title": "OA | TRADE SMC MASTERY", "acad_quote": "Not beating the market, but following it with discipline.",
-        "lesson_1_title": "📌 PART 1: TIME & CONTEXT", "lesson_1_content": "#### 1. TIME FILTER...",
-        "lesson_2_title": "🛠️ PART 2: ENTRY SETUP", "lesson_2_content": "#### 1. FIBONACCI...",
-        "lesson_3_title": "⚠️ PART 3: RULES", "lesson_3_content": "NO CHOCH...",
+        
+        # AKADEMİ (FULL)
+        "lesson_1_title": "📌 PART 1: TIME & CONTEXT",
+        "lesson_1_content": """
+        #### 1. TIME FILTER (CRITICAL)
+        We only trade during high-volume sessions.
+        * **LONDON:** `10:00 – 12:00` (UTC+3)
+        * **NEW YORK:** `15:30 – 18:30` (UTC+3)
+        
+        #### 2. DAILY CONTEXT (PDH/PDL)
+        The only condition: **LIQUIDITY SWEEP**.
+        * **PDH Raid:** Look for **SHORT**.
+        * **PDL Raid:** Look for **LONG**.
+        * *Wick sweep is enough.*
+        """,
+        "lesson_2_title": "🛠️ PART 2: ENTRY SETUP",
+        "lesson_2_content": """
+        #### 1. FIBONACCI SETTINGS
+        Draw Fib on the impulse leg.
+        * **ENTRY:** `0.75` - `0.60` (Golden Pocket)
+        * **STOP:** `1.0`
+        * **TP-1:** `0.25`
+        * **TP-2:** `-0.18`
+        
+        #### 2. FVG CONFIRMATION
+        * Must tap into a **Fair Value Gap** inside the zone.
+        """,
+        "lesson_3_title": "⚠️ PART 3: RULES",
+        "lesson_3_content": """
+        <div class="rule-box">
+        <h4>🚨 STRICT RULES</h4>
+        <ul>
+            <li><b>NO CHOCH:</b> Don't wait for LTF confirmation.</li>
+            <li><b>NO TRADING OUTSIDE HOURS:</b> Discipline is key.</li>
+            <li><b>MANAGEMENT:</b> Move SL to BE only after TP-1.</li>
+        </ul>
+        </div>
+        """,
+        
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Real-time Live Market Analysis.",
         "run_ai": "SCAN MARKET", "ai_analyzing": "Fetching Live Data...", 
         "ai_input_label": "Enter Coin Symbol (e.g. TAO, BTC, ETH)",
@@ -62,9 +99,46 @@ TRANSLATIONS = {
         "contact_sales": "SATIŞA ULAŞ", "settings": "⚙️ AYARLAR",
         "lang_sel": "Dil", "theme_sel": "Tema", "theme_dark": "Koyu Mod (Neon)", "theme_light": "Açık Mod (Kurumsal)",
         "acad_title": "OA | TRADE SMC USTALIK SINIFI", "acad_quote": "Piyasayı yenmek değil, disiplinle takip etmek.",
-        "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM", "lesson_1_content": "#### 1. ZAMAN FİLTRESİ...",
-        "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ", "lesson_2_content": "#### 1. FIBONACCI...",
-        "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR", "lesson_3_content": "CHOCH YOK...",
+        
+        # AKADEMİ (FULL)
+        "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM",
+        "lesson_1_content": """
+        #### 1. ZAMAN FİLTRESİ (KRİTİK)
+        Sadece hacimli seanslarda işlem aranır. Diğer saatlerde ekran kapatılır.
+        * **LONDRA:** `10:00 – 12:00` (TSİ)
+        * **NEW YORK:** `15:30 – 18:30` (TSİ)
+        
+        #### 2. GÜNLÜK BAĞLAM (PDH/PDL)
+        İşlem aramak için tek şart **LİKİDİTE ALIMI (SWEEP)**'dır.
+        * **PDH (Önceki Gün Yükseği) İhlali:** Sadece **SHORT**.
+        * **PDL (Önceki Gün Düşüğü) İhlali:** Sadece **LONG**.
+        * *Not: Fitil atması (Wick) yeterlidir.*
+        """,
+        "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ",
+        "lesson_2_content": """
+        #### 1. FIBONACCI AYARLARI
+        Likidite alımından sonra oluşan sert harekete (Impulse) Fibonacci çekilir.
+        * **GİRİŞ BÖLGESİ:** `0.75` - `0.60` (Golden Pocket)
+        * **STOP:** `1` (Hareket başlangıcı)
+        * **TP-1:** `0.25`
+        * **TP-2:** `-0.18`
+        
+        #### 2. FVG ONAYI
+        * Fiyat, `0.6-0.75` aralığındaki bir **FVG (Dengesizlik)** alanına temas etmelidir.
+        * Oradan reddedilme (rejection) beklenir.
+        """,
+        "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR",
+        "lesson_3_content": """
+        <div class="rule-box">
+        <h4>🚨 DEĞİŞMEZ KURALLAR</h4>
+        <ul>
+            <li><b>CHOCH YOK:</b> Düşük zaman diliminde kırılım (Choch) beklenmez.</li>
+            <li><b>SAAT DIŞI İŞLEM YOK:</b> Disiplin her şeydir.</li>
+            <li><b>YÖNETİM:</b> Stop sadece TP-1 alındıktan sonra Girişe (BE) çekilir.</li>
+        </ul>
+        </div>
+        """,
+        
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Gerçek Zamanlı Canlı Piyasa Analizi.",
         "run_ai": "TARA VE ANALİZ ET", "ai_analyzing": "Canlı Veri Çekiliyor...", 
         "ai_input_label": "Coin Sembolü Girin (Örn: TAO, BTC, ETH, PEPE)",
@@ -81,20 +155,20 @@ TRANSLATIONS = {
         "select_month": "Выберите месяц", "total_monthly": "ИТОГ МЕСЯЦА PNL",
         "roi_sim": "🧮 ROI СИМУЛЯТОР", "initial_cap": "Капитал", "risk_trade": "Риск", "proj_bal": "ПРОГНОЗ",
         "trade_log": "ЖУРНАЛ", "download": "📥 СКАЧАТЬ", "limited_offer": "🔥 ПРЕДЛОЖЕНИЕ: LIFETIME доступ!",
-        "plan_starter": "СТАРТ", "plan_pro": "ПРОФИ", "plan_life": "LIFETIME", "sel_plan": "ВЫБРАТЬ", "most_pop": "ПОПУЛЯРНЫЙ",
-        "contact_sales": "СВЯЗАТЬСЯ", "settings": "⚙️ НАСТРОЙКИ",
+        "plan_starter": "СТАРТ", "plan_pro": "ПРОФИ", "plan_life": "LIFETIME", "sel_plan": "ВЫБРАТЬ",
+        "most_pop": "ПОПУЛЯРНЫЙ", "contact_sales": "СВЯЗАТЬСЯ", "settings": "⚙️ НАСТРОЙКИ",
         "lang_sel": "Язык", "theme_sel": "Тема", "theme_dark": "Темная", "theme_light": "Светлая",
         "acad_title": "OA | TRADE SMC МАСТЕРСТВО", "acad_quote": "Дисциплина прежде всего.",
-        "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "...",
-        "lesson_2_title": "🛠️ ЧАСТЬ 2: ВХОД", "lesson_2_content": "...",
-        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "...",
+        "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "### 1. ФИЛЬТР ВРЕМЕНИ\n* **ЛОНДОН:** 10:00–12:00\n* **НЬЮ-ЙОРК:** 15:30–18:30",
+        "lesson_2_title": "🛠️ ЧАСТЬ 2: ВХОД", "lesson_2_content": "### 1. ФИБОНАЧЧИ\n* **Вход:** 0.60-0.75",
+        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "<div class='rule-box'>НЕТ CHOCH.</div>",
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "ИИ анализ.",
         "run_ai": "АНАЛИЗ", "ai_analyzing": "Сканирование...", 
         "ai_input_label": "Символ (TAO, BTC...)",
         "ai_trend": "Тренд", "ai_rsi": "RSI", "ai_supp": "Поддержка", "ai_res": "Сопротивление",
         "ai_score": "Оценка", "ai_dec": "РЕШЕНИЕ",
         "bull": "БЫЧИЙ 🟢", "bear": "МЕДВЕЖИЙ 🔴", "neutral": "НЕЙТРАЛЬНО ⚪",
-        "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖА 🔻", "wait": "ЖДАТЬ ✋",
+        "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖ 🔻", "wait": "ЖДАТЬ ✋",
         "data_source": "Источник", "err_msg": "Монета не найдена."
     }
 }
@@ -170,7 +244,7 @@ st.markdown(f"""
             .neon-title {{ font-size: 1.8rem !important; }}
             .metric-value {{ font-size: 1.2rem !important; }}
             .ai-header {{ font-size: 1.2rem !important; }}
-            .ai-decision {{ font-size: 1.2rem !important; }}
+            .ai-decision {{ font-size: 1.4rem !important; }}
             .pro-grid {{ grid-template-columns: 1fr !important; }}
             .ai-grid {{ grid-template-columns: 1fr !important; gap: 10px !important; }}
         }}
@@ -199,6 +273,7 @@ st.markdown(f"""
 
         /* Renkler */
         .day-win {{ background: rgba(0, 255, 204, 0.15); border-color: {col['ac']}; }}
+        .day-win-light {{ background: rgba(13, 110, 253, 0.15); border-color: {col['ac']}; }}
         .day-loss {{ background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b; }}
         .win-text {{ color: {col['ac']} !important; }} .loss-text {{ color: #ff4b4b !important; }} .empty-cell {{ background: transparent; border: none; }}
         
@@ -429,7 +504,7 @@ with tab5:
 <div class="ai-card" style="border-left-color: {dec_col} !important;">
 <div style="display:flex; justify-content:space-between; align-items:center;">
 <div>
-<div class="ai-header">{user_symbol.upper()} / USDT</div>
+<div class="ai-header">{user_symbol.upper()} / USD</div>
 <div class="ai-sub" style="color:{dec_col} !important;">{change_24h:+.2f}%</div>
 </div>
 <div style="text-align:right;">
