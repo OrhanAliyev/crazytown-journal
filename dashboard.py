@@ -54,10 +54,10 @@ TRANSLATIONS = {
         "lesson_3_title": "⚠️ PART 3: RULES",
         "lesson_3_content": "<div class='rule-box'><h4>🚨 STRICT RULES</h4><ul><li><b>NO CHOCH</b></li><li><b>NO TRADING OUTSIDE HOURS</b></li></ul></div>",
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Advanced Technical Analysis & AI Confidence Score.",
-        "run_ai": "SCAN & ANALYZE", "ai_analyzing": "Running Pro Algorithms...", 
+        "run_ai": "SCAN MARKET", "ai_analyzing": "Scanning Market Structure...", 
         "ai_input_label": "Enter Coin Symbol (e.g. BTC, ETH, SOL, PEPE)",
         "ai_trend": "General Trend", "ai_rsi": "RSI Indicator", "ai_supp": "Est. Support", "ai_res": "Est. Resistance",
-        "ai_score": "Crazytown Confidence Score", "ai_dec": "DECISION",
+        "ai_score": "Crazytown Confidence Score", "ai_dec": "AI DECISION",
         "bull": "BULLISH 🟢", "bear": "BEARISH 🔴", "neutral": "NEUTRAL ⚪",
         "s_buy": "STRONG BUY 🚀", "buy": "BUY 🟢", "sell": "SELL 🔴", "s_sell": "STRONG SELL 🔻", "wait": "WAIT ✋",
         "data_source": "Data Source", "err_msg": "Coin not found. Try adding USDT (e.g. PEPEUSDT)"
@@ -81,13 +81,13 @@ TRANSLATIONS = {
         "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR",
         "lesson_3_content": "<div class='rule-box'><h4>🚨 DEĞİŞMEZ KURALLAR</h4><ul><li><b>CHOCH YOK</b></li><li><b>SAAT DIŞI İŞLEM YOK</b></li></ul></div>",
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Gelişmiş Teknik Analiz & YZ Güven Skoru.",
-        "run_ai": "TARA VE ANALİZ ET", "ai_analyzing": "Pro Algoritmalar Çalıştırılıyor...", 
+        "run_ai": "TARA VE ANALİZ ET", "ai_analyzing": "Binance Node Bağlanıyor...", 
         "ai_input_label": "Coin Sembolü (Örn: BTC, ETH, SOL, PEPE)",
         "ai_trend": "Genel Trend", "ai_rsi": "RSI Göstergesi", "ai_supp": "Tahmini Destek", "ai_res": "Tahmini Direnç",
         "ai_score": "Crazytown Güven Skoru", "ai_dec": "YZ KARARI",
         "bull": "BOĞA (YÜKSELİŞ) 🟢", "bear": "AYI (DÜŞÜŞ) 🔴", "neutral": "NÖTR ⚪",
         "s_buy": "GÜÇLÜ AL 🚀", "buy": "AL 🟢", "sell": "SAT 🔴", "s_sell": "GÜÇLÜ SAT 🔻", "wait": "BEKLE ✋",
-        "data_source": "Veri Kaynağı", "err_msg": "Coin bulunamadı veya API limiti doldu."
+        "data_source": "Veri Kaynağı", "err_msg": "Coin bulunamadı. Sonuna USDT eklemeyi dene (Örn: PEPEUSDT)"
     },
     "RU": {
         "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ", "ai_lab": "ИИ ЛАБОРАТОРИЯ",
@@ -146,6 +146,7 @@ else:
 
 st.markdown(anim_html, unsafe_allow_html=True)
 
+# CSS ENJEKSİYONU (MOBİL UYUMLU - RESPONSIVE)
 st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Inter:wght@400;600;800&display=swap');
@@ -153,13 +154,26 @@ st.markdown(f"""
         header, footer, #MainMenu {{display: none !important;}}
         .block-container {{padding-top: 2rem;}}
         h1, h2, h3, h4, h5, h6, p, li, div, span, label {{ color: {col['txt']} !important; font-family: 'Inter', sans-serif; }}
+        
+        /* MOBİL UYUM (RESPONSIVE) AYARLARI */
+        @media only screen and (max-width: 768px) {{
+            .block-container {{ padding: 1rem 0.5rem !important; }}
+            .neon-title {{ font-size: 2rem !important; }}
+            .ai-grid {{ grid-template-columns: 1fr 1fr !important; gap: 10px !important; }}
+            .pro-grid {{ grid-template-columns: 1fr !important; }} /* Pro Toolkit Telefonda Tek Sıra */
+            .metric-value {{ font-size: 1.5rem !important; }}
+            .pricing-card {{ margin-bottom: 20px; }}
+            .ai-header {{ font-size: 1.2rem !important; }}
+            .ai-decision {{ font-size: 1.4rem !important; }}
+        }}
+
         .neon-title {{ font-family: 'Orbitron', sans-serif; font-size: 3.5rem; text-align: center; color: {col['ttl']} !important; font-weight: 900; letter-spacing: 4px; margin: 0; {f"text-shadow: 0 0 20px {col['ac']};" if st.session_state.theme == "Dark" else ""} animation: pulse 3s infinite alternate; }}
         .metric-container {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; }}
         .metric-container:hover {{ transform: translateY(-5px); border-color: {col['ac']}; }}
         .metric-value {{ font-size: 2rem; font-weight: 700; color: {col['ttl']} !important; }}
         .metric-label {{ font-size: 0.8rem; color: {col['grd']} !important; font-weight: 600; letter-spacing: 1px; }}
         
-        /* AI CARD STYLING */
+        /* AI CARD */
         .ai-card {{ background-color: {col['ai_bg']}; border: 1px solid {col['bd']}; border-left-width: 6px; border-left-style: solid; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }}
         .ai-header {{ font-size: 1.6rem; font-weight: 800; color: {col['ttl']} !important; margin-bottom: 5px; }}
         .ai-sub {{ font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; }}
@@ -169,7 +183,7 @@ st.markdown(f"""
         .ai-val {{ font-size: 1.2rem; font-weight: 800; color: {col['ttl']} !important; }}
         .ai-decision {{ font-size: 1.8rem; font-weight: 900; text-align: left; margin-top: 15px; display: flex; align-items: center; gap: 10px; }}
 
-        /* PRO TOOLKIT STYLING */
+        /* PRO TOOLKIT */
         .pro-grid {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 20px; }}
         .pro-item {{ background: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 8px; padding: 15px; text-align: left; transition: transform 0.2s; }}
         .pro-item:hover {{ border-color: {col['ac']}; transform: scale(1.02); }}
@@ -201,7 +215,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. VERİ YÜKLEME
+# 3. VERİ YÜKLEME & CCXT MOTORU
 # ==========================================
 @st.cache_data(ttl=60)
 def load_data():
@@ -217,11 +231,14 @@ def load_data():
     except: return pd.DataFrame()
 df = load_data()
 
-# --- VERİ MOTORU (ÖNCELİK: COINGECKO, YEDEK: BINANCE) ---
 def get_crypto_data(symbol, timeframe):
+    """
+    1. CoinGecko (Primary)
+    2. Binance (CCXT) (Fallback)
+    """
     symbol = symbol.upper().strip()
     
-    # 1. COINGECKO API (ÖNCELİKLİ)
+    # 1. COINGECKO
     try:
         cg_map = {
             "BTC": "bitcoin", "ETH": "ethereum", "SOL": "solana", "AVAX": "avalanche-2",
@@ -241,7 +258,7 @@ def get_crypto_data(symbol, timeframe):
                 return df, "CoinGecko API (Best)"
     except: pass
 
-    # 2. BINANCE (CCXT - YEDEK)
+    # 2. BINANCE
     try:
         import ccxt
         exchange = ccxt.binance()
@@ -255,12 +272,7 @@ def get_crypto_data(symbol, timeframe):
             return df, "Binance API (Fallback)"
     except Exception as e: pass
 
-    # 3. SİMÜLASYON (GÜVENLİK)
-    dates = pd.date_range(end=datetime.now(), periods=100, freq=timeframe.replace('m', 'min'))
-    base = 100 
-    change = np.random.normal(0, 0.02, 100) + 1
-    prices = base * np.cumprod(change)
-    return pd.DataFrame({'time': dates, 'close': prices, 'high': prices*1.01, 'low': prices*0.99, 'open': prices}), "Simulation (Offline)"
+    return pd.DataFrame(), "Data Error"
 
 wt = "light" if st.session_state.theme == "Light" else "dark"
 components.html(f"""<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>{{"symbols": [{{"proName": "BINANCE:BTCUSDT", "title": "Bitcoin"}}, {{"proName": "BINANCE:ETHUSDT", "title": "Ethereum"}}, {{"proName": "BINANCE:SOLUSDT", "title": "Solana"}}], "showSymbolLogo": true, "colorTheme": "{wt}", "isTransparent": true, "displayMode": "adaptive", "locale": "en"}}</script></div>""", height=50)
@@ -363,7 +375,6 @@ with tab5:
             time.sleep(0.5) 
         
         if not live_df.empty and len(live_df) > 20:
-            # --- ANA ANALİZ (TEMEL) ---
             current_price = float(live_df['close'].iloc[-1])
             open_price = float(live_df['open'].iloc[-1])
             change_24h = ((current_price - open_price) / open_price) * 100
@@ -371,7 +382,6 @@ with tab5:
             live_df['SMA'] = live_df['close'].rolling(window=20).mean()
             sma_val = float(live_df['SMA'].iloc[-1]) if not pd.isna(live_df['SMA'].iloc[-1]) else current_price
             
-            # RSI Calculation
             delta = live_df['close'].diff()
             gain = (delta.where(delta > 0, 0)).rolling(window=14).mean().fillna(0)
             loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean().fillna(0)
@@ -382,23 +392,19 @@ with tab5:
             supp = live_df['low'].tail(50).min()
             res = live_df['high'].tail(50).max()
             
-            # --- PRO TOOLKIT HESAPLAMALARI (SİMÜLASYON VE GERÇEK KARIŞIMI) ---
-            # 1. Market Waves Pro (Trend Gücü)
+            # --- PRO TOOLKIT HESAPLAMALARI ---
             ema50 = live_df['close'].ewm(span=50, adjust=False).mean().iloc[-1]
             wave_status = "BULLISH WAVE 🌊" if current_price > ema50 else "BEARISH WAVE 🌊"
             wave_col = "#00ff00" if current_price > ema50 else "#ff0000"
 
-            # 2. Market Core Pro (Volatilite)
             std_dev = live_df['close'].rolling(20).std().iloc[-1]
             core_status = "HIGH VOLATILITY ⚡" if std_dev > (current_price * 0.02) else "STABLE CORE 🛡️"
             core_col = "#ffcc00" if "HIGH" in core_status else "#00ccff"
 
-            # 3. Beluga Nautilus (Stoch RSI Benzeri)
             stoch_k = ((rsi_val - 30) / (70 - 30)) * 100
-            beluga_val = max(0, min(100, stoch_k)) # 0-100 arası
+            beluga_val = max(0, min(100, stoch_k)) 
             beluga_status = f"{beluga_val:.1f} (OSC)"
 
-            # 4. Ultimate MACD
             ema12 = live_df['close'].ewm(span=12, adjust=False).mean()
             ema26 = live_df['close'].ewm(span=26, adjust=False).mean()
             macd = ema12 - ema26
@@ -408,14 +414,12 @@ with tab5:
             macd_status = "BUY CROSS 🟢" if macd_val > sig_val else "SELL CROSS 🔴"
             macd_col = "#00ff00" if macd_val > sig_val else "#ff0000"
 
-            # 5. Premium Uyumsuzluk (Basit Mantık)
             price_trend = live_df['close'].iloc[-1] > live_df['close'].iloc[-5]
             rsi_trend = live_df['RSI'].iloc[-1] > live_df['RSI'].iloc[-5]
             if price_trend and not rsi_trend: div_status = "BEARISH DIV 📉"; div_col = "#ff0000"
             elif not price_trend and rsi_trend: div_status = "BULLISH DIV 📈"; div_col = "#00ff00"
             else: div_status = "NO DIVERGENCE"; div_col = "#888"
 
-            # SKORLAMA
             score = 50
             if current_price > sma_val: score += 15
             if rsi_val > 50: score += 10
@@ -429,7 +433,7 @@ with tab5:
             elif score <= 40: decision = t('sell'); dec_col = "#cc0000"; trend_text = t('bear'); direction = "BEAR"
             else: decision = t('wait'); dec_col = "#aaaaaa"; trend_text = t('neutral'); direction = "NEUTRAL"
             
-            # --- HTML ÇIKTISI (PRO TOOLKIT EKLENDİ) ---
+            # --- HTML ÇIKTISI (SOLA YASLI - PRO TOOLKIT İLE) ---
             html_card = f"""
 <div class="ai-card" style="border-left-color: {dec_col} !important;">
 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -448,7 +452,6 @@ with tab5:
 <div class="ai-item"><div class="ai-label">{t('ai_supp')}</div><div class="ai-val">${supp:,.4f}</div></div>
 <div class="ai-item"><div class="ai-label">{t('ai_res')}</div><div class="ai-val">${res:,.4f}</div></div>
 </div>
-
 <div style="margin-top:25px; margin-bottom:10px; font-weight:800; color:{col['ac']} !important; letter-spacing:1px;">PRO TOOLKIT 🛠️</div>
 <div class="pro-grid">
 <div class="pro-item"><div class="pro-name">Market Waves Pro</div><div class="pro-status" style="color:{wave_col}">{wave_status}</div></div>
@@ -458,7 +461,6 @@ with tab5:
 <div class="pro-item"><div class="pro-name">Ultimate RSI</div><div class="pro-status">{rsi_val:.1f}</div></div>
 <div class="pro-item"><div class="pro-name">Premium Divergence</div><div class="pro-status" style="color:{div_col}">{div_status}</div></div>
 </div>
-
 <div class="ai-label" style="margin-top:25px;">{t('ai_score')}:</div>
 <div style="background:#333; border-radius:10px; height:10px; width:100%; margin-top:5px; overflow:hidden;">
 <div style="background: linear-gradient(90deg, #ff4b4b, #ffff00, #00ffcc); width:{score}%; height:100%;"></div>
@@ -484,14 +486,16 @@ with tab5:
             steps = 15
             future_x = np.arange(last_idx, last_idx + steps)
             slope = volatility * 0.1 if direction == "BULL" else (-volatility * 0.1 if direction == "BEAR" else 0)
-            base_forecast = [current_price + (i * slope) for i in range(steps)]
-            upper_bound = [p + (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
-            lower_bound = [p - (i * volatility * 0.2) for i, p in enumerate(base_forecast)]
             
             f_col = "rgba(0, 255, 204, 0.15)" if direction == "BULL" else "rgba(255, 75, 75, 0.15)"
             
+            # Üst ve Alt sınır hesaplama
+            upper_bound = [current_price + (i * slope) + (i * volatility * 0.2) for i in range(steps)]
+            lower_bound = [current_price + (i * slope) - (i * volatility * 0.2) for i in range(steps)]
+            mid_line = [current_price + (i * slope) for i in range(steps)]
+
             fig_ai.add_trace(go.Scatter(x=np.concatenate([future_x, future_x[::-1]]), y=np.concatenate([upper_bound, lower_bound[::-1]]), fill='toself', fillcolor=f_col, line=dict(color='rgba(0,0,0,0)'), showlegend=False))
-            fig_ai.add_trace(go.Scatter(x=future_x, y=base_forecast, mode='lines', name='AI Projection', line=dict(color=dec_col, width=2, dash='dot')))
+            fig_ai.add_trace(go.Scatter(x=future_x, y=mid_line, mode='lines', name='AI Projection', line=dict(color=dec_col, width=2, dash='dot')))
             
             pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"
             fig_ai.update_layout(template=pt, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=400, margin=dict(l=0,r=0,t=20,b=0), xaxis=dict(showgrid=False), yaxis=dict(gridcolor=col['bd']))
