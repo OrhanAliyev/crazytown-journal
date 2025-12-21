@@ -21,11 +21,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# SESSION STATE BAŞLATMA (Hata almamak için)
+# SESSION STATE BAŞLATMA
 if 'personal_trades' not in st.session_state:
     st.session_state.personal_trades = pd.DataFrame(columns=['Tarih', 'Parite', 'Yön', 'Sonuç', 'R_Kazanc'])
 if 'calendar_mode' not in st.session_state:
-    st.session_state.calendar_mode = 'System' # 'System' veya 'Personal'
+    st.session_state.calendar_mode = 'System' 
 if 'terms_accepted' not in st.session_state:
     st.session_state.terms_accepted = False
 if 'lang' not in st.session_state: st.session_state.lang = "TR"
@@ -82,7 +82,7 @@ TRANSLATIONS = {
         "ai_trend": "Тренд", "ai_rsi": "RSI", "ai_supp": "Поддержка", "ai_res": "Сопротивление",
         "ai_score": "Оценка", "ai_dec": "РЕШЕНИЕ", "ai_exp_title": "📝 ОБЪЯСНЕНИЕ",
         "bull": "БЫЧИЙ 🟢", "bear": "МЕДВЕЖИЙ 🔴", "neutral": "НЕЙТРАЛЬНО ⚪",
-        "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖА 🔻", "wait": "ЖДАТЬ ✋",
+        "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖ 🔻", "wait": "ЖДАТЬ ✋",
         "cal_sys": "СИСТЕМА", "cal_per": "МОЙ ЖУРНАЛ", "add_trade": "➕ Добавить",
         "legal_head": "ЮРИДИЧЕСКИЙ ОТКАЗ",
         "accept_terms": "Я принимаю условия.",
@@ -103,13 +103,23 @@ with st.expander(t('settings'), expanded=False):
         if thm != st.session_state.theme: st.session_state.theme = thm; st.rerun()
 
 # ==========================================
-# 2. CSS TASARIM (RESOLV STYLE & MOBİL)
+# 2. DİNAMİK RENK VE CSS (DÜZELTİLDİ)
 # ==========================================
 if st.session_state.theme == "Dark":
-    col = {"bg": "#050505", "txt": "#e0e0e0", "card": "rgba(20, 20, 25, 0.9)", "bd": "#333", "ac": "#00ffcc", "sec": "#111", "ttl": "#ffffff", "grd": "#aaaaaa", "ai_bg": "#0e0e0e"}
+    # ac_h eklendi!
+    col = {
+        "bg": "#050505", "txt": "#e0e0e0", "card": "rgba(20, 20, 25, 0.9)", 
+        "bd": "#333", "ac": "#00ffcc", "ac_h": "#00cca3", "sec": "#111", 
+        "ttl": "#ffffff", "grd": "#aaaaaa", "ai_bg": "#0e0e0e"
+    }
     anim = """<style>.orb-container {position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;background:#050505;} .orb {position:absolute;border-radius:50%;filter:blur(90px);opacity:0.6;animation:moveOrb 20s infinite alternate;} .orb1 {top:10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,#00ffcc 0%,transparent 70%);} .orb2 {bottom:10%;right:10%;width:40vw;height:40vw;background:radial-gradient(circle,#9900ff 0%,transparent 70%);} @keyframes moveOrb {0%{transform:scale(1);}100%{transform:scale(1.1);}}</style><div class="orb-container"><div class="orb orb1"></div><div class="orb orb2"></div></div>"""
 else:
-    col = {"bg": "#f8f9fa", "txt": "#212529", "card": "rgba(255, 255, 255, 0.95)", "bd": "#dee2e6", "ac": "#0d6efd", "sec": "#ffffff", "ttl": "#000000", "grd": "#6c757d", "ai_bg": "#ffffff"}
+    # ac_h eklendi!
+    col = {
+        "bg": "#f8f9fa", "txt": "#212529", "card": "rgba(255, 255, 255, 0.95)", 
+        "bd": "#dee2e6", "ac": "#0d6efd", "ac_h": "#0b5ed7", "sec": "#ffffff", 
+        "ttl": "#000000", "grd": "#6c757d", "ai_bg": "#ffffff"
+    }
     anim = """<style>.orb-container {position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;background:#f8f9fa;} .orb {position:absolute;border-radius:50%;filter:blur(80px);opacity:0.2;animation:moveOrb 25s infinite alternate;} .orb1 {top:-10%;left:-10%;width:60vw;height:60vw;background:radial-gradient(circle,#0d6efd 0%,transparent 60%);} @keyframes moveOrb {0%{transform:scale(1);}100%{transform:scale(1.1);}}</style><div class="orb-container"><div class="orb orb1"></div></div>"""
 
 st.markdown(anim, unsafe_allow_html=True)
@@ -123,7 +133,7 @@ st.markdown(f"""
         .neon-title {{ font-family: 'Orbitron', sans-serif; font-size: 3rem; text-align: center; color: {col['ttl']} !important; font-weight: 900; text-shadow: 0 0 20px {col['ac']}; }}
         
         /* KART TASARIMLARI */
-        .metric-container {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 15px; text-align: center; }}
+        .metric-container {{ background-color: {col['card']}; border: 1px solid {col['bd']}; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
         .metric-value {{ font-size: 1.8rem; font-weight: 700; color: {col['ttl']} !important; }}
         .metric-label {{ font-size: 0.8rem; color: {col['grd']} !important; }}
         
@@ -133,7 +143,8 @@ st.markdown(f"""
         .ai-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }}
         .ai-label {{ font-size: 0.8rem; color: {col['grd']} !important; }}
         .ai-val {{ font-size: 1.1rem; font-weight: bold; color: {col['ttl']} !important; }}
-        .explanation-box {{ background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.9rem; }}
+        .ai-decision {{ font-size: 1.8rem; font-weight: 900; text-align: center; margin-top: 15px; padding: 10px; border-radius: 8px; }}
+        .explanation-box {{ background: rgba(255, 255, 255, 0.05); border-left: 3px solid {col['ac']}; padding: 15px; border-radius: 5px; margin-top: 15px; font-size: 0.9rem; }}
         
         /* TAKVİM */
         .calendar-container {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }}
@@ -144,13 +155,13 @@ st.markdown(f"""
         .day-loss {{ background: rgba(255, 75, 75, 0.15); border-color: #ff4b4b; }}
         .win-txt {{ color: {col['ac']} !important; }} .loss-txt {{ color: #ff4b4b !important; }}
         
-        /* ÜYELİK KARTLARI */
+        /* ÜYELİK */
         .memb-grid {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 20px; }}
         .memb-card {{ background: {col['card']}; border: 1px solid {col['bd']}; border-radius: 12px; padding: 25px; text-align: center; transition: 0.3s; }}
         .memb-card:hover {{ transform: translateY(-5px); border-color: {col['ac']}; }}
         .plan-price {{ font-size: 2rem; font-weight: bold; color: {col['ttl']} !important; }}
         
-        /* YASAL METİN */
+        /* YASAL */
         .legal-box {{ margin-top: 50px; padding: 20px; border-top: 1px solid {col['bd']}; font-size: 0.75rem; color: {col['grd']} !important; text-align: justify; }}
         
         /* MOBİL UYUM */
@@ -163,6 +174,8 @@ st.markdown(f"""
         }}
         
         .custom-btn {{ background: {col['ac']}; color: {col['bg']} !important; padding: 8px 16px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; }}
+        .custom-btn-outline {{ border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent; padding: 8px 16px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; }}
+        .stTextInput input, .stSelectbox div[data-baseweb="select"] > div {{ background-color: {col['sec']}; color: {col['txt']}; border-color: {col['bd']}; }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -179,7 +192,8 @@ def load_system_data():
             df = pd.DataFrame(data)
             if 'R_Kazanc' in df.columns: df['R_Kazanc'] = df['R_Kazanc'].astype(str).str.replace(',', '.'); df['R_Kazanc'] = pd.to_numeric(df['R_Kazanc'], errors='coerce').fillna(0)
             return df
-    except: return pd.DataFrame() # Boş döner
+    except: pass
+    return pd.DataFrame() # Boş döner
 
 def get_market_data(symbol, interval):
     symbol = symbol.upper().strip()
@@ -203,7 +217,7 @@ def get_market_data(symbol, interval):
     # 2. Binance
     try:
         ex = ccxt.binance()
-        t = f"{symbol}/USDT"
+        t = f"{symbol}/USDT" if "/" not in symbol else symbol
         tf = "1h" if interval=="1h" else ("4h" if interval=="4h" else "1d")
         o = ex.fetch_ohlcv(t, timeframe=tf, limit=100)
         if o:
@@ -211,7 +225,6 @@ def get_market_data(symbol, interval):
             df['time'] = pd.to_datetime(df['time'], unit='ms')
             return df, "Binance API"
     except: pass
-    
     return pd.DataFrame(), None
 
 # ==========================================
@@ -302,15 +315,22 @@ with tab5:
         if not df_ai.empty and len(df_ai) > 20:
             cur = float(df_ai['close'].iloc[-1])
             sma = float(df_ai['close'].rolling(20).mean().iloc[-1])
-            rsi = 100 - (100 / (1 + (df_ai['close'].diff().clip(lower=0).rolling(14).mean().iloc[-1] / abs(df_ai['close'].diff().clip(upper=0).rolling(14).mean().iloc[-1]))))
+            # RSI Calculation Fixed
+            delta = df_ai['close'].diff()
+            gain = (delta.where(delta > 0, 0)).rolling(14).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
+            rs = gain / (loss + 0.0001)
+            rsi = 100 - (100 / (1 + rs))
+            rsi_val = float(rsi.iloc[-1])
             
             # --- MANTIK MOTORU ---
             score = 50; reasons = []
             if cur > sma: score += 20; reasons.append("✅ Fiyat > SMA20 (Trend Pozitif)")
             else: score -= 20; reasons.append("⚠️ Fiyat < SMA20 (Trend Negatif)")
             
-            if rsi > 55: score += 10; reasons.append(f"✅ RSI {rsi:.1f} > 55 (Momentum Güçlü)")
-            elif rsi < 45: score -= 10; reasons.append(f"⚠️ RSI {rsi:.1f} < 45 (Momentum Zayıf)")
+            if rsi_val > 55: score += 10; reasons.append(f"✅ RSI {rsi_val:.1f} > 55 (Momentum Güçlü)")
+            elif rsi_val < 45: score -= 10; reasons.append(f"⚠️ RSI {rsi_val:.1f} < 45 (Momentum Zayıf)")
+            else: reasons.append(f"ℹ️ RSI {rsi_val:.1f} (Nötr Bölge)")
             
             score = max(0, min(100, score))
             if score >= 60: dec = t('buy'); dcol = "#00ff00"; tr = t('bull')
@@ -328,7 +348,7 @@ with tab5:
                 <hr style="border-color:{col['bd']}; margin:15px 0;">
                 <div class="ai-grid">
                     <div><div class="ai-label">{t('ai_trend')}</div><div class="ai-val" style="color:{dcol}">{tr}</div></div>
-                    <div><div class="ai-label">{t('ai_rsi')}</div><div class="ai-val">{rsi:.1f}</div></div>
+                    <div><div class="ai-label">{t('ai_rsi')}</div><div class="ai-val">{rsi_val:.1f}</div></div>
                 </div>
                 <div class="ai-decision" style="border: 2px solid {dcol}; color:{dcol};">{t('ai_dec')}: {dec}</div>
                 <div class="explanation-box">
@@ -341,7 +361,7 @@ with tab5:
         else:
             st.error(t("err_msg"))
 
-# TAB 3: ÜYELİK (ŞIK)
+# TAB 3: ÜYELİK
 with tab3:
     st.markdown(f"<h2 style='text-align:center; color:{col['ttl']}'>{t('memb_title')}</h2>", unsafe_allow_html=True)
     st.markdown('<div class="memb-grid">', unsafe_allow_html=True)
@@ -359,14 +379,14 @@ with tab3:
 with tab4:
     st.markdown(f"### 📨 Telegram\n<a href='https://t.me/Orhan1909' class='custom-btn'>TELEGRAM</a>", unsafe_allow_html=True)
 
-# FOOTER: YASAL & KVKK
+# FOOTER
 st.markdown("---")
 st.markdown(f"""
 <div class="legal-box">
     <h4 style="text-align:center; color:{col['txt']}">{t('legal_head')}</h4>
-    <p><b>1. YASAL UYARI (SPK):</b> Buradaki bilgiler yatırım tavsiyesi değildir. 6362 sayılı SPK Kanunu uyarınca sadece yetkili kurumlar tavsiye verebilir.</p>
-    <p><b>2. RİSK BİLDİRİMİ:</b> Kripto paralar yüksek risk içerir. Paranızın tamamını kaybedebilirsiniz.</p>
-    <p><b>3. KVKK AYDINLATMA:</b> Verileriniz (6698 sayılı Kanun) sunucuda tutulmaz, sadece tarayıcı önbelleğinde geçici işlenir.</p>
+    <p><b>1. YASAL UYARI (SPK):</b> Buradaki bilgiler yatırım tavsiyesi değildir.</p>
+    <p><b>2. RİSK BİLDİRİMİ:</b> Kripto paralar yüksek risk içerir.</p>
+    <p><b>3. KVKK AYDINLATMA:</b> Verileriniz sunucuda tutulmaz.</p>
 </div>
 """, unsafe_allow_html=True)
 
