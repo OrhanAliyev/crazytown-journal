@@ -18,13 +18,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Session State (Dil ve Tema Hafızası)
+# Session State
 if 'lang' not in st.session_state:
     st.session_state.lang = "TR"
 if 'theme' not in st.session_state:
     st.session_state.theme = "Dark"
 
-# Çeviri Sözlüğü
+# Çeviri Sözlüğü (EKSİKLER GİDERİLDİ)
 TRANSLATIONS = {
     "EN": {
         "title_sub": "ALGORITHMIC TRADING SYSTEMS",
@@ -66,8 +66,40 @@ TRANSLATIONS = {
         "acad_title": "OA | TRADE SMC MASTERY",
         "acad_quote": "Not beating the market, but following it with discipline.",
         "lesson_1_title": "📌 PART 1: TIME & CONTEXT",
+        "lesson_1_content": """
+        ### 1. TIME FILTER (CRITICAL)
+        We only trade during high-volume sessions. Charts are closed otherwise.
+        * **LONDON:** `10:00 – 12:00` (UTC+3)
+        * **NEW YORK:** `15:30 – 18:30` (UTC+3)
+        
+        ### 2. DAILY CONTEXT (PDH/PDL)
+        The only condition to look for a trade is **LIQUIDITY SWEEP**.
+        * **PDH (Previous Day High) Raid:** Look for **SHORT**.
+        * **PDL (Previous Day Low) Raid:** Look for **LONG**.
+        """,
         "lesson_2_title": "🛠️ PART 2: ENTRY SETUP",
-        "lesson_3_title": "⚠️ PART 3: RULES & EXECUTION"
+        "lesson_2_content": """
+        ### 1. FIBONACCI RETRACEMENT
+        Draw Fib on the impulse leg created after the liquidity sweep.
+        * **ENTRY ZONE:** `0.75` - `0.60` (Golden Pocket)
+        * **STOP LOSS:** `1` (Start of the impulse)
+        * **TP-1:** `0.25`
+        * **TP-2:** `-0.18`
+        
+        ### 2. FVG REJECTION
+        * Price must tap into a **Fair Value Gap (FVG)** inside the Golden Zone.
+        """,
+        "lesson_3_title": "⚠️ PART 3: RULES & EXECUTION",
+        "lesson_3_content": """
+        <div class="rule-box">
+        <h4>🚨 CORE RULES</h4>
+        <ul>
+            <li><b>NO CHOCH:</b> We do not wait for Change of Character on LTF. It's often too late.</li>
+            <li><b>NO TRADING OUTSIDE HOURS:</b> Discipline is key.</li>
+            <li><b>MANAGEMENT:</b> Move SL to Breakeven (BE) only after TP-1 is hit.</li>
+        </ul>
+        </div>
+        """
     },
     "TR": {
         "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ",
@@ -109,8 +141,41 @@ TRANSLATIONS = {
         "acad_title": "OA | TRADE SMC USTALIK SINIFI",
         "acad_quote": "Piyasayı yenmek değil, disiplinle takip etmek.",
         "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM",
+        "lesson_1_content": """
+        ### 1. ZAMAN FİLTRESİ (KRİTİK)
+        Sadece hacimli seanslarda işlem aranır. Diğer saatlerde ekran kapatılır.
+        * **LONDRA:** `10:00 – 12:00` (TSİ)
+        * **NEW YORK:** `15:30 – 18:30` (TSİ)
+        
+        ### 2. GÜNLÜK BAĞLAM (PDH/PDL)
+        İşlem aramak için tek şart **LİKİDİTE ALIMI (SWEEP)**'dır.
+        * **PDH (Önceki Gün Yükseği) İhlali:** Sadece **SHORT** ara.
+        * **PDL (Önceki Gün Düşüğü) İhlali:** Sadece **LONG** ara.
+        """,
         "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ",
-        "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR VE YÖNETİM"
+        "lesson_2_content": """
+        ### 1. FIBONACCI AYARLARI
+        Likidite alımından sonra oluşan sert harekete (Impulse) Fibonacci çekilir.
+        * **GİRİŞ BÖLGESİ:** `0.75` - `0.60` (Golden Pocket)
+        * **STOP:** `1` (Hareket başlangıcı)
+        * **TP-1:** `0.25`
+        * **TP-2:** `-0.18`
+        
+        ### 2. FVG ONAYI
+        * Fiyat, `0.6-0.75` aralığındaki bir **FVG (Dengesizlik)** alanına temas etmelidir.
+        * Oradan reddedilme (rejection) beklenir.
+        """,
+        "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR VE YÖNETİM",
+        "lesson_3_content": """
+        <div class="rule-box">
+        <h4>🚨 DEĞİŞMEZ KURALLAR</h4>
+        <ul>
+            <li><b>CHOCH YOK:</b> Düşük zaman diliminde kırılım (Choch) beklenmez.</li>
+            <li><b>SAAT DIŞI İŞLEM YOK:</b> Disiplin her şeydir.</li>
+            <li><b>YÖNETİM:</b> Stop sadece TP-1 alındıktan sonra Girişe (BE) çekilir.</li>
+        </ul>
+        </div>
+        """
     },
     "RU": {
         "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ",
@@ -152,8 +217,40 @@ TRANSLATIONS = {
         "acad_title": "OA | TRADE SMC МАСТЕРСТВО",
         "acad_quote": "Не побеждать рынок, а дисциплинированно следовать за ним.",
         "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ И КОНТЕКСТ",
+        "lesson_1_content": """
+        ### 1. ФИЛЬТР ВРЕМЕНИ
+        Мы торгуем только во время высокой волатильности.
+        * **ЛОНДОН:** `10:00 – 12:00` (UTC+3)
+        * **НЬЮ-ЙОРК:** `15:30 – 18:30` (UTC+3)
+        
+        ### 2. ДНЕВНОЙ КОНТЕКСТ (PDH/PDL)
+        Единственное условие для поиска сделки - **СНЯТИЕ ЛИКВИДНОСТИ**.
+        * **Снятие PDH (Max вчера):** Ищем **SHORT**.
+        * **Снятие PDL (Min вчера):** Ищем **LONG**.
+        """,
         "lesson_2_title": "🛠️ ЧАСТЬ 2: СТРАТЕГИЯ ВХОДА",
-        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА И УПРАВЛЕНИЕ"
+        "lesson_2_content": """
+        ### 1. ФИБОНАЧЧИ
+        Тянем сетку на импульс после снятия ликвидности.
+        * **ВХОД:** `0.75` - `0.60`
+        * **СТОП:** `1`
+        * **TP-1:** `0.25`
+        * **TP-2:** `-0.18`
+        
+        ### 2. FVG (Fair Value Gap)
+        * Цена должна коснуться FVG в золотой зоне.
+        """,
+        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА И УПРАВЛЕНИЕ",
+        "lesson_3_content": """
+        <div class="rule-box">
+        <h4>🚨 ПРАВИЛА</h4>
+        <ul>
+            <li><b>НЕТ CHOCH:</b> Не ждем смены характера движения на младших таймфреймах.</li>
+            <li><b>НЕТ СДЕЛОК ВНЕ СЕССИЙ:</b> Дисциплина прежде всего.</li>
+            <li><b>УПРАВЛЕНИЕ:</b> SL в безубыток только после TP-1.</li>
+        </ul>
+        </div>
+        """
     }
 }
 
@@ -187,7 +284,7 @@ if st.session_state.theme == "Dark":
     colors = {
         "bg": "#050505",
         "text": "#e0e0e0",
-        "card_bg": "rgba(20, 20, 25, 0.8)", # Yarı saydam
+        "card_bg": "rgba(20, 20, 25, 0.8)", 
         "border": "#333333",
         "accent": "#00ffcc",  # Neon Turkuaz
         "accent_hover": "#00cca3",
@@ -630,18 +727,18 @@ with tab2:
     st.markdown(f"<h2 style='text-align: center; color: {colors['accent']};'>{t('acad_title')}</h2>", unsafe_allow_html=True)
     st.markdown(f"""<div style="text-align: center; font-style: italic; color: {colors['grid_text']}; margin-bottom: 20px;">"{t('acad_quote')}"</div>""", unsafe_allow_html=True)
 
-    # PDF İçerikleri [cite: 1, 16, 22, 55, 79]
+    # PDF İçerikleri
     with st.expander(t('lesson_1_title'), expanded=True):
         st.markdown(t('lesson_1_content'))
-        st.info("Bu kurallar 'OATRADE SMC' PDF dokümanından derlenmiştir[cite: 16, 22].")
+        st.info("Bu kurallar 'OATRADE SMC' PDF dokümanından derlenmiştir.")
 
     with st.expander(t('lesson_2_title')):
         st.markdown(t('lesson_2_content'))
-        st.info("Fibonacci ve FVG kurulumları[cite: 55].")
+        st.info("Fibonacci ve FVG kurulumları.")
 
     with st.expander(t('lesson_3_title')):
         st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
-        st.warning("Kurallar esnetilmez[cite: 367, 438].")
+        st.warning("Kurallar esnetilmez.")
 
 # ==========================================
 # TAB 3: MEMBERSHIP
