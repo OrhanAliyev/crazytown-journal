@@ -26,7 +26,7 @@ import ccxt
 # 0. AYARLAR VE KÜTÜPHANE KONTROLÜ
 # ==========================================
 st.set_page_config(
-    page_title="Crazytown Capital",
+    page_title="OA|Trade",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -559,5 +559,6 @@ with tab4:
     with c2: st.markdown(f"""### 📧 Email\n**orhanaliyev02@gmail.com**""")
 
 st.markdown("---"); st.markdown(f"<p style='text-align: center; color: {col['ac_h']} !important; font-size: 0.8rem;'>© 2025 Crazytown Capital. All rights reserved.</p>", unsafe_allow_html=True)
+
 
 
