@@ -1,4 +1,4 @@
-import streamlit as st
+mport streamlit as st
 
 hide_st_style = """
             <style>
@@ -559,6 +559,7 @@ with tab4:
     with c2: st.markdown(f"""### 📧 Email\n**orhanaliyev02@gmail.com**""")
 
 st.markdown("---"); st.markdown(f"<p style='text-align: center; color: {col['ac_h']} !important; font-size: 0.8rem;'>© 2025 Crazytown Capital. All rights reserved.</p>", unsafe_allow_html=True)
+
 
 
 
