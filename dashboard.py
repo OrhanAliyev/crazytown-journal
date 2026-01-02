@@ -1,3 +1,7 @@
+st.title("🚀 Algoritmik Trade Paneli")
+st.write("Veriler Google Sheets üzerinden canlı çekiliyor.")
+st.metric(label="BTC/USDT", value="98,500 $", delta="+1.2%")
+
 import streamlit as st  # Bu satır zaten en tepede varsa tekrar yazmana gerek yok
 
 st.success("MERHABA.")
