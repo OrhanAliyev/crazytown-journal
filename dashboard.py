@@ -46,7 +46,7 @@ if 'theme' not in st.session_state: st.session_state.theme = "Dark"
 # 1. ÇEVİRİ VE İÇERİK
 # ==========================================
 TRANSLATIONS = {
-    "": {
+    "EN": {
         "title_sub": "ALGORITHMIC TRADING SYSTEMS", "perf": "PERFORMANCE", "acad": "ACADEMY", "memb": "MEMBERSHIP", "cont": "CONTACT", "ai_lab": "AI LAB",
         "total_trades": "TOTAL TRADES", "win_rate": "WIN RATE", "net_return": "NET RETURN", "profit_factor": "PROFIT FACTOR",
         "season_goal": "SEASON GOAL", "completed": "COMPLETED", "perf_cal": "🗓️ PERFORMANCE CALENDAR",
@@ -559,6 +559,7 @@ with tab4:
     with c2: st.markdown(f"""### 📧 Email\n**orhanaliyev02@gmail.com**""")
 
 st.markdown("---"); st.markdown(f"<p style='text-align: center; color: {col['ac_h']} !important; font-size: 0.8rem;'>© 2025 Crazytown Capital. All rights reserved.</p>", unsafe_allow_html=True)
+
 
 
 
