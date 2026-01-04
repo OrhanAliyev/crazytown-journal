@@ -645,9 +645,20 @@ with tab_tools:
         if st.button("TARAMAYI BAŞLAT 🔍", use_container_width=True):
             with st.spinner("Piyasa taranıyor..."):
                 df_rsi = calculate_rsi_scanner()
-                st.dataframe(df_rsi.style.applymap(lambda x: f"color: {'red' if 'SAT' in str(x) else ('green' if 'AL' in str(x) else 'gray')}", subset=['Durum']), use_container_width=True, hide_index=True)
-        else:
-            st.info("Canlı veri taraması için butona basın.")
+                
+                # EĞER TABLO BOŞ DEĞİLSE VE 'Durum' SÜTUNU VARSA:
+                if not df_rsi.empty and 'Durum' in df_rsi.columns:
+                    st.dataframe(
+                        df_rsi.style.applymap(
+                            lambda x: f"color: {'red' if 'SAT' in str(x) else ('green' if 'AL' in str(x) else 'gray')}", 
+                            subset=['Durum']
+                        ), 
+                        use_container_width=True, 
+                        hide_index=True
+                    )
+                else:
+                    # EĞER VERİ ÇEKİLEMEDİYSE:
+                    st.warning("⚠️ Veri alınamadı veya piyasa şu an yanıt vermiyor. Lütfen sayfayı yenileyip tekrar deneyin.")
 
     with c_fut:
         st.markdown("### 📊 VADELİ İŞLEMLER VERİSİ")
