@@ -1,8 +1,9 @@
 streamlit
 pandas
+numpy
 plotly
 gspread
 oauth2client
+requests
 ccxt
 yfinance
-numpy

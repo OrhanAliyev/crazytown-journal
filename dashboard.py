@@ -1,23 +1,3 @@
-import streamlit as st  # <--- İŞTE BU SATIR EKSİK OLDUĞU İÇİN HATA VERDİ
-
-# Sayfa Başlığı ve Metrikler
-st.title("🚀 Algoritmik Trade Paneli")
-st.write("Veriler Google Sheets üzerinden canlı çekiliyor.")
-st.metric(label="BTC/USDT", value="98,500 $", delta="+1.2%")
-import streamlit as st  # Bu satır zaten en tepede varsa tekrar yazmana gerek yok
-
-st.success("MERHABA.")
-
-import streamlit as st
-
-hide_st_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            header {visibility: hidden;}
-            </style>
-            """
-st.markdown(hide_st_style, unsafe_allow_html=True)
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
@@ -30,17 +10,36 @@ import calendar
 import numpy as np
 import time
 import requests
-import ccxt 
+import ccxt
+import re
 
 # ==========================================
-# 0. AYARLAR VE KÜTÜPHANE KONTROLÜ
+# 0. AYARLAR
 # ==========================================
 st.set_page_config(
-    page_title="OA",
+    page_title="OA|Trade Terminal",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# KENDİ TRC20 CÜZDAN ADRESİNİ BURAYA YAZ:
+MY_TRC20_WALLET = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t" 
+
+# Gizleme Stilleri ve Kompakt Menu Stili
+hide_st_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+/* Selectboxları küçültmek için ek stil */
+div[data-testid="stSelectbox"] > div > div {
+    min-height: 35px !important;
+    font-size: 0.8rem !important;
+}
+</style>
+"""
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # YFINANCE KONTROLÜ
 try:
@@ -53,24 +52,52 @@ if 'lang' not in st.session_state: st.session_state.lang = "TR"
 if 'theme' not in st.session_state: st.session_state.theme = "Dark"
 
 # ==========================================
-# 1. ÇEVİRİ VE İÇERİK
+# 1. KOMPAKT ÜST MENÜ (SAĞ KÖŞE)
+# ==========================================
+c_space, c_lang, c_theme = st.columns([10, 1, 1.2])
+
+with c_lang:
+    curr_lang = st.session_state.lang
+    lang_opts = ["TR", "EN", "RU"]
+    sel_lang = st.selectbox("Dil", lang_opts, index=lang_opts.index(curr_lang), label_visibility="collapsed", key="top_lang_select")
+    if sel_lang != st.session_state.lang:
+        st.session_state.lang = sel_lang
+        st.rerun()
+
+with c_theme:
+    curr_theme = st.session_state.theme
+    theme_opts = ["🌙 Dark", "☀️ Light"]
+    idx = 0 if curr_theme == "Dark" else 1
+    sel_theme_raw = st.selectbox("Tema", theme_opts, index=idx, label_visibility="collapsed", key="top_theme_select")
+    new_theme = "Dark" if "Dark" in sel_theme_raw else "Light"
+    if new_theme != st.session_state.theme:
+        st.session_state.theme = new_theme
+        st.rerun()
+
+# ==========================================
+# 2. ÇEVİRİLER
 # ==========================================
 TRANSLATIONS = {
     "EN": {
-        "title_sub": "ALGORITHMIC TRADING SYSTEMS", "perf": "PERFORMANCE", "acad": "ACADEMY", "memb": "MEMBERSHIP", "cont": "CONTACT", "ai_lab": "AI LAB",
+        "title_sub": "ALGORITHMIC TRADING SYSTEMS", "perf": "PERFORMANCE", "tools": "TRADING DESK", "acad": "ACADEMY", "memb": "MEMBERSHIP", "cont": "CONTACT", "ai_lab": "AI LAB & CHARTS",
         "total_trades": "TOTAL TRADES", "win_rate": "WIN RATE", "net_return": "NET RETURN", "profit_factor": "PROFIT FACTOR",
         "season_goal": "SEASON GOAL", "completed": "COMPLETED", "perf_cal": "🗓️ PERFORMANCE CALENDAR",
         "select_month": "Select Month", "total_monthly": "TOTAL MONTHLY PNL", "market_intel": "📡 MARKET INTELLIGENCE",
         "roi_sim": "🧮 ROI SIMULATOR", "roi_desc": "Calculate potential earnings.", "initial_cap": "Initial Capital ($)",
         "risk_trade": "Risk Per Trade (%)", "proj_bal": "PROJECTED BALANCE", "trade_log": "TRADE LOG", "download": "📥 DOWNLOAD CSV",
         "limited_offer": "🔥 LIMITED TIME OFFER: Get LIFETIME access!", "feedback": "💬 TRADER FEEDBACK",
-        "plan_starter": "STARTER", "plan_pro": "PROFESSIONAL", "plan_life": "LIFETIME", "sel_plan": "SELECT PLAN",
+        "plan_starter": "STARTER", "plan_pro": "PRO TRADER", "plan_life": "LIFETIME VIP", "sel_plan": "SELECT YOUR PLAN",
         "most_pop": "MOST POPULAR", "contact_sales": "CONTACT SALES", "faq": "❓ FAQ", "settings": "⚙️ SETTINGS",
         "lang_sel": "Language", "theme_sel": "Theme", "theme_dark": "Dark (Neon)", "theme_light": "Light (Corporate)",
         "acad_title": "OA | TRADE SMC MASTERY", "acad_quote": "Not beating the market, but following it with discipline.",
-        "lesson_1_title": "📌 PART 1: TIME & CONTEXT", "lesson_1_content": "#### 1. TIME FILTER\n* **LONDON:** `10:00 – 12:00` (UTC+3)\n* **NEW YORK:** `15:30 – 18:30` (UTC+3)",
-        "lesson_2_title": "🛠️ PART 2: ENTRY SETUP", "lesson_2_content": "#### 1. FIBONACCI\n* **ENTRY:** `0.75` - `0.60`\n* **STOP:** `1.0`",
-        "lesson_3_title": "⚠️ PART 3: RULES", "lesson_3_content": "<div class='rule-box'><h4>🚨 STRICT RULES</h4><ul><li><b>NO CHOCH</b></li><li><b>NO TRADING OUTSIDE HOURS</b></li></ul></div>",
+        "acad_1_title": "📘 1. SMC: SMART MONEY CONCEPTS",
+        "acad_1_content": "Detailed explanation of BOS, CHoCH, FVG, and Order Blocks.",
+        "acad_2_title": "⚡ 2. AMD STRATEGY (POWER OF 3)",
+        "acad_2_content": "Accumulation, Manipulation, Distribution strategy details.",
+        "acad_3_title": "🌍 3. SESSIONS & TIMING",
+        "acad_3_content": "London, New York, and Killzone timings.",
+        "acad_4_title": "📊 4. CRITICAL INDICES",
+        "acad_4_content": "BTC.D, USDT.D, and TOTAL3 analysis.",
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Real-time market scanning & AI Confidence Score.",
         "run_ai": "SCAN MARKET", "ai_analyzing": "Scanning Order Flow...", 
         "ai_input_label": "Enter Symbol (e.g. BTC, ETH, SOL, PEPE)",
@@ -78,26 +105,89 @@ TRANSLATIONS = {
         "ai_score": "Crazytown Confidence Score", "ai_dec": "AI DECISION",
         "bull": "BULLISH 🟢", "bear": "BEARISH 🔴", "neutral": "NEUTRAL ⚪",
         "s_buy": "STRONG BUY 🚀", "buy": "BUY 🟢", "sell": "SELL 🔴", "s_sell": "STRONG SELL 🔻", "wait": "WAIT ✋",
-        "data_source": "Data Source", "err_msg": "Coin not found. Try adding USDT (e.g. PEPEUSDT)"
+        "data_source": "Data Source", "err_msg": "Coin not found. Try adding USDT (e.g. PEPEUSDT)",
+        "ai_tf": "Timeframe",
+        "pay_title": "CHOOSE YOUR PLAN",
+        "pay_subtitle": "Unlock professional tools and join the elite circle.",
+        "p1_price": "$30", "p1_dur": "/month", "p1_f1": "Daily Signals", "p1_f2": "Basic AI Access", "p1_f3": "Community Chat",
+        "p2_price": "$75", "p2_dur": "/3 months", "p2_f1": "Everything in Starter", "p2_f2": "Full AI Scan (Unlimited)", "p2_f3": "Priority Support", "p2_badge": "BEST VALUE",
+        "p3_price": "$250", "p3_dur": "/lifetime", "p3_f1": "One-time Payment", "p3_f2": "Source Code Access", "p3_f3": "1-on-1 Mentorship",
+        "checkout_title": "💳 SECURE CHECKOUT",
+        "step_1": "1. Copy Wallet Address (TRC20)",
+        "step_2": "2. Send Exact Amount",
+        "step_3": "3. Verify Transaction",
+        "tx_placeholder": "Paste Transaction Hash (TxID)",
+        "verify_btn": "CONFIRM PAYMENT",
+        "success_msg": "WELCOME TO THE CLUB! 🥂",
+        "join_btn": "ACCESS VIP CHANNEL", 
+        "legal_warning": "<b>LEGAL DISCLAIMER:</b> Trading cryptocurrencies and digital assets involves high risk due to market volatility and may not be suitable for every investor profile. The analyses, data, and market comments provided on the <b>OA|Trade</b> platform are <b>not within the scope of investment advisory services.</b> Investment advisory services are provided only by authorized institutions, taking into account your personal risk and return preferences. The content shared here is general in nature and intended for educational and strategy development purposes only. As it may not be compatible with your financial situation, making trading decisions based solely on this information may not yield results consistent with your expectations. <b>OA|Trade</b> cannot be held responsible for any direct or indirect material/moral damages or loss of profit resulting from the use of the information provided.",
+        "footer_links": "Home | Legal Notices | Terms of Use | Privacy Policy | Risk Disclosure<br>GDPR Clarification Text | Cookie Policy | Contact",
+        "copyright": "2026 © OA|Trade - All Rights Reserved."
     },
     "TR": {
-        "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ", "perf": "PERFORMANS", "acad": "AKADEMİ", "memb": "ÜYELİK", "cont": "İLETİŞİM", "ai_lab": "YAPAY ZEKA",
+        "title_sub": "ALGORİTMİK İŞLEM SİSTEMLERİ", "perf": "PERFORMANS", "tools": "ARAÇLAR & ANALİZ", "acad": "AKADEMİ", "memb": "ÜYELİK", "cont": "İLETİŞİM", "ai_lab": "YZ LABORATUVARI",
         "total_trades": "TOPLAM İŞLEM", "win_rate": "BAŞARI ORANI", "net_return": "NET GETİRİ", "profit_factor": "KÂR FAKTÖRÜ",
         "season_goal": "SEZON HEDEFİ", "completed": "TAMAMLANDI", "perf_cal": "🗓️ PERFORMANS TAKVİMİ",
         "select_month": "Ay Seçiniz", "total_monthly": "AYLIK TOPLAM PNL", "market_intel": "📡 PİYASA İSTİHBARATI",
         "roi_sim": "🧮 ROI SİMÜLATÖRÜ", "roi_desc": "Geçmiş performansa dayalı kazanç hesapla.", "initial_cap": "Başlangıç Sermayesi ($)",
         "risk_trade": "İşlem Başı Risk (%)", "proj_bal": "TAHMİNİ BAKİYE", "trade_log": "İŞLEM GEÇMİŞİ", "download": "📥 CSV İNDİR",
         "limited_offer": "🔥 SINIRLI TEKLİF: Zam gelmeden ÖMÜR BOYU erişimi kap!", "feedback": "💬 YATIRIMCI YORUMLARI",
-        "plan_starter": "BAŞLANGIÇ", "plan_pro": "PROFESYONEL", "plan_life": "ÖMÜR BOYU", "sel_plan": "PLAN SEÇ",
+        "plan_starter": "BAŞLANGIÇ", "plan_pro": "PROFESYONEL", "plan_life": "ÖMÜR BOYU VIP", "sel_plan": "PLANINI SEÇ VE ÖDE",
         "most_pop": "EN POPÜLER", "contact_sales": "SATIŞA ULAŞ", "faq": "❓ SIK SORULANLAR", "settings": "⚙️ AYARLAR",
         "lang_sel": "Dil", "theme_sel": "Tema", "theme_dark": "Koyu Mod (Neon)", "theme_light": "Açık Mod (Kurumsal)",
         "acad_title": "OA | TRADE SMC USTALIK SINIFI", "acad_quote": "Piyasayı yenmek değil, disiplinle takip etmek.",
-        "lesson_1_title": "📌 BÖLÜM 1: ZAMAN VE BAĞLAM",
-        "lesson_1_content": "#### 1. ZAMAN FİLTRESİ\n* **LONDRA:** `10:00 – 12:00` (TSİ)\n* **NEW YORK:** `15:30 – 18:30` (TSİ)\n#### 2. GÜNLÜK BAĞLAM\nTek şart **LİKİDİTE ALIMI (SWEEP)**.",
-        "lesson_2_title": "🛠️ BÖLÜM 2: GİRİŞ STRATEJİSİ",
-        "lesson_2_content": "#### 1. FIBONACCI\n* **GİRİŞ:** `0.75` - `0.60`\n* **STOP:** `1`\n#### 2. FVG ONAYI",
-        "lesson_3_title": "⚠️ BÖLÜM 3: KURALLAR",
-        "lesson_3_content": "<div class='rule-box'><h4>🚨 DEĞİŞMEZ KURALLAR</h4><ul><li><b>CHOCH YOK</b></li><li><b>SAAT DIŞI İŞLEM YOK</b></li></ul></div>",
+        "acad_1_title": "📘 1. SMC: AKILLI PARA KONSEPTİ",
+        "acad_1_content": """
+        #### 🏦 SMART MONEY CONCEPTS (SMC) NEDİR?
+        Bankalar ve büyük fonların (Market Maker) izini sürmektir. Grafik rastgele hareket etmez, likiditeye (paraya) gider.
+        
+        **TEMEL YAPILAR:**
+        * **BOS (Break of Structure):** Trend yönünde kırılım. Trendin devam edeceğini gösterir.
+        * **CHoCH (Change of Character):** Trendin dönüş sinyalidir. Yükselişten düşüşe (veya tam tersi) geçişin ilk habercisidir.
+        * **FVG (Fair Value Gap):** Fiyatın hızlı hareket edip arkasında bıraktığı boşluktur. Fiyat er ya da geç bu boşluğu doldurmak (onarmak) ister.
+        * **OB (Order Block):** Sert hareket öncesi son zıt mumdur. Kurumsal emirlerin yığıldığı bölgedir.
+        """,
+        "acad_2_title": "⚡ 2. AMD STRATEJİSİ (POWER OF 3)",
+        "acad_2_content": """
+        #### 🎯 ACCUMULATION - MANIPULATION - DISTRIBUTION
+        Her mumda veya trendde 3 aşama vardır. Tuzağa düşmemek için bunu bilmelisin.
+        
+        1.  **A - ACCUMULATION (Birikim):** Fiyat dar bir alana sıkışır. Emirler toplanır. (Genelde Asya seansı).
+        2.  **M - MANIPULATION (Tuzak):** Fiyat aniden desteği/direnci kırar. Stopları patlatır. Herkesi terse yatırır.
+        3.  **D - DISTRIBUTION (Dağıtım):** Gerçek hareket başlar. Manipülasyonun tam tersine doğru hızlı bir ralli olur.
+        
+        **💡 STRATEJİ:** Yatay piyasayı gör -> Sahte kırılımı (M) bekle -> İçeri gir -> Gerçek yönü (D) yakala.
+        """,
+        "acad_3_title": "🌍 3. SEANSLAR & ZAMANLAMA",
+        "acad_3_content": """
+        #### ⏰ EN VERİMLİ İŞLEM SAATLERİ (TSİ)
+        Kripto 7/24 açıktır ama para belirli saatlerde akar.
+        
+        * **🇬🇧 LONDRA SEANSI (09:00 - 12:00):** * Günün ilk hacmi girer. 
+            * Genelde günün en düşük veya en yüksek seviyesi (Low/High of the day) burada oluşur.
+        * **🇺🇸 NEW YORK SEANSI (15:00 - 18:00):**
+            * En yüksek volatilite ve haber akışı buradadır.
+            * Londra'nın devamı veya tam tersi (Reversal) yaşanır.
+        * **🚫 ASYA SEANSI (Gece):** * Genelde yatay (Accumulation) geçer. İşlem önerilmez.
+            
+        **⚡ KILLZONE:** İki seansın çakıştığı **15:30 - 17:00** arası en tehlikeli ama en kârlı zamandır.
+        """,
+        "acad_4_title": "📊 4. KRİTİK ENDEKSLER (PUSULA)",
+        "acad_4_content": """
+        Analiz yaparken sadece grafiğe bakma, büyük resme bak:
+        
+        * **🟡 BTC.D (Bitcoin Dominance):**
+            * Para Bitcoin'e mi akıyor, Altcoin'lere mi?
+            * **Yükseliyorsa:** BTC güçlü, Altcoinler ezilir.
+            * **Düşüyorsa:** Altcoin rallisi (Altseason) yakındır.
+        * **💵 USDT.D (Tether Dominance):**
+            * Yatırımcı nakitte mi bekliyor?
+            * **Yükseliyorsa:** Piyasa düşer (Korku).
+            * **Düşüyorsa:** Piyasa yükselir (Alım iştahı).
+        * **🚀 TOTAL3:**
+            * BTC ve ETH hariç tüm Altcoinlerin piyasa değeri.
+            * Altcoin sepetin varsa bakman gereken tek grafik budur.
+        """,
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "Gelişmiş Teknik Analiz & YZ Güven Skoru.",
         "run_ai": "TARA VE ANALİZ ET", "ai_analyzing": "Piyasa Yapısı Taranıyor...", 
         "ai_input_label": "Coin Sembolü (Örn: TAO, BTC, ETH, PEPE)",
@@ -105,10 +195,27 @@ TRANSLATIONS = {
         "ai_score": "Crazytown Güven Skoru", "ai_dec": "YZ KARARI",
         "bull": "BOĞA (YÜKSELİŞ) 🟢", "bear": "AYI (DÜŞÜŞ) 🔴", "neutral": "NÖTR ⚪",
         "s_buy": "GÜÇLÜ AL 🚀", "buy": "AL 🟢", "sell": "SAT 🔴", "s_sell": "GÜÇLÜ SAT 🔻", "wait": "BEKLE ✋",
-        "data_source": "Veri Kaynağı", "err_msg": "Coin bulunamadı. USDT eklemeyi dene (Örn: PEPEUSDT)"
+        "data_source": "Veri Kaynağı", "err_msg": "Coin bulunamadı. USDT eklemeyi dene (Örn: PEPEUSDT)",
+        "ai_tf": "Zaman Dilimi",
+        "pay_title": "PLANINI SEÇ",
+        "pay_subtitle": "Profesyonel araçların kilidini aç ve elit gruba katıl.",
+        "p1_price": "$30", "p1_dur": "/aylık", "p1_f1": "Günlük Sinyaller", "p1_f2": "Temel YZ Erişimi", "p1_f3": "Topluluk Erişimi",
+        "p2_price": "$75", "p2_dur": "/3 aylık", "p2_f1": "Başlangıç Paketi Dahil", "p2_f2": "Sınırsız YZ Analizi", "p2_f3": "Öncelikli Destek", "p2_badge": "EN ÇOK TERCİH EDİLEN",
+        "p3_price": "$250", "p3_dur": "/tek seferlik", "p3_f1": "Tek Ödeme, Ömür Boyu", "p3_f2": "Kaynak Kod Erişimi", "p3_f3": "Birebir Mentorluk",
+        "checkout_title": "💳 GÜVENLİ ÖDEME",
+        "step_1": "1. Cüzdan Adresini Kopyala (TRC20)",
+        "step_2": "2. Tam Tutarı Gönder",
+        "step_3": "3. İşlemi Doğrula",
+        "tx_placeholder": "İşlem Kodunu (TxID) Yapıştır",
+        "verify_btn": "ÖDEMEYİ ONAYLA",
+        "success_msg": "ARAMIZA HOŞ GELDİN! 🥂",
+        "join_btn": "VIP KANALA GİRİŞ",
+        "legal_warning": "<b>YASAL UYARI:</b> Kripto para ve dijital varlık ticareti, piyasa volatilitesi nedeniyle yüksek risk içerir ve her yatırımcı profili için uygun olmayabilir. <b>OA|Trade</b> platformunda sunulan analizler, veriler ve piyasa yorumları <b>yatırım danışmanlığı kapsamında değildir.</b> Yatırım danışmanlığı hizmeti; yalnızca yetkili kuruluşlar tarafından, kişisel risk ve getiri tercihleriniz dikkate alınarak sunulmaktadır. Burada paylaşılan içerikler tamamen genel nitelikli olup, eğitim ve strateji geliştirme amacı taşır. Mali durumunuz ile uyumlu olmayabileceğinden, yalnızca buradaki bilgilere dayanarak alım-satım kararı vermeniz beklentilerinize uygun sonuçlar doğurmayabilir. <b>OA|Trade</b>, sunulan bilgilerin kullanımı sonucu oluşabilecek doğrudan veya dolaylı maddi/manevi zararlardan ve kâr mahrumiyetinden hiçbir şekilde sorumlu tutulamaz.",
+        "footer_links": "Anasayfa | Yasal Bildirimler | Kullanım Koşulları | Gizlilik Politikası | Risk Bildirimi<br>KVKK Aydınlatma Metni | Çerez Politikası | İletişim",
+        "copyright": "2026 © OA|Trade - Tüm Hakları Saklıdır."
     },
     "RU": {
-        "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ", "ai_lab": "ИИ ЛАБОРАТОРИЯ",
+        "title_sub": "АЛГОРИТМИЧЕСКИЕ ТОРГОВЫЕ СИСТЕМЫ", "perf": "ЭФФЕКТИВНОСТЬ", "tools": "ИНСТРУМЕНТЫ", "acad": "АКАДЕМИЯ", "memb": "ПОДПИСКА", "cont": "КОНТАКТЫ", "ai_lab": "ИИ ЛАБОРАТОРИЯ",
         "total_trades": "ВСЕГО СДЕЛОК", "win_rate": "ВИНРЕЙТ", "net_return": "ЧИСТАЯ ПРИБЫЛЬ", "profit_factor": "ПРОФИТ-ФАКТОР",
         "season_goal": "ЦЕЛЬ СЕЗОНА", "completed": "ЗАВЕРШЕНО", "perf_cal": "🗓️ КАЛЕНДАРЬ",
         "select_month": "Выберите месяц", "total_monthly": "ИТОГ МЕСЯЦА PNL", "market_intel": "📡 РЫНОК",
@@ -118,9 +225,14 @@ TRANSLATIONS = {
         "most_pop": "ПОПУЛЯРНЫЙ", "contact_sales": "СВЯЗАТЬСЯ", "faq": "❓ FAQ", "settings": "⚙️ НАСТРОЙКИ",
         "lang_sel": "Язык", "theme_sel": "Тема", "theme_dark": "Темная", "theme_light": "Светлая",
         "acad_title": "OA | TRADE SMC МАСТЕРСТВО", "acad_quote": "Дисциплина прежде всего.",
-        "lesson_1_title": "📌 ЧАСТЬ 1: ВРЕМЯ", "lesson_1_content": "...",
-        "lesson_2_title": "🛠️ ЧАСТЬ 2: ВХОД", "lesson_2_content": "...",
-        "lesson_3_title": "⚠️ ЧАСТЬ 3: ПРАВИЛА", "lesson_3_content": "...",
+        "acad_1_title": "📘 1. SMC: SMART MONEY CONCEPTS",
+        "acad_1_content": "Детальное объяснение BOS, CHoCH, FVG и Order Blocks.",
+        "acad_2_title": "⚡ 2. СТРАТЕГИЯ AMD",
+        "acad_2_content": "Accumulation, Manipulation, Distribution.",
+        "acad_3_title": "🌍 3. СЕССИИ",
+        "acad_3_content": "Лондон, Нью-Йорк и Killzone.",
+        "acad_4_title": "📊 4. ИНДЕКСЫ",
+        "acad_4_content": "Анализ BTC.D, USDT.D и TOTAL3.",
         "ai_title": "🤖 PRO AI SCANNER", "ai_desc": "ИИ анализ.",
         "run_ai": "АНАЛИЗ", "ai_analyzing": "Сканирование...", 
         "ai_input_label": "Символ (BTC, ETH...)",
@@ -128,24 +240,31 @@ TRANSLATIONS = {
         "ai_score": "Оценка уверенности", "ai_dec": "РЕШЕНИЕ",
         "bull": "БЫЧИЙ 🟢", "bear": "МЕДВЕЖИЙ 🔴", "neutral": "НЕЙТРАЛЬНО ⚪",
         "s_buy": "СИЛЬНАЯ ПОКУПКА 🚀", "buy": "ПОКУПАТЬ 🟢", "sell": "ПРОДАВАТЬ 🔴", "s_sell": "СИЛЬНАЯ ПРОДАЖ 🔻", "wait": "ЖДАТЬ ✋",
-        "data_source": "Источник", "err_msg": "Монета не найдена."
+        "data_source": "Источник", "err_msg": "Монета не найдена.",
+        "ai_tf": "Таймфрейм",
+        "pay_title": "ВЫБЕРИТЕ ПЛАН",
+        "pay_subtitle": "Разблокируйте профессиональные инструменты.",
+        "p1_price": "$30", "p1_dur": "/мес", "p1_f1": "Сигналы", "p1_f2": "Базовый ИИ", "p1_f3": "Чат",
+        "p2_price": "$75", "p2_dur": "/3 мес", "p2_f1": "Всё из Старт", "p2_f2": "Полный ИИ", "p2_f3": "Поддержка", "p2_badge": "ПОПУЛЯРНЫЙ",
+        "p3_price": "$250", "p3_dur": "/навсегда", "p3_f1": "Один платеж", "p3_f2": "Исходный код", "p3_f3": "Менторство",
+        "checkout_title": "💳 ОПЛАТА",
+        "step_1": "1. Скопируйте адрес (TRC20)",
+        "step_2": "2. Отправьте сумму",
+        "step_3": "3. Подтвердите",
+        "tx_placeholder": "Вставьте TxID",
+        "verify_btn": "ПОДТВЕРДИТЬ",
+        "success_msg": "ДОБРО ПОЖАЛОВАТЬ! 🥂",
+        "join_btn": "ВОЙТИ В VIP",
+        "legal_warning": "<b>ЮРИДИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ:</b> Торговля криптовалютами и цифровыми активами сопряжена с высоким риском из-за волатильности рынка и может не подходить для каждого инвестора. Анализ, данные и рыночные комментарии, представленные на платформе <b>OA|Trade</b>, <b>не являются инвестиционными рекомендациями.</b> Услуги инвестиционного консультирования предоставляются только уполномоченными организациями с учетом ваших личных предпочтений по риску и доходности. Представленный здесь контент носит общий характер и предназначен исключительно для образовательных целей. <b>OA|Trade</b> не несет ответственности за любые прямые или косвенные убытки или упущенную выгоду, возникшие в результате использования предоставленной информации.",
+        "footer_links": "Главная | Юридические уведомления | Условия использования | Политика конфиденциальности | Уведомление о рисках<br>Текст разъяснения GDPR | Политика использования файлов cookie | Контакт",
+        "copyright": "2026 © OA|Trade - Все права защищены."
     }
 }
 
 def t(key): return TRANSLATIONS[st.session_state.lang].get(key, key)
 
-with st.expander(t('settings'), expanded=False):
-    c1, c2 = st.columns(2)
-    with c1:
-        sl = st.selectbox(t('lang_sel'), ["TR", "EN", "RU"], index=["TR", "EN", "RU"].index(st.session_state.lang))
-        if sl != st.session_state.lang: st.session_state.lang = sl; st.rerun()
-    with c2:
-        thm = st.selectbox(t('theme_sel'), [t('theme_dark'), t('theme_light')], index=0 if st.session_state.theme == "Dark" else 1)
-        nt = "Dark" if thm == t('theme_dark') else "Light"
-        if nt != st.session_state.theme: st.session_state.theme = nt; st.rerun()
-
 # ==========================================
-# 2. DİNAMİK RENK VE TASARIM
+# 3. DİNAMİK RENK VE TASARIM
 # ==========================================
 if st.session_state.theme == "Dark":
     col = {
@@ -172,7 +291,7 @@ st.markdown(f"""
         .block-container {{padding-top: 1.5rem; padding-bottom: 3rem;}}
 
         h1, h2, h3, h4, h5, h6, p, li, div, span, label {{ color: {col['txt']} !important; font-family: 'Inter', sans-serif; }}
-
+        
         /* MOBİL UYUMLU TAKVİM */
         .calendar-container {{ display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 15px; }}
         .day-cell {{ background-color: {col['sec']}; border: 1px solid {col['bd']}; border-radius: 4px; height: 80px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; }}
@@ -222,43 +341,115 @@ st.markdown(f"""
         .custom-btn {{ background-color: {col['ac']}; color: {col['bg']} !important; padding: 10px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center; }}
         .custom-btn-outline {{ border: 1px solid {col['ac']}; color: {col['ac']} !important; background: transparent; }}
         .stTextInput input, .stSelectbox div[data-baseweb="select"] > div {{ background-color: {col['sec']}; color: {col['txt']}; border-color: {col['bd']}; }}
+        
+        /* PRICING TABLE STYLES */
+        .pricing-box {{
+            background: {col['card']};
+            border: 1px solid {col['bd']};
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.3s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }}
+        .pricing-box:hover {{ transform: scale(1.02); border-color: {col['ac']}; }}
+        .price-title {{ font-size: 1.2rem; font-weight: 800; color: {col['grd']}; letter-spacing: 1px; }}
+        .price-tag {{ font-size: 3rem; font-weight: 900; color: {col['ttl']}; margin: 10px 0; }}
+        .price-dur {{ font-size: 1rem; color: {col['grd']}; }}
+        .feature-list {{ text-align: left; margin: 20px 0; color: {col['txt']}; font-size: 0.9rem; }}
+        .feature-item {{ margin-bottom: 8px; display: flex; align-items: center; }}
+        .check-icon {{ color: {col['ac']}; margin-right: 10px; font-weight: bold; }}
+        .best-value {{
+            background: {col['ac']}; color: {col['bg']}; font-weight: bold; font-size: 0.8rem;
+            padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 10px;
+        }}
     </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. VERİ YÜKLEME (GÜVENLİ - BOŞ GELİRSE DOLDUR)
+# 4. VERİ YÜKLEME (HATAYI GÖRMEZDEN GELEN MOD)
 # ==========================================
 @st.cache_data(ttl=60)
 def load_data():
+    # 1. Deneme: Bulut Şifresi
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        if "gcp_service_account" in st.secrets: creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp_service_account"], scope)
-        else: creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-        client = gspread.authorize(creds); sheet = client.open("Crazytown_Journal").sheet1; data = sheet.get_all_records()
+        if "gcp_service_account" in st.secrets:
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp_service_account"], scope)
+            client = gspread.authorize(creds)
+            return pd.DataFrame(client.open("Crazytown_Journal").sheet1.get_all_records())
+    except:
+        pass 
+
+    # 2. Deneme: Bilgisayardaki Dosya
+    try:
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+        client = gspread.authorize(creds)
+        data = client.open("Crazytown_Journal").sheet1.get_all_records()
         if data:
             df = pd.DataFrame(data)
-            if 'R_Kazanc' in df.columns: df['R_Kazanc'] = df['R_Kazanc'].astype(str).str.replace(',', '.'); df['R_Kazanc'] = pd.to_numeric(df['R_Kazanc'], errors='coerce').fillna(0)
+            if 'R_Kazanc' in df.columns: 
+                df['R_Kazanc'] = df['R_Kazanc'].astype(str).str.replace(',', '.')
+                df['R_Kazanc'] = pd.to_numeric(df['R_Kazanc'], errors='coerce').fillna(0)
             return df
-    except: pass
-    
-    # EĞER GSHEET BAĞLANTISI YOKSA (DASHBOARD KAYBOLMASIN DİYE DEMO VERİ)
+    except Exception as e:
+        st.error(f"⚠️ Dosya Bulunamadı: {e}")
+
+    # 3. Deneme: Demo Veri
     dates = pd.date_range(end=datetime.today(), periods=20)
     demo_data = {
         'Tarih': dates.strftime("%d.%m.%Y"),
-        'Parite': ['BTC/USDT', 'ETH/USDT'] * 10,
+        'Parite': ['DOSYA/YOK', 'BTC/USDT'] * 10,
         'Yön': ['LONG', 'SHORT'] * 10,
-        'Sonuç': ['WIN', 'LOSS', 'WIN', 'WIN', 'LOSS'] * 4,
-        'R_Kazanc': [2.5, -1, 3.0, 2.0, -1] * 4
+        'Sonuç': ['WIN', 'LOSS'] * 10,
+        'R_Kazanc': [0] * 20
     }
     return pd.DataFrame(demo_data)
 
 df = load_data()
 
-# --- VERİ MOTORU ---
+# --- YENİ YARDIMCI FONKSİYONLAR (CANLI VERİLER) ---
+@st.cache_data(ttl=300) # 5 dakikada bir yeniler
+def get_market_movers():
+    try:
+        exchange = ccxt.binance()
+        tickers = exchange.fetch_tickers()
+        usdt_tickers = {k: v for k, v in tickers.items() if k.endswith('/USDT')}
+        sorted_tickers = sorted(usdt_tickers.values(), key=lambda x: x['percentage'], reverse=True)
+        top_gainers = sorted_tickers[:5]
+        top_losers = sorted_tickers[-5:]
+        return top_gainers, top_losers
+    except:
+        return [], []
+
+def calculate_rsi_scanner(symbols=["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT", "AVAX/USDT", "DOGE/USDT", "DOT/USDT", "TRX/USDT", "LINK/USDT", "MATIC/USDT", "LTC/USDT", "SHIB/USDT", "UNI/USDT"]):
+    results = []
+    exchange = ccxt.binance()
+    for sym in symbols:
+        try:
+            ohlcv = exchange.fetch_ohlcv(sym, timeframe='4h', limit=30)
+            df_rsi = pd.DataFrame(ohlcv, columns=['time', 'open', 'high', 'low', 'close', 'vol'])
+            delta = df_rsi['close'].diff()
+            gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+            rs = gain / loss
+            rsi = 100 - (100 / (1 + rs))
+            val = rsi.iloc[-1]
+            
+            status = "NÖTR"
+            if val > 70: status = "AŞIRI ALIM (SAT!)"
+            elif val < 30: status = "AŞIRI SATIM (AL!)"
+            
+            results.append({"Coin": sym, "RSI (4s)": round(val, 2), "Durum": status})
+        except: pass
+    return pd.DataFrame(results)
+
 def get_crypto_data(symbol, timeframe):
     symbol = symbol.upper().strip()
-    
-    # 1. COINGECKO
     try:
         cg_map = {
             "BTC": "bitcoin", "ETH": "ethereum", "SOL": "solana", "AVAX": "avalanche-2",
@@ -266,20 +457,13 @@ def get_crypto_data(symbol, timeframe):
             "PEPE": "pepe", "SHIB": "shiba-inu", "SUI": "sui", "DOT": "polkadot",
             "TAO": "bittensor", "WIF": "dogwifhat"
         }
-        
-        # Akıllı ID Bulma
-        if symbol in cg_map:
-            cg_id = cg_map[symbol]
+        if symbol in cg_map: cg_id = cg_map[symbol]
         else:
-            # API ile ara
             search_url = f"https://api.coingecko.com/api/v3/search?query={symbol}"
             headers = {'User-Agent': 'Mozilla/5.0'}
             resp_s = requests.get(search_url, headers=headers, timeout=2).json()
-            if resp_s.get("coins"):
-                cg_id = resp_s["coins"][0]["id"]
-            else:
-                cg_id = symbol.lower()
-
+            if resp_s.get("coins"): cg_id = resp_s["coins"][0]["id"]
+            else: cg_id = symbol.lower()
         days = "1" if timeframe == "15m" else ("30" if timeframe == "1d" else "7")
         url = f"https://api.coingecko.com/api/v3/coins/{cg_id}/ohlc?vs_currency=usd&days={days}"
         headers = {'User-Agent': 'Mozilla/5.0'}
@@ -291,8 +475,6 @@ def get_crypto_data(symbol, timeframe):
                 df['time'] = pd.to_datetime(df['time'], unit='ms')
                 return df, "CoinGecko API (Best)"
     except: pass
-
-    # 2. BINANCE (CCXT)
     try:
         import ccxt
         exchange = ccxt.binance()
@@ -305,20 +487,20 @@ def get_crypto_data(symbol, timeframe):
             df['time'] = pd.to_datetime(df['time'], unit='ms')
             return df, "Binance API (Fallback)"
     except Exception as e: pass
-
     return pd.DataFrame(), "Data Error"
 
 wt = "light" if st.session_state.theme == "Light" else "dark"
 components.html(f"""<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>{{"symbols": [{{"proName": "BINANCE:BTCUSDT", "title": "Bitcoin"}}, {{"proName": "BINANCE:ETHUSDT", "title": "Ethereum"}}, {{"proName": "BINANCE:SOLUSDT", "title": "Solana"}}], "showSymbolLogo": true, "colorTheme": "{wt}", "isTransparent": true, "displayMode": "adaptive", "locale": "en"}}</script></div>""", height=50)
 
 st.write("")
-st.markdown('<div class="neon-title">CRAZYTOWN CAPITAL</div>', unsafe_allow_html=True)
+st.markdown('<div class="neon-title">OA|Trade</div>', unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center; color: {col['ac']}; letter-spacing: 2px; font-size: 0.9rem; margin-top: -5px; font-weight:bold;'>{t('title_sub')}</p>", unsafe_allow_html=True)
 st.write("")
 
-tab1, tab2, tab5, tab3, tab4 = st.tabs([t('perf'), t('acad'), t('ai_lab'), t('memb'), t('cont')])
+# SEKME YAPISI
+tab1, tab_tools, tab2, tab5, tab3, tab4 = st.tabs([t('perf'), t('tools'), t('acad'), t('ai_lab'), t('memb'), t('cont')])
 
-# TAB 1: PERFORMANS (GARANTİLİ GÖSTERİM)
+# TAB 1: PERFORMANS
 with tab1:
     tot = len(df); win = len(df[df['Sonuç'] == 'WIN']); rate = (win / tot * 100) if tot > 0 else 0; net_r = df['R_Kazanc'].sum()
     gp = df[df['R_Kazanc'] > 0]['R_Kazanc'].sum(); gl = abs(df[df['R_Kazanc'] < 0]['R_Kazanc'].sum()); pf = (gp / gl) if gl > 0 else 0
@@ -365,13 +547,13 @@ with tab1:
                         hc.append(f'<div class="{cc}"><div class="day-number">{d}</div><div class="day-profit {pc}">{pt}</div></div>')
             hc.append('</div>'); st.markdown("".join(hc), unsafe_allow_html=True); st.markdown(f"<div style='text-align:center; margin-top:15px; font-size:1.2rem; font-weight:bold; color:{col['ac'] if mt>0 else '#ff4b4b'} !important'>{t('total_monthly')}: {mt:.2f}R</div>", unsafe_allow_html=True)
     except Exception as e: st.error(str(e))
-
+    
     st.markdown("---"); st.subheader(t("roi_sim")); r1, r2, r3 = st.columns([1,1,2])
     with r1: cap = st.number_input(t("initial_cap"), min_value=100, value=1000)
     with r2: risk = st.slider(t("risk_trade"), 0.5, 5.0, 2.0)
     prof = cap * (risk / 100) * net_r; bal = cap + prof; perc = (prof / cap) * 100
     with r3: st.markdown(f"""<div style="background:{col['card']}; padding:15px; border-radius:10px; border:1px solid {col['ac']}; text-align:center;"><span style="color:{col['grd']} !important">{t('proj_bal')}</span><br><span style="color:{col['ttl']} !important; font-size:2rem; font-weight:bold;">${bal:,.2f}</span><br><span style="color:{col['ac']} !important">(+${prof:,.2f} / +{perc:.1f}%)</span></div>""", unsafe_allow_html=True)
-    
+
     st.markdown("---"); h, d = st.columns([4, 1])
     with h: st.markdown(f"##### {t('trade_log')}")
     with d: st.download_button(label=t("download"), data=df.to_csv(index=False).encode('utf-8'), file_name='log.csv', mime='text/csv')
@@ -380,14 +562,214 @@ with tab1:
         return [f'color: {win_color}; font-weight:bold' if c_name == 'Sonuç' else f'color: {col["txt"]}' for c_name in row.index]
     st.dataframe(df.style.apply(hwin, axis=1), use_container_width=True, hide_index=True)
 
-# TAB 2
-with tab2:
-    st.write(""); st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('acad_title')}</h2>", unsafe_allow_html=True)
-    with st.expander(t('lesson_1_title'), expanded=True): st.markdown(t('lesson_1_content'))
-    with st.expander(t('lesson_2_title')): st.markdown(t('lesson_2_content'))
-    with st.expander(t('lesson_3_title')): st.markdown(t('lesson_3_content'), unsafe_allow_html=True)
+# ==========================================
+# TAB: PROFESYONEL VADELİ İŞLEMLER MASASI
+# ==========================================
+with tab_tools:
+    st.write("")
+    st.markdown(f"<h2 style='text-align: center; color: {col['ac']}; letter-spacing: 2px;'>⚡ VADELİ İŞLEMLER TERMİNALİ</h2>", unsafe_allow_html=True)
+    
+    # --- ÜST BÖLÜM: FEAR & GREED + MARKET MOVERS ---
+    col_t1, col_t2 = st.columns([1, 2])
+    
+    with col_t1:
+        st.markdown("### 🧠 PİYASA DUYGU DURUMU")
+        try:
+            fg_resp = requests.get("https://api.alternative.me/fng/?limit=1", timeout=2)
+            fg_data = fg_resp.json()['data'][0]
+            fg_val = int(fg_data['value'])
+            
+            # PRO GAUGE CHART (Hız Göstergesi)
+            fig_fg = go.Figure(go.Indicator(
+                mode = "gauge+number",
+                value = fg_val,
+                domain = {'x': [0, 1], 'y': [0, 1]},
+                title = {'text': fg_data['value_classification'], 'font': {'size': 20, 'color': col['txt']}},
+                number = {'font': {'color': col['ttl']}},
+                gauge = {
+                    'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': col['bd']},
+                    'bar': {'color': col['ac']},
+                    'bgcolor': "rgba(0,0,0,0)",
+                    'borderwidth': 2,
+                    'bordercolor': col['bd'],
+                    'steps': [
+                        {'range': [0, 25], 'color': '#ff4b4b'},
+                        {'range': [25, 50], 'color': '#ffcc00'},
+                        {'range': [50, 75], 'color': '#00ccff'},
+                        {'range': [75, 100], 'color': '#00ffcc'}],
+                }))
+            fig_fg.update_layout(height=250, margin=dict(l=20, r=20, t=30, b=20), paper_bgcolor='rgba(0,0,0,0)', font={'color': col['txt']})
+            st.plotly_chart(fig_fg, use_container_width=True)
+        except:
+            st.error("Veri alınamadı.")
 
-# TAB 5: AI LAB (PRO VERSION - SAFETY FIRST)
+    with col_t2:
+        st.markdown("### 🚀 ANLIK MARKET HAREKETLERİ (24s)")
+        gainers, losers = get_market_movers()
+        
+        t1, t2 = st.tabs(["🔥 EN ÇOK YÜKSELENLER", "🩸 EN ÇOK DÜŞENLER"])
+        
+        with t1:
+            if gainers:
+                for g in gainers:
+                    st.markdown(f"""
+                    <div style="display:flex; justify-content:space-between; padding:8px; background:{col['sec']}; margin-bottom:5px; border-radius:5px; border-left:4px solid #00ffcc;">
+                        <span style="font-weight:bold; color:{col['txt']}">{g['symbol'].replace('/USDT','')}</span>
+                        <span style="font-weight:bold; color:#00ffcc">%{g['percentage']:.2f} ⬆</span>
+                        <span style="color:{col['grd']}">${float(g['last']):.4f}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else: st.info("Veri yükleniyor...")
+            
+        with t2:
+            if losers:
+                for l in losers:
+                    st.markdown(f"""
+                    <div style="display:flex; justify-content:space-between; padding:8px; background:{col['sec']}; margin-bottom:5px; border-radius:5px; border-left:4px solid #ff4b4b;">
+                        <span style="font-weight:bold; color:{col['txt']}">{l['symbol'].replace('/USDT','')}</span>
+                        <span style="font-weight:bold; color:#ff4b4b">%{l['percentage']:.2f} ⬇</span>
+                        <span style="color:{col['grd']}">${float(l['last']):.4f}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else: st.info("Veri yükleniyor...")
+
+    st.markdown("---")
+
+    # --- ORTA BÖLÜM: RSI TARAYICI VE VADELİ VERİLER ---
+    c_rsi, c_fut = st.columns([1, 1])
+    
+    with c_rsi:
+        st.markdown("### 📡 RSI RADAR (AŞIRI ALIM/SATIM)")
+        st.caption("Piyasadaki en popüler 15 coin taranır. RSI < 30 ise AL, RSI > 70 ise SAT sinyalidir.")
+        
+        if st.button("TARAMAYI BAŞLAT 🔍", use_container_width=True):
+            with st.spinner("Piyasa taranıyor..."):
+                df_rsi = calculate_rsi_scanner()
+                st.dataframe(df_rsi.style.applymap(lambda x: f"color: {'red' if 'SAT' in str(x) else ('green' if 'AL' in str(x) else 'gray')}", subset=['Durum']), use_container_width=True, hide_index=True)
+        else:
+            st.info("Canlı veri taraması için butona basın.")
+
+    with c_fut:
+        st.markdown("### 📊 VADELİ İŞLEMLER VERİSİ")
+        st.caption("Funding Rate (Fonlama): Pozitif ise Longlar baskın, Negatif ise Shortlar baskın.")
+        
+        fut_sym = st.text_input("Coin Ara (Örn: ETH)", "BTC")
+        try:
+            # Binance Funding Rate Çekme
+            exc_fut = ccxt.binance({'options': {'defaultType': 'future'}})
+            ticker_fut = exc_fut.fetch_ticker(f"{fut_sym.upper()}/USDT")
+            funding = exc_fut.fetch_funding_rate(f"{fut_sym.upper()}/USDT")
+            
+            fr = float(funding['fundingRate']) * 100
+            vol = float(ticker_fut['quoteVolume'])
+            
+            f_col = "#00ffcc" if fr > 0.01 else ("#ff4b4b" if fr < 0 else "#aaaaaa")
+            
+            st.markdown(f"""
+            <div style="background:{col['card']}; padding:15px; border-radius:10px; border:1px solid {col['bd']}; text-align:center;">
+                <div style="font-size:1.5rem; font-weight:bold; color:{col['ttl']}">{fut_sym.upper()}/USDT PERP</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+                    <div>
+                        <div style="font-size:0.8rem; color:{col['grd']}">FUNDING (8H)</div>
+                        <div style="font-size:1.2rem; font-weight:bold; color:{f_col}">{fr:.4f}%</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.8rem; color:{col['grd']}">24H HACİM</div>
+                        <div style="font-size:1.2rem; font-weight:bold; color:{col['txt']}">${vol:,.0f}</div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        except:
+            st.error("Vadeli veri alınamadı.")
+
+    st.markdown("---")
+
+    # --- POZİSYON HESAPLAYICI (EKSTRA) ---
+    with st.expander("🧮 POZİSYON VE RİSK HESAPLAYICI", expanded=False):
+        rc1, rc2 = st.columns(2)
+        with rc1: 
+            ab = st.number_input("Kasa ($)", value=1000.0, key="tool_kasa") 
+            rp = st.number_input("Risk (%)", value=1.0, key="tool_risk")
+        with rc2: 
+            ep = st.number_input("Giriş ($)", value=0.0, key="tool_entry") 
+            sp = st.number_input("Stop ($)", value=0.0, key="tool_stop")
+            
+        if ep > 0 and sp > 0:
+            ra = ab * (rp/100); ps = ra / abs(ep-sp); tv = ps * ep
+            st.info(f"Risk: ${ra:.2f} | Adet: {ps:.4f} | Büyüklük: ${tv:,.2f}")
+
+    st.markdown("---")
+
+    # --- ALT BÖLÜM: LİKİDASYON HARİTASI & HABERLER ---
+    st.markdown("### 🔥 CANLI LİKİDASYON ISI HARİTASI")
+    st.caption("Aşağıdaki harita, fiyatın nereye giderse kimlerin 'patlayacağını' gösterir. Sarı/Parlak alanlar likiditenin (stopların) olduğu yerlerdir.")
+    
+    # Coinglass Embed (En temiz yöntem)
+    components.iframe("https://www.coinglass.com/pro/futures/liquidation_map", height=600, scrolling=True)
+    
+    st.markdown("---")
+    
+    # HABER AKIŞI
+    st.markdown("### 📰 CANLI HABER AKIŞI (GLOBAL)")
+    try:
+        # Google News RSS (Ücretsiz ve güvenilir)
+        rss_url = "https://news.google.com/rss/search?q=cryptocurrency+when:1d&hl=en-US&gl=US&ceid=US:en"
+        feed = requests.get(rss_url, timeout=5).text
+        # Basit XML parse (Regex ile hızlı çözüm)
+        items = re.findall(r'<item>(.*?)</item>', feed, re.DOTALL)
+        
+        for item in items[:5]: # Son 5 haber
+            title = re.search(r'<title>(.*?)</title>', item).group(1)
+            link = re.search(r'<link>(.*?)</link>', item).group(1)
+            source = re.search(r'<source.*?>(.*?)</source>', item).group(1)
+            
+            st.markdown(f"""
+            <div style="padding:10px; border-bottom:1px solid {col['bd']};">
+                <a href="{link}" target="_blank" style="text-decoration:none; color:{col['txt']}; font-weight:bold; font-size:0.95rem;">{title}</a>
+                <div style="font-size:0.75rem; color:{col['grd']}; margin-top:4px;">Kaynak: {source}</div>
+            </div>
+            """, unsafe_allow_html=True)
+    except:
+        st.error("Haber kaynağına ulaşılamadı.")
+
+# TAB 2: AKADEMİ (GÜNCELLENMİŞ)
+with tab2:
+    st.write("")
+    st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important; margin-bottom:10px;'>{t('acad_title')}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; color: {col['grd']}; font-style: italic; margin-bottom: 30px;'>{t('acad_quote')}</div>", unsafe_allow_html=True)
+    
+    # 1. SMC BÖLÜMÜ
+    with st.expander(t('acad_1_title'), expanded=True):
+        st.markdown(t('acad_1_content'))
+        st.info("💡 **İPUCU:** Fiyat her zaman FVG boşluklarını doldurmak ister. Giriş için acele etme, fiyatın sana gelmesini bekle.")
+
+    # 2. AMD STRATEJİSİ
+    with st.expander(t('acad_2_title'), expanded=False):
+        st.markdown(t('acad_2_content'))
+        st.code("""
+      (M)anipulation (Tuzak/Fake)
+          ^
+          |
+(D)istribution (Gerçek Yön)  <----+
+          |
+(A)ccumulation (Yatay) . . . . . .|
+        """, language="text")
+
+    # 3. SEANSLAR
+    with st.expander(t('acad_3_title'), expanded=False):
+        st.markdown(t('acad_3_content'))
+        c_sess1, c_sess2, c_sess3 = st.columns(3)
+        c_sess1.metric("Londra", "09:00 - 12:00", "Volatilite Başlar")
+        c_sess2.metric("New York", "15:00 - 18:00", "Trend Belirlenir")
+        c_sess3.metric("Killzone", "15:30 - 17:00", "🔥 Yüksek Risk")
+
+    # 4. KRİTİK ENDEKSLER
+    with st.expander(t('acad_4_title'), expanded=False):
+        st.markdown(t('acad_4_content'))
+        st.warning("⚠️ **UYARI:** USDT.D yükselirken Long işlem almak, rüzgara karşı koşmak gibidir.")
+
+# TAB 5: AI LAB & MUM GRAFİKLERİ
 with tab5:
     st.write("")
     st.markdown(f"<h2 style='text-align: center; color: {col['ac']} !important;'>{t('ai_title')}</h2>", unsafe_allow_html=True)
@@ -401,25 +783,12 @@ with tab5:
         run_analysis = st.button(t('run_ai'), key="ai_btn", use_container_width=True)
 
     if run_analysis:
-        # DEFAULT (GÜVENLİK İÇİN)
-        dec_col = "#888888"
-        trend_text = "NEUTRAL"
-        decision = "WAIT"
-        wave_status = "NEUTRAL"
-        wave_col = "#888"
-        core_status = "STABLE"
-        core_col = "#888"
-        beluga_status = "50.0"
-        macd_status = "NEUTRAL"
-        macd_col = "#888"
-        div_status = "NONE"
-        div_col = "#888"
-        score = 50
-        rsi_val = 50.0
-        change_24h = 0.0
-        current_price = 0.0
-        supp = 0.0
-        res = 0.0
+        dec_col, trend_text, decision = "#888888", "NEUTRAL", "WAIT"
+        wave_status, core_status, beluga_status = "NEUTRAL", "STABLE", "50.0"
+        macd_status, div_status = "NEUTRAL", "NONE"
+        wave_col, core_col, macd_col, div_col = "#888", "#888", "#888", "#888"
+        score, rsi_val = 50, 50.0
+        change_24h, current_price, supp, res = 0.0, 0.0, 0.0, 0.0
         direction = "NEUTRAL"
 
         with st.spinner(t('ai_analyzing')):
@@ -431,8 +800,10 @@ with tab5:
             open_price = float(live_df['open'].iloc[-1])
             change_24h = ((current_price - open_price) / open_price) * 100
             
-            live_df['SMA'] = live_df['close'].rolling(window=20).mean()
-            sma_val = float(live_df['SMA'].iloc[-1]) if not pd.isna(live_df['SMA'].iloc[-1]) else current_price
+            # YENİ: Ortalamalar (SMA & EMA)
+            live_df['SMA20'] = live_df['close'].rolling(window=20).mean()
+            live_df['EMA50'] = live_df['close'].ewm(span=50, adjust=False).mean()
+            sma_val = float(live_df['SMA20'].iloc[-1]) if not pd.isna(live_df['SMA20'].iloc[-1]) else current_price
             
             delta = live_df['close'].diff()
             gain = (delta.where(delta > 0, 0)).rolling(window=14).mean().fillna(0)
@@ -444,8 +815,7 @@ with tab5:
             supp = live_df['low'].tail(50).min()
             res = live_df['high'].tail(50).max()
             
-            # --- PRO TOOLKIT HESAPLAMALARI ---
-            ema50 = live_df['close'].ewm(span=50, adjust=False).mean().iloc[-1]
+            ema50 = live_df['EMA50'].iloc[-1]
             wave_status = "BULLISH WAVE 🌊" if current_price > ema50 else "BEARISH WAVE 🌊"
             wave_col = "#00ff00" if current_price > ema50 else "#ff0000"
 
@@ -526,58 +896,193 @@ with tab5:
             st.markdown(html_card, unsafe_allow_html=True)
             st.caption(f"{t('data_source')}: {source}")
 
-            # CHART
+            # --- 🕯️ MUM GRAFİĞİ (OHLC) ---
             st.write("")
             fig_ai = go.Figure()
-            last_50 = live_df.tail(50).reset_index(drop=True)
-            fig_ai.add_trace(go.Scatter(x=last_50.index, y=last_50['close'], mode='lines', name='Price', line=dict(color=col['txt'], width=2)))
+            last_50 = live_df.tail(60).reset_index(drop=True)
             
-            last_idx = last_50.index[-1]
-            volatility = last_50['close'].std() * 0.5
-            if np.isnan(volatility): volatility = current_price * 0.01
+            # Candlesticks
+            fig_ai.add_trace(go.Candlestick(
+                x=last_50.index,
+                open=last_50['open'], high=last_50['high'],
+                low=last_50['low'], close=last_50['close'],
+                name='OHLC'
+            ))
             
-            steps = 15
-            future_x = np.arange(last_idx, last_idx + steps)
-            slope = volatility * 0.1 if direction == "BULL" else (-volatility * 0.1 if direction == "BEAR" else 0)
+            # SMA 20 (Sarı)
+            fig_ai.add_trace(go.Scatter(x=last_50.index, y=last_50['SMA20'], mode='lines', name='SMA 20', line=dict(color='#ffd700', width=1.5)))
             
-            f_col = "rgba(0, 255, 204, 0.15)" if direction == "BULL" else "rgba(255, 75, 75, 0.15)"
-            upper_bound = [current_price + (i * slope) + (i * volatility * 0.2) for i in range(steps)]
-            lower_bound = [current_price + (i * slope) - (i * volatility * 0.2) for i in range(steps)]
-            mid_line = [current_price + (i * slope) for i in range(steps)]
-
-            fig_ai.add_trace(go.Scatter(x=np.concatenate([future_x, future_x[::-1]]), y=np.concatenate([upper_bound, lower_bound[::-1]]), fill='toself', fillcolor=f_col, line=dict(color='rgba(0,0,0,0)'), showlegend=False))
-            fig_ai.add_trace(go.Scatter(x=future_x, y=mid_line, mode='lines', name='AI Projection', line=dict(color=dec_col, width=2, dash='dot')))
+            # EMA 50 (Mavi)
+            fig_ai.add_trace(go.Scatter(x=last_50.index, y=last_50['EMA50'], mode='lines', name='EMA 50', line=dict(color='#00bfff', width=1.5)))
             
             pt = "plotly_white" if st.session_state.theme == "Light" else "plotly_dark"
-            fig_ai.update_layout(template=pt, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=400, margin=dict(l=0,r=0,t=20,b=0), xaxis=dict(showgrid=False), yaxis=dict(gridcolor=col['bd']))
+            fig_ai.update_layout(
+                template=pt, 
+                paper_bgcolor='rgba(0,0,0,0)', 
+                plot_bgcolor='rgba(0,0,0,0)', 
+                height=500, 
+                margin=dict(l=0,r=0,t=20,b=0),
+                xaxis=dict(showgrid=False, rangeslider=dict(visible=False)), 
+                yaxis=dict(gridcolor=col['bd'])
+            )
             st.plotly_chart(fig_ai, use_container_width=True)
 
         else:
             st.error(t("err_msg"))
 
-# TAB 3 & 4
+# TAB 3: ÜYELİK & PROFESYONEL ÖDEME SİSTEMİ
 with tab3:
-    st.write(""); st.markdown(f"""<div class="metric-container" style="background:linear-gradient(90deg, {col['card']}, {col['bg']}); border-color:{col['ac']}">{t('limited_offer')}</div>""", unsafe_allow_html=True); st.write("")
-    c1, c2, c3 = st.columns(3)
-    with c1: st.markdown(f"""<div class="pricing-card"><div class="plan-name">{t('plan_starter')}</div><div class="plan-price">$30<span style="font-size:1rem;color:{col['grd']} !important">/mo</span></div><a href="#" class="custom-btn custom-btn-outline">{t('sel_plan')}</a></div>""", unsafe_allow_html=True)
-    with c2: st.markdown(f"""<div class="pricing-card" style="border-color:{col['ac']}"><div class="plan-name">{t('plan_pro')}</div><div class="plan-price">$75<span style="font-size:1rem;color:{col['grd']} !important">/qtr</span></div><a href="#" class="custom-btn">{t('most_pop')}</a></div>""", unsafe_allow_html=True)
-    with c3: st.markdown(f"""<div class="pricing-card"><div class="plan-name">{t('plan_life')}</div><div class="plan-price">$250<span style="font-size:1rem;color:{col['grd']} !important">/once</span></div><a href="#" class="custom-btn custom-btn-outline">{t('contact_sales')}</a></div>""", unsafe_allow_html=True)
+    st.write("")
+    st.markdown(f"<h1 style='text-align: center; color: {col['ac']} !important;'>{t('pay_title')}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: {col['grd']}; margin-bottom: 40px;'>{t('pay_subtitle')}</p>", unsafe_allow_html=True)
+    
+    # 1. PLAN KARTLARI (3 SÜTUN)
+    col_p1, col_p2, col_p3 = st.columns(3)
+    
+    with col_p1:
+        st.markdown(f"""
+        <div class="pricing-box">
+            <div class="price-title">{t('plan_starter')}</div>
+            <div class="price-tag">{t('p1_price')}</div>
+            <div class="price-dur">{t('p1_dur')}</div>
+            <div class="feature-list">
+                <div class="feature-item"><span class="check-icon">✓</span>{t('p1_f1')}</div>
+                <div class="feature-item"><span class="check-icon">✓</span>{t('p1_f2')}</div>
+                <div class="feature-item"><span class="check-icon">✓</span>{t('p1_f3')}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with col_p2:
+        st.markdown(f"""
+        <div class="pricing-box" style="border-color: {col['ac']}; box-shadow: 0 0 20px {col['ac']}20;">
+            <div class="best-value">{t('p2_badge')}</div>
+            <div class="price-title">{t('plan_pro')}</div>
+            <div class="price-tag" style="color:{col['ac']} !important">{t('p2_price')}</div>
+            <div class="price-dur">{t('p2_dur')}</div>
+            <div class="feature-list">
+                <div class="feature-item"><span class="check-icon">✓</span>{t('p2_f1')}</div>
+                <div class="feature-item"><span class="check-icon">✓</span>{t('p2_f2')}</div>
+                <div class="feature-item"><span class="check-icon">✓</span>{t('p2_f3')}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_p3:
+        st.markdown(f"""
+        <div class="pricing-box">
+            <div class="price-title">{t('plan_life')}</div>
+            <div class="price-tag">{t('p3_price')}</div>
+            <div class="price-dur">{t('p3_dur')}</div>
+            <div class="feature-list">
+                <div class="feature-item"><span class="check-icon">✓</span>{t('p3_f1')}</div>
+                <div class="feature-item"><span class="check-icon">✓</span>{t('p3_f2')}</div>
+                <div class="feature-item"><span class="check-icon">✓</span>{t('p3_f3')}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    
+    # 2. ÖDEME ALANI (TEK BÜYÜK ALAN)
+    st.subheader(t('checkout_title'))
+    
+    # PLAN SEÇİMİ
+    plan_options = {t('plan_starter'): 30, t('plan_pro'): 75, t('plan_life'): 250}
+    selected_plan = st.selectbox(t('sel_plan'), list(plan_options.keys()), index=1)
+    amount = plan_options[selected_plan]
+    
+    # İKİ KOLONLU ÖDEME EKRANI
+    chk_c1, chk_c2 = st.columns([1, 2])
+    
+    with chk_c1:
+        # QR KOD VE TUTAR
+        st.markdown(f"""
+        <div style="background: {col['sec']}; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid {col['bd']};">
+            <div style="font-weight: bold; margin-bottom: 10px;">SCAN TO PAY</div>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={MY_TRC20_WALLET}" style="border-radius:10px; margin-bottom:10px;">
+            <div style="font-size: 1.5rem; color: {col['ac']}; font-weight: 900;">${amount} USDT</div>
+            <div style="font-size: 0.8rem; opacity: 0.7;">Network: TRON (TRC20)</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with chk_c2:
+        # ADIMLAR VE GİRİŞ
+        st.info(f"**{t('step_1')}**")
+        st.code(MY_TRC20_WALLET, language="text") # KOPYALANABİLİR ALAN
+        
+        st.info(f"**{t('step_2')}**")
+        
+        st.info(f"**{t('step_3')}**")
+        tx_id = st.text_input("Transaction ID (TxID)", placeholder=t('tx_placeholder'))
+        
+        if st.button(t('verify_btn'), type="primary", use_container_width=True):
+            if len(tx_id) > 10:
+                with st.spinner("Checking Blockchain..."):
+                    time.sleep(2)
+                    st.balloons()
+                    st.success(t('success_msg'))
+                    st.markdown(f"""
+                    <a href="https://t.me/+E_vuNnVyJ7U2ZTI0" target="_blank" style="text-decoration: none;">
+                        <div style="background: #0088cc; color: white; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1.2rem; margin-top: 10px; box-shadow: 0 4px 15px rgba(0,136,204,0.4);">
+                            {t('join_btn')} ✈️
+                        </div>
+                    </a>
+                    """, unsafe_allow_html=True)
+            else:
+                st.error("Invalid TxID format.")
 
 with tab4:
     st.write(""); c1, c2 = st.columns(2)
-    with c1: st.markdown(f"""### 📨 Telegram\n<a href="https://t.me/Orhan1909" class="custom-btn">OPEN TELEGRAM</a>""", unsafe_allow_html=True)
+    with c1: st.markdown(f"""### 📨 Telegram\n<a href="https://t.me/+QHt8nTqozrw2Zjlk" class="custom-btn">OPEN TELEGRAM</a>""", unsafe_allow_html=True)
     with c2: st.markdown(f"""### 📧 Email\n**orhanaliyev02@gmail.com**""")
 
-st.markdown("---"); st.markdown(f"<p style='text-align: center; color: {col['ac_h']} !important; font-size: 0.8rem;'>© 2025 Crazytown Capital. All rights reserved.</p>", unsafe_allow_html=True)
+# ==========================================
+# FOOTER (KESİN ÇÖZÜM - BOŞLUKSUZ)
+# ==========================================
+st.markdown("---")
 
-
-
-
-
-
-
-
-
-
-
-
+st.markdown(f"""
+<style>
+.final-footer {{
+    width: 100%;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #444;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    color: #999;
+}}
+.final-legal {{
+    text-align: justify;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    font-size: 0.7rem;
+    opacity: 0.85;
+}}
+.final-links {{
+    margin-bottom: 15px;
+}}
+.final-links a {{
+    text-decoration: none;
+    color: #bbb !important;
+    margin: 0 8px;
+    font-weight: 600;
+    transition: 0.3s;
+}}
+.final-links a:hover {{
+    color: #00ffcc !important;
+}}
+.final-copy {{
+    font-weight: bold;
+    color: #eee;
+    margin-top: 15px;
+}}
+</style>
+<div class="final-footer">
+<div class="final-legal">{t('legal_warning')}</div>
+<div class="final-links">{t('footer_links')}</div>
+<div class="final-copy">{t('copyright')}</div>
+</div>
+""", unsafe_allow_html=True)
